@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 #include "utils.h"
 #include "segy_bin_header.h"
@@ -65,10 +66,9 @@ public:
 	std::vector<float> iline(int il_num);
 	std::vector<float> xline(int xl_num);
 
-	void create_mem_map();
+	void determineSorting();
 
 private:
-	void determineSorting();
 	void getLineFromSorted(int startTrace, int count, int offset, std::vector<float> &line);
 };
 

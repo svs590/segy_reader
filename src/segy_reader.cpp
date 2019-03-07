@@ -360,7 +360,3 @@ void segy_reader::determineSorting() {
 	else if (sorting == segy_sorting::xline)
 		lineMap.xl_count = xl_count;
 }
-
-void segy_reader::create_mem_map() {
-	determineSorting();
-}

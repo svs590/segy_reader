@@ -1,0 +1,6 @@
+[submodule "lib/OpenSeaSeis"]
+	path = lib/OpenSeaSeis
+	url = https://github.com/svs590/OpenSeaSeis.git
+[submodule "lib/pybind11"]
+	path = lib/pybind11
+	url = https://github.com/pybind/pybind11.git

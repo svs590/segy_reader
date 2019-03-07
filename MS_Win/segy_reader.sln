@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2048
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "segy_reader", "segy_reader.vcxproj", "{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+		Test|x64 = Test|x64
+		Test|x86 = Test|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}.Debug|x64.ActiveCfg = Debug|x64
+		{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}.Debug|x64.Build.0 = Debug|x64
+		{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}.Debug|x86.ActiveCfg = Debug|Win32
+		{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}.Debug|x86.Build.0 = Debug|Win32
+		{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}.Release|x64.ActiveCfg = Release|x64
+		{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}.Release|x64.Build.0 = Release|x64
+		{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}.Release|x86.ActiveCfg = Release|Win32
+		{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}.Release|x86.Build.0 = Release|Win32
+		{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}.Test|x64.ActiveCfg = Test|x64
+		{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}.Test|x64.Build.0 = Test|x64
+		{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}.Test|x86.ActiveCfg = Test|Win32
+		{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}.Test|x86.Build.0 = Test|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4BA37F6E-4E24-4D00-896F-E730B6E3C2FD}
+	EndGlobalSection
+EndGlobal

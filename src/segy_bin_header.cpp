@@ -1,6 +1,10 @@
 #include "segy_bin_header.h"
 #include "utils.h"
 
+#include <iostream>
+
+using namespace std;
+
 DLLIMPORT int				cseis_csNativeSegyBinHeader_jobID(const void *obj);
 DLLIMPORT int				cseis_csNativeSegyBinHeader_jobID(const void *obj);
 DLLIMPORT int				cseis_csNativeSegyBinHeader_lineNum(const void *obj);
@@ -117,4 +121,36 @@ unsigned short	segy_bin_header::fixedTraceLengthFlag() {
 }
 unsigned short	segy_bin_header::numExtendedBlocks() {
 	return cseis_csNativeSegyBinHeader_numExtendedBlocks(obj);
+}
+
+map<string, int> segy_bin_header::to_map() {
+	return {
+		{"job ID",				jobID()},
+		{"job ID",				jobID()},
+		{"line Num", 			lineNum()},
+		{"reel Num",				reelNum()},
+		{"num Traces", 			numTraces()},
+		{"num Aux Traces", 		numAuxTraces()},
+		{"sample Interval US", 		sampleIntUS()},
+		{"sample Interval Orig US",		sampleIntOrigUS()},
+		{"num Samples", 			numSamples()},
+		{"num Samples Orig", 		numSamplesOrig()},
+		{"data Sample Format",    dataSampleFormat()},
+		{"fold", 				fold()},
+		{"sort Code", 			sortCode()},
+		{"vert Sum Code", 		vertSumCode()},
+		{"sweep FreqStart", 		sweepFreqStart()},
+		{"sweep Freq End", 		sweepFreqEnd()},
+		{"sweep Code", 			sweepCode()},
+		{"taper Type", 			taperType()},
+		{"correlated Traces",	correlatedTraces()},
+		{"gain Recovered",		gainRecovered()},
+		{"amp Recovery Method",   ampRecoveryMethod()},
+		{"unit System", 			unitSystem()},
+		{"polarity ", 			polarity()},
+		{"vib Polarity Code",		vibPolarityCode()},
+		{"revision Num", 		revisionNum()},
+		{"fixed Trace Length Flag", fixedTraceLengthFlag()},
+		{"num Extended Blocks",   numExtendedBlocks()}
+	};
 }

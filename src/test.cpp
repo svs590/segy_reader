@@ -16,16 +16,19 @@ using namespace std::chrono;
 
 int main() {
 
-	string file = "D:\FullStack_PSTM.segy";
+	string file = "D:/test/EE_1_2.sgy";
 
 	segy_reader reader(
 		file,
-		100000,
+		100,
 		1110,
 		false,
 		false,
 		false
 	);
+
+	auto bh = reader.binHeader();
+	bh.to_map();
 
 	cout << reader.charBinHeader() << endl;
 	segy_bin_header binHeader = reader.binHeader();
@@ -40,7 +43,8 @@ int main() {
 	cout << row_index << endl;
 	cout << col_index << endl;
 
-	//hdrMap.addHeader("QQQQQQQQQQQQQQQQ", 226, 4, 1, "privet");
+	//hdrMap.addHeader("row", 5, 4, 1, "");
+	//hdrMap.addHeader("col", 17, 4, 1, "");
 	int numHeaders = hdrMap.count();
 	cout << "num heders in map: " << numHeaders << endl;
 
@@ -74,12 +78,12 @@ int main() {
 	std::vector<float> iline;
 
 	start = system_clock::now();
-	for (int i = 0; i < 10; ++i) {
-		cout << i << endl;
+	for (int i = 0; i < 100; ++i) {
+		//cout << i << endl;
 		iline = reader.iline(312 + i);
 	}
 	end = system_clock::now();
-	cout << "10 Line time: " << duration_cast<seconds>(end - start).count() << endl;
+	cout << "100 Line time: " << duration_cast<milliseconds>(end - start).count() << endl;
 
 	ofstream ilinefile("iline.dat");
 	for (int i = 0; i < iline.size(); ++i) {

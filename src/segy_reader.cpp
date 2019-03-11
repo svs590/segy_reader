@@ -129,18 +129,19 @@ std::vector<float> segy_reader::getTrace(int index) {
 segy_header_map segy_reader::traceHeaderMap() {
 	return cseis_csSegyReader_getTrcHdrMap(obj);
 }
-std::string segy_reader::charBinHeader() {
+string segy_reader::charBinHeader() {
 	char *buf = new char[csSegyHeader::SIZE_CHARHDR];
 	cseis_csNativeSegyReader_charBinHeader(obj, buf);
-	auto res = std::string(buf);
+	auto res = string(buf);
 	delete[] buf;
 	return res;
 }
 
 std::vector<float> segy_reader::iline(int il_num) {
-	if (!(il_num >= lineMap.il_start) ||
-		!(il_num < lineMap.il_start + lineMap.il_count))
-		throw std::invalid_argument("invalid iline number.");
+	if (sorting != segy_sorting::unknown)
+		if (!(il_num >= lineMap.il_start) ||
+			!(il_num < lineMap.il_start + lineMap.il_count))
+			throw std::invalid_argument("invalid iline number.");
 
 	samplesCount();
 
@@ -174,9 +175,10 @@ std::vector<float> segy_reader::iline(int il_num) {
 }
 
 std::vector<float> segy_reader::xline(int xl_num) {
-	if (!(xl_num >= lineMap.xl_start) ||
-		!(xl_num < lineMap.xl_start + lineMap.xl_count))
-		throw std::invalid_argument("invalid xline number.");
+	if (sorting != segy_sorting::unknown)
+		if (!(xl_num >= lineMap.xl_start) ||
+			!(xl_num < lineMap.xl_start + lineMap.xl_count))
+			throw std::invalid_argument("invalid xline number.");
 
 	samplesCount();
 
@@ -360,3 +362,45 @@ void segy_reader::determineSorting() {
 	else if (sorting == segy_sorting::xline)
 		lineMap.xl_count = xl_count;
 }
+
+#ifdef PYTHON
+
+void vector_to_numpy(vector<float> &x, py::array_t<float> y) {
+	y.resize({ x.size() });
+	memcpy((void*)y.data(), (void*)x.data(), x.size() * sizeof(float));
+}
+
+py::array_t<float> segy_reader::pyGetNextTrace() {
+	py::array_t<float> trace;
+
+	const float *nativeTrace = nextTraceRef();
+	if (nativeTrace == nullptr)
+		return trace;
+
+	samplesCount();
+	trace.resize({ samples_count });
+	std::memcpy((void*)trace.data(), (void*)nativeTrace, samples_count * sizeof(float));
+	return trace;
+}
+
+py::array_t<float> segy_reader::pyIline(int il_num) {
+	py::array_t<float> line;
+	auto il = iline(il_num);
+
+	vector_to_numpy(il, line);
+	line.resize({ lineMap.xl_count, samples_count });
+
+	return line;
+}
+
+py::array_t<float> segy_reader::pyXline(int xl_num) {
+	py::array_t<float> line;
+	auto xl = xline(xl_num);
+
+	vector_to_numpy(xl, line);
+	line.resize({ lineMap.il_count, samples_count });
+
+	return line;
+}
+
+#endif

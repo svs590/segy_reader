@@ -1,6 +1,9 @@
 #ifndef SEGY_BIN_HEADER
 #define SEGY_BIN_HEADER
 
+#include <map>
+#include <string>
+
 class segy_bin_header {
 	void *obj;
 public:
@@ -34,6 +37,8 @@ public:
 	unsigned short	revisionNum();
 	unsigned short	fixedTraceLengthFlag();
 	unsigned short	numExtendedBlocks();
+
+	std::map<std::string, int> to_map();
 };
 
 #endif

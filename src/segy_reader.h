@@ -9,6 +9,14 @@
 #include "segy_bin_header.h"
 #include "segy_header_map.h"
 
+#ifdef PYTHON
+#include <pybind11/stl.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+
+namespace py = pybind11;
+#endif
+
 class segy_line_map {
 public:
 	std::vector<int> ilineStartTraces;
@@ -67,6 +75,12 @@ public:
 	std::vector<float> xline(int xl_num);
 
 	void determineSorting();
+
+#ifdef PYTHON
+	py::array_t<float> pyGetNextTrace();
+	py::array_t<float> pyIline(int il_num);
+	py::array_t<float> pyXline(int xl_num);
+#endif
 
 private:
 	void getLineFromSorted(int startTrace, int count, int offset, std::vector<float> &line);

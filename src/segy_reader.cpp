@@ -150,15 +150,18 @@ std::vector<float> segy_reader::iline(int il_num) {
 	int startTrace = (il_num - lineMap.il_start) * lineMap.il_offset;
 	int count = lineMap.xl_count;
 	int offset;
+	int buffer;
 
 	switch (sorting) {
 	case segy_sorting::iline:
 		offset = lineMap.xl_offset;
+		buffer = 1; // lineMap.xl_count;
 		break;
 	case segy_sorting::xline:
 		offset = lineMap.il_offset;
+		buffer = 1;
 		break;
-	case segy_sorting::unsorting:
+	case segy_sorting::unsorted:
 		throw std::exception("reading lines from unsorted .segy file still not inplemented.");
 		break;
 	case segy_sorting::unknown:
@@ -170,7 +173,7 @@ std::vector<float> segy_reader::iline(int il_num) {
 		break;
 	}
 
-	getLineFromSorted(startTrace, count, offset, res);
+	getLine(iline_trcs[il_num], buffer, res);
 	return res;
 }
 
@@ -187,16 +190,19 @@ std::vector<float> segy_reader::xline(int xl_num) {
 	int startTrace = (xl_num - lineMap.xl_start) * lineMap.xl_offset;
 	int count = lineMap.il_count;
 	int offset;
+	int buffer;
 
 	switch (sorting) {
 	case segy_sorting::iline:
 		offset = lineMap.il_offset;
+		buffer = 1;
 		break;
 
 	case segy_sorting::xline:
 		offset = lineMap.xl_offset;
+		buffer = 1; // lineMap.il_count;
 		break;
-	case segy_sorting::unsorting:
+	case segy_sorting::unsorted:
 		throw std::exception("reading lines from unsorted .segy file still not inplemented.");
 		break;
 	case segy_sorting::unknown:
@@ -208,15 +214,15 @@ std::vector<float> segy_reader::xline(int xl_num) {
 		break;
 	}
 
-	getLineFromSorted(startTrace, count, offset, res);
+	getLine(xline_trcs[xl_num], buffer, res);
 	return res;
 }
 
-void segy_reader::getLineFromSorted(int startTrace, int count, int offset, vector<float> &line) {
-	line.resize(count * samples_count);
-	//moveToTrace(startTrace, offset + 1);
-	for (int i = 0; i < count; ++i) {
-		moveToTrace(startTrace + i * offset, offset + 1);
+void segy_reader::getLine(const vector<int> &trcs, int trc_buffer, vector<float> &line) {
+	line.resize(trcs.size() * samples_count);
+	//moveToTrace(trcs[0], trc_buffer);
+	for (int i = 0; i < trcs.size(); ++i) {
+		moveToTrace(trcs[i], trc_buffer);
 		auto trace = nextTraceRef();
 		memcpy(&line[i * samples_count], trace, samples_count * sizeof(float));
 	}
@@ -248,119 +254,68 @@ void segy_reader::determineSorting() {
 	int hdrRowPos = hdrMap.contains("row");
 	int hdrColPos = hdrMap.contains("col");
 
-	moveToTrace(0, tracesCount());
-	nextTraceRef();
-
 	int il, il_prev;
 	int xl, xl_prev;
 
-	il_prev = headerValue<int>(hdrRowPos);
-	xl_prev = headerValue<int>(hdrColPos);
-
-	lineMap.il_start = il_prev;
-	lineMap.xl_start = xl_prev;
+	int il_min = numeric_limits<int>::max();
+	int xl_min = numeric_limits<int>::max();
+	int il_max = 0;
+	int xl_max = 0;
 
 	int il_count = 1;
 	int xl_count = 1;
 	int il_offset = 1;
 	int xl_offset = 1;
 
-	for (int i = 0; i < tracesCount(); ++i) {
+	moveToTrace(0, 1);
+	nextTraceRef();
+
+	il_prev = headerValue<int>(hdrRowPos);
+	xl_prev = headerValue<int>(hdrColPos);
+
+	iline_trcs[il_prev].push_back(0);
+	xline_trcs[xl_prev].push_back(0);
+
+	for (int i = 1; i < tracesCount(); ++i) {
 		nextTraceRef();
 
 		il = headerValue<int>(hdrRowPos);
 		xl = headerValue<int>(hdrColPos);
 
-		if (il_prev == il && xl_prev != xl) {
-			il_offset++;
+		iline_trcs[il].push_back(i);
+		xline_trcs[xl].push_back(i);
 
+		if (il < il_min)
+			il_min = il;
+		if (il > il_max)
+			il_max = il;
+		if (xl < xl_min)
+			xl_min = xl;
+		if (xl > xl_max)
+			xl_max = xl;
+
+		if (il_prev == il && xl_prev != xl) {
 			if (sorting == segy_sorting::unknown)
 				sorting = segy_sorting::iline;
 			else if (sorting == segy_sorting::xline) {
-				sorting = segy_sorting::unsorting;
-				break;
+				sorting = segy_sorting::unsorted;
 			}
-
-			xl_count++;
-			xl_offset = xl - xl_prev;
 		}
 
 		if (il_prev != il && xl_prev == xl) {
-			xl_offset++;
-
 			if (sorting == segy_sorting::unknown)
 				sorting = segy_sorting::xline;
 			else if (sorting == segy_sorting::iline) {
-				sorting = segy_sorting::unsorting;
-				break;
+				sorting = segy_sorting::unsorted;
 			}
-
-			il_count++;
-			il_offset = xl - xl_prev;
 		}
-
-		if (sorting == segy_sorting::iline)
-			if (il_prev != il) {
-				if (lineMap.xl_count == NOT_INDEX)
-					lineMap.xl_count = xl_count;
-				else if (lineMap.xl_count != xl_count) {
-					sorting = segy_sorting::unsorting;
-					break;
-				}
-				if (lineMap.xl_offset == NOT_INDEX)
-					lineMap.xl_offset = xl_offset;
-				else if (lineMap.xl_offset != xl_offset) {
-					sorting = segy_sorting::unsorting;
-					break;
-				}
-				if (lineMap.il_offset == NOT_INDEX)
-					lineMap.il_offset = il_offset;
-				else if (lineMap.il_offset != il_offset) {
-					sorting = segy_sorting::unsorting;
-					break;
-				}
-
-				il_count++;
-				xl_count = 1;
-				xl_offset = 1;
-				il_offset = 1;
-			}
-			else {}
-		else if (sorting == segy_sorting::xline)
-			if (xl_prev != xl) {
-				if (lineMap.il_count == NOT_INDEX)
-					lineMap.il_count = il_count;
-				else if (lineMap.il_count != il_count) {
-					sorting = segy_sorting::unsorting;
-					break;
-				}
-				if (lineMap.il_offset == NOT_INDEX)
-					lineMap.il_offset = il_offset;
-				else if (lineMap.il_offset != il_offset) {
-					sorting = segy_sorting::unsorting;
-					break;
-				}
-				if (lineMap.xl_offset == NOT_INDEX)
-					lineMap.xl_offset = xl_offset;
-				else if (lineMap.xl_offset != xl_offset) {
-					sorting = segy_sorting::unsorting;
-					break;
-				}
-
-				xl_count++;
-				il_count = 1;
-				il_offset = 1;
-				xl_offset = 1;
-			}
 
 		il_prev = il;
 		xl_prev = xl;
 	}
 
-	if (sorting == segy_sorting::iline)
-		lineMap.il_count = il_count;
-	else if (sorting == segy_sorting::xline)
-		lineMap.xl_count = xl_count;
+	lineMap.il_count = il_max - il_min;
+	lineMap.xl_count = xl_max - xl_min;
 }
 
 #ifdef PYTHON

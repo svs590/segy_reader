@@ -16,11 +16,11 @@ using namespace std::chrono;
 
 int main() {
 
-	string file = "D:/test/EE_1_2.sgy";
+	string file = "D:/Prirazl_Salym_Z_PH_DEC.sgy";
 
 	segy_reader reader(
 		file,
-		100,
+		1,
 		1110,
 		false,
 		false,
@@ -43,8 +43,8 @@ int main() {
 	cout << row_index << endl;
 	cout << col_index << endl;
 
-	//hdrMap.addHeader("row", 5, 4, 1, "");
-	//hdrMap.addHeader("col", 17, 4, 1, "");
+	hdrMap.addHeader("row", 8, 4, 1, "");
+	hdrMap.addHeader("col", 20, 4, 1, "");
 	int numHeaders = hdrMap.count();
 	cout << "num heders in map: " << numHeaders << endl;
 
@@ -62,26 +62,30 @@ int main() {
 	int n = reader.samplesCount();
 
 	auto start = system_clock::now();
-	reader.moveToTrace(0, reader.tracesCount());
-	for (int i = 0; i < reader.tracesCount(); ++i) {
-		reader.getNextTrace();
-	}
+	//reader.moveToTrace(0, reader.tracesCount());
+	//for (int i = 0; i < reader.tracesCount(); ++i) {
+	//	reader.getNextTrace();
+	//}
 	auto end = system_clock::now();
 
-	cout << "Пробег по всем трассам: " << duration_cast<seconds>(end - start).count() << endl;
+	//cout << "Пробег по всем трассам: " << duration_cast<seconds>(end - start).count() << endl;
 
+	start = system_clock::now();
 	cout << "Determine sorting..." << endl;
 	reader.determineSorting();
 	cout << "Done" << endl;
+	end = system_clock::now();
+	cout << "Sorting time: " << duration_cast<milliseconds>(end - start).count() << endl;
 
 	//system("pause");
 	std::vector<float> iline;
 
 	start = system_clock::now();
-	for (int i = 0; i < 100; ++i) {
-		//cout << i << endl;
-		iline = reader.iline(312 + i);
+	for (int i = 0; i < 1; ++i) {
+		cout << i << endl;
+		iline = reader.xline(312 + i);
 	}
+	//iline = reader.iline(16);
 	end = system_clock::now();
 	cout << "100 Line time: " << duration_cast<milliseconds>(end - start).count() << endl;
 

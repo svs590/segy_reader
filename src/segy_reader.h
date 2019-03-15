@@ -19,8 +19,11 @@ namespace py = pybind11;
 
 class segy_line_map {
 public:
-	std::vector<int> ilineStartTraces;
-	std::vector<int> xlineStartTraces;
+	std::map<int, std::pair<int, int>>	ilStartEndTrc;
+	std::map<int, int>					ilCountTrcs;
+	std::map<int, std::pair<int, int>>	xlStartEndTrc;
+	std::map<int, int>					xlCountTrcs;
+
 	int il_count;
 	int xl_count;
 	int il_offset;
@@ -33,9 +36,13 @@ class segy_reader {
 	int samples_count = NOT_INDEX;
 	void *obj;
 
-	enum class segy_sorting { iline, xline, unsorting, unknown };
+	enum class segy_sorting { iline, xline, unsorted, unknown };
 	segy_sorting sorting = segy_sorting::unknown;
 	segy_line_map lineMap;
+
+	std::map<int, std::vector<int>> iline_trcs;
+	std::map<int, std::vector<int>> xline_trcs;
+
 public:
 	segy_reader(const void *obj);
 	segy_reader(const segy_reader &obj);
@@ -83,7 +90,7 @@ public:
 #endif
 
 private:
-	void getLineFromSorted(int startTrace, int count, int offset, std::vector<float> &line);
+	void getLine(const std::vector<int> &trcs, int trc_buffer, std::vector<float> &line);
 };
 
 #endif

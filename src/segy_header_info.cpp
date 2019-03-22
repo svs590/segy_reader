@@ -17,42 +17,60 @@ DLLIMPORT void				cseis_csNativeSegyHeaderInfo_setByteSize(void *obj, int val);
 DLLIMPORT void				cseis_csNativeSegyHeaderInfo_setInType(void *obj, type_t val);
 DLLIMPORT void				cseis_csNativeSegyHeaderInfo_setOutType(void *obj, type_t val);
 
-segy_header_info::segy_header_info(const void *obj) {
+
+segy_traceheader_field::segy_traceheader_field(const void *obj) {
 	this->obj = const_cast<void*>(obj);
 }
-segy_header_info& segy_header_info::operator=(const void *obj) {
+
+segy_traceheader_field& segy_traceheader_field::operator=(const void *obj) {
 	this->obj = const_cast<void*>(obj);
 	return *this;
 }
 
-int segy_header_info::getByteLoc() {
+int segy_traceheader_field::byte_loc() {
 	return cseis_csNativeSegyHeaderInfo_getByteLoc(obj);
 }
-int segy_header_info::getByteSize() {
+
+int segy_traceheader_field::byte_size() {
 	return cseis_csNativeSegyHeaderInfo_getByteSize(obj);
 }
-string segy_header_info::getName() {
+
+string segy_traceheader_field::name() {
 	return string(cseis_csNativeSegyHeaderInfo_getName(obj));
 }
-string segy_header_info::getDescription() {
+
+string segy_traceheader_field::description() {
 	return string(cseis_csNativeSegyHeaderInfo_getDescription(obj));
 }
-type_t segy_header_info::getInType() {
-	return cseis_csNativeSegyHeaderInfo_getInType(obj);
-}
-type_t segy_header_info::getOutType() {
-	return cseis_csNativeSegyHeaderInfo_getOutType(obj);
+
+seismic_data_type segy_traceheader_field::type_in() {
+	return geolib_type_converter::convert<type_t, seismic_data_type>(
+			cseis_csNativeSegyHeaderInfo_getInType(obj)
+		);
 }
 
-void segy_header_info::setByteLoc(int byteLoc) {
+seismic_data_type segy_traceheader_field::type_out() {
+	return geolib_type_converter::convert<type_t, seismic_data_type>(
+			cseis_csNativeSegyHeaderInfo_getOutType(obj)
+		);
+}
+
+void segy_traceheader_field::set_byte_loc(int byteLoc) {
 	cseis_csNativeSegyHeaderInfo_setByteLoc(obj, byteLoc);
 }
-void segy_header_info::setByteSize(int byteSize) {
+
+void segy_traceheader_field::set_byte_size(int byteSize) {
 	cseis_csNativeSegyHeaderInfo_setByteSize(obj, byteSize);
 }
-void segy_header_info::setInType(type_t type) {
-	cseis_csNativeSegyHeaderInfo_setInType(obj, type);
+
+void segy_traceheader_field::set_type_in(seismic_data_type type) {
+	type_t geolibtype =
+		geolib_type_converter::convert<seismic_data_type, type_t>(type);
+	cseis_csNativeSegyHeaderInfo_setInType(obj, geolibtype);
 }
-void segy_header_info::setOutType(type_t type) {
-	cseis_csNativeSegyHeaderInfo_setOutType(obj, type);
+
+void segy_traceheader_field::set_type_out(seismic_data_type type) {
+	type_t geolibtype =
+		geolib_type_converter::convert<seismic_data_type, type_t>(type);
+	cseis_csNativeSegyHeaderInfo_setOutType(obj, geolibtype);
 }

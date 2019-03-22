@@ -33,8 +33,9 @@ print('\nDone')
 #Trace #300000
 reader.move(300000, 1000)
 trc = reader.get_trace()
-print(trc.shape)
-print(trc)
+header = trc.header
+print(header.to_dict())
+print(trc.data)
 
 
 #iline #370 plot

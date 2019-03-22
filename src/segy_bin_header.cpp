@@ -2,6 +2,7 @@
 #include "utils.h"
 
 #include <iostream>
+#include <iterator>
 
 using namespace std;
 
@@ -33,124 +34,222 @@ DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_revisionNum(const void *obj
 DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_fixedTraceLengthFlag(const void *obj);
 DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_numExtendedBlocks(const void *obj);
 
+
 segy_bin_header::segy_bin_header(const void *obj) {
 	this->obj = const_cast<void*>(obj);
+	initialize();
 }
+
 segy_bin_header& segy_bin_header::operator=(const void *obj) {
 	this->obj = const_cast<void*>(obj);
+	initialize();
 	return *this;
 }
+
 segy_bin_header::~segy_bin_header() {
 
 }
 
 int				segy_bin_header::jobID() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_jobID(obj);
 }
+
 int				segy_bin_header::lineNum() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_lineNum(obj);
 }
+
 int				segy_bin_header::reelNum() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_reelNum(obj);
 }
+
 int				segy_bin_header::numTraces() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_numTraces(obj);
 }
+
 int				segy_bin_header::numAuxTraces() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_numAuxTraces(obj);
 }
+
 int				segy_bin_header::sampleIntUS() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_sampleIntUS(obj);
 }
+
 int				segy_bin_header::sampleIntOrigUS() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_sampleIntOrigUS(obj);
 }
+
 int				segy_bin_header::numSamples() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_numSamples(obj);
 }
+
 int				segy_bin_header::numSamplesOrig() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_numSamplesOrig(obj);
 }
+
 unsigned short	segy_bin_header::dataSampleFormat() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_dataSampleFormat(obj);
 }
+
 unsigned short	segy_bin_header::fold() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_fold(obj);
 }
+
 unsigned short	segy_bin_header::sortCode() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_sortCode(obj);
 }
+
 unsigned short	segy_bin_header::vertSumCode() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_vertSumCode(obj);
 }
+
 unsigned short	segy_bin_header::sweepFreqStart() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_sweepFreqStart(obj);
 }
+
 unsigned short	segy_bin_header::sweepFreqEnd() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_sweepFreqEnd(obj);
 }
+
 unsigned short	segy_bin_header::sweepCode() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_sweepCode(obj);
 }
+
 unsigned short	segy_bin_header::taperType() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_taperType(obj);
 }
+
 unsigned short	segy_bin_header::correlatedTraces() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_correlatedTraces(obj);
 }
+
 unsigned short	segy_bin_header::gainRecovered() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_gainRecovered(obj);
 }
+
 unsigned short	segy_bin_header::ampRecoveryMethod() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_ampRecoveryMethod(obj);
 }
+
 unsigned short	segy_bin_header::unitSystem() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_unitSystem(obj);
 }
+
 unsigned short	segy_bin_header::polarity() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_polarity(obj);
 }
+
 unsigned short	segy_bin_header::vibPolarityCode() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_vibPolarityCode(obj);
 }
 unsigned short	segy_bin_header::revisionNum() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_revisionNum(obj);
 }
+
 unsigned short	segy_bin_header::fixedTraceLengthFlag() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_fixedTraceLengthFlag(obj);
 }
+
 unsigned short	segy_bin_header::numExtendedBlocks() {
+	if (obj == nullptr)
+		throw runtime_error("Object segy_bin_header is not initialized");
 	return cseis_csNativeSegyBinHeader_numExtendedBlocks(obj);
 }
 
+pair<string, int> segy_bin_header::get(int index) {
+	return fields[index];
+}
+
+int segy_bin_header::index_of(const string &name) {
+	for (int i = 0; i < fields.size(); ++i)
+		if (fields[i].first == name)
+			return i;
+	return NOT_INDEX;
+}
+
 map<string, int> segy_bin_header::to_map() {
-	return {
-		{"job ID",				jobID()},
-		{"job ID",				jobID()},
-		{"line Num", 			lineNum()},
+	map<string, int> res;
+	copy(fields.begin(), fields.end(),
+		inserter(res, res.begin()));
+}
+
+void segy_bin_header::initialize() {
+	fields = {
+		{"job ID",					jobID()},
+		{"job ID",					jobID()},
+		{"line Num", 				lineNum()},
 		{"reel Num",				reelNum()},
-		{"num Traces", 			numTraces()},
-		{"num Aux Traces", 		numAuxTraces()},
+		{"num Traces", 				numTraces()},
+		{"num Aux Traces", 			numAuxTraces()},
 		{"sample Interval US", 		sampleIntUS()},
-		{"sample Interval Orig US",		sampleIntOrigUS()},
+		{"sample Interval Orig US",	sampleIntOrigUS()},
 		{"num Samples", 			numSamples()},
 		{"num Samples Orig", 		numSamplesOrig()},
-		{"data Sample Format",    dataSampleFormat()},
-		{"fold", 				fold()},
-		{"sort Code", 			sortCode()},
-		{"vert Sum Code", 		vertSumCode()},
+		{"data Sample Format",		dataSampleFormat()},
+		{"fold", 					fold()},
+		{"sort Code", 				sortCode()},
+		{"vert Sum Code", 			vertSumCode()},
 		{"sweep FreqStart", 		sweepFreqStart()},
-		{"sweep Freq End", 		sweepFreqEnd()},
-		{"sweep Code", 			sweepCode()},
-		{"taper Type", 			taperType()},
-		{"correlated Traces",	correlatedTraces()},
-		{"gain Recovered",		gainRecovered()},
-		{"amp Recovery Method",   ampRecoveryMethod()},
+		{"sweep Freq End", 			sweepFreqEnd()},
+		{"sweep Code", 				sweepCode()},
+		{"taper Type", 				taperType()},
+		{"correlated Traces",		correlatedTraces()},
+		{"gain Recovered",			gainRecovered()},
+		{"amp Recovery Method",		ampRecoveryMethod()},
 		{"unit System", 			unitSystem()},
-		{"polarity ", 			polarity()},
+		{"polarity ", 				polarity()},
 		{"vib Polarity Code",		vibPolarityCode()},
-		{"revision Num", 		revisionNum()},
+		{"revision Num", 			revisionNum()},
 		{"fixed Trace Length Flag", fixedTraceLengthFlag()},
-		{"num Extended Blocks",   numExtendedBlocks()}
+		{"num Extended Blocks",		numExtendedBlocks()}
 	};
 }

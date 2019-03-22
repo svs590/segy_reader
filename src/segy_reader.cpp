@@ -37,9 +37,12 @@ DLLIMPORT const float *		cseis_csSegyReader_1getNextTrace(void *obj);
 DLLIMPORT const void * const cseis_csSegyReader_getTrcHdrMap(void *obj);
 DLLIMPORT void				cseis_csNativeSegyReader_charBinHeader(void *obj, char *buf);
 DLLIMPORT bool				cseis_csSegyReader_2moveToTrace(void *obj, int firstTraceIndex);
+DLLIMPORT const void*const	cseis_csNativeSegyReader_getTraceHeader(void *obj);
+DLLIMPORT const char*		cseis_csNativeSegyReader_getFileName(void *obj);
 
 segy_reader::segy_reader(const void *obj) {
 	this->obj = const_cast<void*>(obj);
+	filename = std::string(cseis_csNativeSegyReader_getFileName(this->obj));
 }
 
 segy_reader::segy_reader(const segy_reader &obj) {
@@ -52,7 +55,7 @@ segy_reader::~segy_reader() {
 
 segy_reader& segy_reader::operator=(const void *obj) {
 	this->obj = const_cast<void*>(obj);
-	samples_count = NOT_INDEX;
+	f_samples_count = NOT_INDEX;
 	return *this;
 }
 
@@ -63,7 +66,8 @@ segy_reader::segy_reader(
 	bool reverseByteOrderData_in,
 	bool reverseByteOrderHdr_in,
 	bool autoscale_hdrs_in
-) {
+) : seismic_data_provider(filename_in) {
+
 	obj = cseis_csNativeSegyReader_createInstance(
 		filename_in.c_str(),
 		nTracesBuffer,
@@ -74,28 +78,36 @@ segy_reader::segy_reader(
 	);
 }
 
-void segy_reader::closeFile() {
+void segy_reader::close() {
 	cseis_csNativeSegyReader_closeFile(obj);
 }
+
 int segy_reader::sampleByteSize() {
 	return cseis_SegyReader_sampleByteSize(obj);
 }
-int segy_reader::tracesCount() {
+
+int segy_reader::traces_count() {
 	return cseis_SegyReader_numTraces(obj);
 }
-int segy_reader::samplesCount() {
-	if (samples_count == NOT_INDEX)
-		samples_count = cseis_SegyReader_numSamples(obj);
-	return samples_count;
+
+int segy_reader::samples_count() {
+	if (f_samples_count == NOT_INDEX)
+		f_samples_count = cseis_SegyReader_numSamples(obj);
+	return f_samples_count;
 }
+
 int segy_reader::headersCount() {
 	return cseis_SegyReader_numHeaders(obj);
 }
-float segy_reader::sampleInterval() {
+
+float segy_reader::sample_interval() {
 	return cseis_SegyReader_sampleInterval(obj);
 }
-segy_bin_header segy_reader::binHeader() {
-	return cseis_SegyReader_binHeader(obj);
+
+shared_ptr<seismic_abstract_header> segy_reader::bin_header() {
+	return shared_ptr<seismic_abstract_header>(
+			new segy_bin_header(cseis_SegyReader_binHeader(obj))
+		);
 }
 
 void segy_reader::moveToTrace(int firstTraceIndex, int numTracesToRead) {
@@ -111,25 +123,40 @@ void segy_reader::moveToTrace(int firstTraceIndex) {
 const float *segy_reader::nextTraceRef() {
 	return cseis_csSegyReader_1getNextTrace(obj);
 }
+
 std::vector<float> segy_reader::getNextTrace() {
 	const float *nativeTrace = nextTraceRef();
 	if (nativeTrace == nullptr)
 		return {};
 
-	samplesCount();
-	std::vector<float> trace(samples_count);
-	std::memcpy((void*)trace.data(), (void*)nativeTrace, samples_count * sizeof(float));
+	samples_count();
+	std::vector<float> trace(f_samples_count);
+	std::memcpy((void*)trace.data(), (void*)nativeTrace, f_samples_count * sizeof(float));
 	return trace;
 }
-std::vector<float> segy_reader::getTrace(int index) {
+
+std::vector<float> segy_reader::get_trace_data(int index) {
 	moveToTrace(index, 1);
 	return getNextTrace();
 }
 
-segy_header_map segy_reader::traceHeaderMap() {
-	return cseis_csSegyReader_getTrcHdrMap(obj);
+shared_ptr<seismic_trace> segy_reader::get_trace(int index) {
+	//TODO: Для оптимизации необходимо определять, что лучше: move или read в зависимости от размера прыжка.
+	moveToTrace(index, 1);
+	return shared_ptr<segy_trace>(
+		new segy_trace(
+			segy_trace_header(cseis_csNativeSegyReader_getTraceHeader(obj)),
+			getNextTrace()
+			)
+		);
 }
-string segy_reader::charBinHeader() {
+
+shared_ptr<seismic_header_map> segy_reader::header_map() {
+	return shared_ptr<seismic_header_map>(
+			new segy_header_map(cseis_csSegyReader_getTrcHdrMap(obj))
+		);
+}
+string segy_reader::text_header() {
 	char *buf = new char[csSegyHeader::SIZE_CHARHDR];
 	cseis_csNativeSegyReader_charBinHeader(obj, buf);
 	auto res = string(buf);
@@ -137,35 +164,47 @@ string segy_reader::charBinHeader() {
 	return res;
 }
 
-std::vector<float> segy_reader::iline(int il_num) {
+shared_ptr<seismic_trace_header> segy_reader::trace_header(int index) {
+	moveToTrace(index);
+	nextTraceRef();
+	return current_trace_header();
+}
+
+shared_ptr<seismic_trace_header> segy_reader::current_trace_header() {
+	return shared_ptr<seismic_trace_header>(
+		new segy_trace_header(cseis_csNativeSegyReader_getTraceHeader(obj))
+		);
+}
+
+std::vector<segy_trace> segy_reader::iline(int il_num) {
 	if (sorting != segy_sorting::unknown)
-		if (!(il_num >= lineMap.il_start) ||
-			!(il_num < lineMap.il_start + lineMap.il_count))
+		if (!(il_num >= geometry.il_start) ||
+			!(il_num < geometry.il_start + geometry.il_count))
 			throw std::invalid_argument("invalid iline number.");
 
-	samplesCount();
+	samples_count();
 
-	std::vector<float> res;
+	vector<segy_trace> res;
 
-	int startTrace = (il_num - lineMap.il_start) * lineMap.il_offset;
-	int count = lineMap.xl_count;
+	int startTrace = (il_num - geometry.il_start) * geometry.il_offset;
+	int count = geometry.xl_count;
 	int offset;
 	int buffer;
 
 	switch (sorting) {
 	case segy_sorting::iline:
-		offset = lineMap.xl_offset;
+		offset = geometry.xl_offset;
 		buffer = 1; // lineMap.xl_count;
 		break;
 	case segy_sorting::xline:
-		offset = lineMap.il_offset;
+		offset = geometry.il_offset;
 		buffer = 1;
 		break;
 	case segy_sorting::unsorted:
 		throw std::exception("reading lines from unsorted .segy file still not inplemented.");
 		break;
 	case segy_sorting::unknown:
-		determineSorting();
+		preprocessing();
 		res = iline(il_num);
 		break;
 	default:
@@ -177,36 +216,36 @@ std::vector<float> segy_reader::iline(int il_num) {
 	return res;
 }
 
-std::vector<float> segy_reader::xline(int xl_num) {
+std::vector<segy_trace> segy_reader::xline(int xl_num) {
 	if (sorting != segy_sorting::unknown)
-		if (!(xl_num >= lineMap.xl_start) ||
-			!(xl_num < lineMap.xl_start + lineMap.xl_count))
+		if (!(xl_num >= geometry.xl_start) ||
+			!(xl_num < geometry.xl_start + geometry.xl_count))
 			throw std::invalid_argument("invalid xline number.");
 
-	samplesCount();
+	samples_count();
 
-	std::vector<float> res;
+	vector<segy_trace> res;
 
-	int startTrace = (xl_num - lineMap.xl_start) * lineMap.xl_offset;
-	int count = lineMap.il_count;
+	int startTrace = (xl_num - geometry.xl_start) * geometry.xl_offset;
+	int count = geometry.il_count;
 	int offset;
 	int buffer;
 
 	switch (sorting) {
 	case segy_sorting::iline:
-		offset = lineMap.il_offset;
+		offset = geometry.il_offset;
 		buffer = 1;
 		break;
 
 	case segy_sorting::xline:
-		offset = lineMap.xl_offset;
+		offset = geometry.xl_offset;
 		buffer = 1; // lineMap.il_count;
 		break;
 	case segy_sorting::unsorted:
 		throw std::exception("reading lines from unsorted .segy file still not inplemented.");
 		break;
 	case segy_sorting::unknown:
-		determineSorting();
+		preprocessing();
 		res = xline(xl_num);
 		break;
 	default:
@@ -218,13 +257,18 @@ std::vector<float> segy_reader::xline(int xl_num) {
 	return res;
 }
 
-void segy_reader::getLine(const vector<int> &trcs, int trc_buffer, vector<float> &line) {
-	line.resize(trcs.size() * samples_count);
+void segy_reader::getLine(const vector<int> &trcs, int trc_buffer, std::vector<segy_trace> &line) {
+	line.resize(trcs.size());
 	//moveToTrace(trcs[0], trc_buffer);
 	for (int i = 0; i < trcs.size(); ++i) {
 		moveToTrace(trcs[i], trc_buffer);
 		auto trace = nextTraceRef();
-		memcpy(&line[i * samples_count], trace, samples_count * sizeof(float));
+		auto header = current_trace_header();
+		line[i] = segy_trace(
+			shared_ptr<segy_trace_header>(static_cast<segy_trace_header*>(header.get())),
+			samples_count(), 
+			trace
+		);
 	}
 }
 
@@ -241,18 +285,18 @@ double segy_reader::headerValue(int index) {
 	return cseis_csSegyReader_1hdrDoubleValue(obj, index);
 }
 
-void segy_reader::determineSorting() {
+void segy_reader::preprocessing() {
 	if (sorting != segy_sorting::unknown)
 		return;
 
-	lineMap.il_count = NOT_INDEX;
-	lineMap.xl_count = NOT_INDEX;
-	lineMap.il_offset = NOT_INDEX;
-	lineMap.xl_offset = NOT_INDEX;
+	geometry.il_count = NOT_INDEX;
+	geometry.xl_count = NOT_INDEX;
+	geometry.il_offset = NOT_INDEX;
+	geometry.xl_offset = NOT_INDEX;
 
-	segy_header_map hdrMap = traceHeaderMap();
-	int hdrRowPos = hdrMap.contains("row");
-	int hdrColPos = hdrMap.contains("col");
+	auto header_map_p = dynamic_pointer_cast<segy_header_map>(header_map());
+	int hdrRowPos = header_map_p->contains("row");
+	int hdrColPos = header_map_p->contains("col");
 
 	int il, il_prev;
 	int xl, xl_prev;
@@ -276,7 +320,7 @@ void segy_reader::determineSorting() {
 	iline_trcs[il_prev].push_back(0);
 	xline_trcs[xl_prev].push_back(0);
 
-	for (int i = 1; i < tracesCount(); ++i) {
+	for (int i = 1; i < traces_count(); ++i) {
 		nextTraceRef();
 
 		il = headerValue<int>(hdrRowPos);
@@ -314,8 +358,26 @@ void segy_reader::determineSorting() {
 		xl_prev = xl;
 	}
 
-	lineMap.il_count = il_max - il_min;
-	lineMap.xl_count = xl_max - xl_min;
+	geometry.il_start = il_min;
+	geometry.xl_start = xl_min;
+	geometry.il_count = il_max - il_min;
+	geometry.xl_count = xl_max - xl_min;
+}
+
+segy_line::segy_line(
+	int il_index,
+	int xl_index,
+	int cdpx_index,
+	int cdpy_index,
+	int srcx_index,
+	int srcy_index
+) {
+	this->il_index		= il_index;
+	this->xl_index		= xl_index;
+	this->cdpx_index	= cdpx_index;
+	this->cdpy_index	= cdpy_index;
+	this->srcx_index	= srcx_index;
+	this->srcy_index	= srcy_index;
 }
 
 #ifdef PYTHON
@@ -325,37 +387,12 @@ void vector_to_numpy(vector<float> &x, py::array_t<float> y) {
 	memcpy((void*)y.data(), (void*)x.data(), x.size() * sizeof(float));
 }
 
-py::array_t<float> segy_reader::pyGetNextTrace() {
-	py::array_t<float> trace;
-
+segy_trace segy_reader::py_get_trace() {
 	const float *nativeTrace = nextTraceRef();
-	if (nativeTrace == nullptr)
-		return trace;
-
+	
 	samplesCount();
-	trace.resize({ samples_count });
-	std::memcpy((void*)trace.data(), (void*)nativeTrace, samples_count * sizeof(float));
-	return trace;
-}
 
-py::array_t<float> segy_reader::pyIline(int il_num) {
-	py::array_t<float> line;
-	auto il = iline(il_num);
-
-	vector_to_numpy(il, line);
-	line.resize({ lineMap.xl_count, samples_count });
-
-	return line;
-}
-
-py::array_t<float> segy_reader::pyXline(int xl_num) {
-	py::array_t<float> line;
-	auto xl = xline(xl_num);
-
-	vector_to_numpy(xl, line);
-	line.resize({ lineMap.il_count, samples_count });
-
-	return line;
+	return segy_trace(trace_header(), samples_count, nativeTrace);
 }
 
 #endif

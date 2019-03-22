@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -131,6 +131,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>csCAPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -148,6 +149,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>csCAPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -167,6 +169,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(PYTHON_PATH)include;..\lib\pybind11\include;..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PYTHON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -188,6 +191,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -209,6 +213,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(PYTHON_PATH)include;..\lib\pybind11\include;..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PYTHON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -230,6 +235,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -242,10 +248,21 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\data_types.h" />
+    <ClInclude Include="..\src\obj_base.h" />
     <ClInclude Include="..\src\segy_bin_header.h" />
     <ClInclude Include="..\src\segy_header_info.h" />
     <ClInclude Include="..\src\segy_header_map.h" />
     <ClInclude Include="..\src\segy_reader.h" />
+    <ClInclude Include="..\src\segy_trace.h" />
+    <ClInclude Include="..\src\segy_trace_header.h" />
+    <ClInclude Include="..\src\seismic_cube.h" />
+    <ClInclude Include="..\src\seismic_data_provider.h" />
+    <ClInclude Include="..\src\seismic_abstract_header.h" />
+    <ClInclude Include="..\src\seismic_header_field.h" />
+    <ClInclude Include="..\src\seismic_header_map.h" />
+    <ClInclude Include="..\src\seismic_trace.h" />
+    <ClInclude Include="..\src\seismic_trace_header.h" />
     <ClInclude Include="..\src\utils.h" />
   </ItemGroup>
   <ItemGroup>
@@ -254,6 +271,8 @@
     <ClCompile Include="..\src\segy_header_info.cpp" />
     <ClCompile Include="..\src\segy_header_map.cpp" />
     <ClCompile Include="..\src\segy_reader.cpp" />
+    <ClCompile Include="..\src\segy_trace.cpp" />
+    <ClCompile Include="..\src\segy_trace_header.cpp" />
     <ClCompile Include="..\src\test.cpp" />
     <ClCompile Include="..\src\utils.cpp" />
   </ItemGroup>

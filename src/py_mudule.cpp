@@ -6,6 +6,8 @@
 
 
 #include "segy_reader.h"
+#include "segy_trace.h"
+#include "segy_trace_header.h"
 #include "utils.h"
 
 using namespace pybind11::literals;
@@ -34,11 +36,11 @@ PYBIND11_MODULE(segy_reader, m)
 		.def_property_readonly("header_map", &segy_reader::traceHeaderMap)
 		.def_property_readonly("bin_header", &segy_reader::binHeader)
 		.def_property_readonly("header_val", &segy_reader::headerValue<float>)
-		.def("sort", &segy_reader::determineSorting)
+		.def("sort", &segy_reader::preprocessing)
 		.def("move", (void (segy_reader::*)(int,int))&segy_reader::moveToTrace)
-		.def("get_trace", &segy_reader::pyGetNextTrace)
-		.def("iline", &segy_reader::pyIline)
-		.def("xline", &segy_reader::pyXline);
+		.def("get_trace", &segy_reader::py_get_trace)
+		.def("iline", &segy_reader::iline)
+		.def("xline", &segy_reader::xline);
 
 	py::class_<segy_bin_header>(m, "segy_bin_header")
 		.def_property_readonly("job_id", &segy_bin_header::jobID)
@@ -82,8 +84,8 @@ PYBIND11_MODULE(segy_reader, m)
 		.def("index_of", &segy_header_map::getIndexOf)
 		.def("contains", &segy_header_map::contains)
 		.def("index_of", &segy_header_map::getIndexOf)
-		.def("header_info", (segy_header_info(segy_header_map::*)(int))&segy_header_map::headerInfo)
-		.def("header_info", (segy_header_info(segy_header_map::*)(string))&segy_header_map::headerInfo)
+		.def("header_info", (segy_traceheader_field(segy_header_map::*)(int))&segy_header_map::headerInfo)
+		.def("header_info", (segy_traceheader_field(segy_header_map::*)(string))&segy_header_map::headerInfo)
 		.def("count", &segy_header_map::count)
 		.def("map_id", &segy_header_map::mapId)
 		.def("to_dict", [](segy_header_map &obj) {
@@ -100,6 +102,50 @@ PYBIND11_MODULE(segy_reader, m)
 			return res;
 		});
 
+	py::class_<segy_trace_header>(m, "segy_trace_header")
+		.def(py::init<>())
+		.def_property_readonly("count", &segy_trace_header::count,
+			"Count of fields in current header"
+		)
+		.def("description", &segy_trace_header::description,
+			py::arg("field_index"),
+			"Field description"
+		)
+		.def("name", &segy_trace_header::name,
+			py::arg("field_index"),
+			"Field name"
+			)
+		.def("index_of", &segy_trace_header::index_of,
+			py::arg("field_name"),
+			"Index of field with name=field_name"
+		)
+		.def("type", &segy_trace_header::type,
+			py::arg("field_index"),
+			"Value type for field"
+		)
+		.def("get_i", &segy_trace_header::get<int>,
+			py::arg("field_index"),
+			"Get int value of field"
+		)
+		.def("get_d", &segy_trace_header::get<double>,
+			py::arg("field_index"),
+			"Get double value of field"
+		)
+		.def("to_dict", &segy_trace_header::to_dict);
+
+	py::class_<segy_trace>(m, "segy_trace")
+		.def(py::init<const segy_trace_header &, const std::vector<float> &>(),
+			py::arg("trace_header"), py::arg("trace_data")
+		)
+		.def(py::init<const segy_trace &>(),
+			py::arg("trace")
+		)
+		.def_property("data", &segy_trace::get_data, &segy_trace::set_data,
+			"Trace data array"
+		)
+		.def_property("header", &segy_trace::get_header, &segy_trace::set_header,
+			"Trace header"
+		);
 }
 
 #endif

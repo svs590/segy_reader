@@ -13,37 +13,76 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Файлы заголовков\base">
+      <UniqueIdentifier>{7266e1b9-0f22-4ec2-b4cb-ee747c5c3f0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\segy">
+      <UniqueIdentifier>{28d2b51c-55ac-4de9-8591-f4ac9f3ca178}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\utils">
+      <UniqueIdentifier>{3b534a7a-3404-437c-8476-236372974601}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\base">
+      <UniqueIdentifier>{5f8dfa3c-be14-48a9-b297-cd3160d0c779}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\utils">
+      <UniqueIdentifier>{50ac9d42-2525-4865-a779-41ee611bbc71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\segy">
+      <UniqueIdentifier>{0a84c777-aba5-4b2f-b73a-254a83042074}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\segy_reader.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="..\src\obj_base.h">
+      <Filter>Файлы заголовков\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="..\src\segy_reader.h">
+      <Filter>Файлы заголовков\segy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\seismic_abstract_header.h">
+      <Filter>Файлы заголовков\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\seismic_cube.h">
+      <Filter>Файлы заголовков\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\seismic_data_provider.h">
+      <Filter>Файлы заголовков\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\seismic_header_field.h">
+      <Filter>Файлы заголовков\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\seismic_header_map.h">
+      <Filter>Файлы заголовков\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\seismic_trace_header.h">
+      <Filter>Файлы заголовков\base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\segy_bin_header.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\segy_header_map.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>Файлы заголовков\segy</Filter>
     </ClInclude>
     <ClInclude Include="..\src\segy_header_info.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>Файлы заголовков\segy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\segy_header_map.h">
+      <Filter>Файлы заголовков\segy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\segy_trace.h">
+      <Filter>Файлы заголовков\segy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\segy_trace_header.h">
+      <Filter>Файлы заголовков\segy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\data_types.h">
+      <Filter>Файлы заголовков\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils.h">
+      <Filter>Файлы заголовков\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\seismic_trace.h">
+      <Filter>Файлы заголовков\base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\segy_reader.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\segy_bin_header.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\segy_header_map.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\segy_header_info.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\test.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -51,7 +90,25 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils.cpp">
-      <Filter>Исходные файлы</Filter>
+      <Filter>Исходные файлы\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\segy_bin_header.cpp">
+      <Filter>Исходные файлы\segy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\segy_header_info.cpp">
+      <Filter>Исходные файлы\segy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\segy_header_map.cpp">
+      <Filter>Исходные файлы\segy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\segy_reader.cpp">
+      <Filter>Исходные файлы\segy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\segy_trace.cpp">
+      <Filter>Исходные файлы\segy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\segy_trace_header.cpp">
+      <Filter>Исходные файлы\segy</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

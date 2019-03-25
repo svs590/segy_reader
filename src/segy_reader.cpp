@@ -265,7 +265,7 @@ void segy_reader::getLine(const vector<int> &trcs, int trc_buffer, std::vector<s
 		auto trace = nextTraceRef();
 		auto header = current_trace_header();
 		line[i] = segy_trace(
-			shared_ptr<segy_trace_header>(static_cast<segy_trace_header*>(header.get())),
+			dynamic_pointer_cast<segy_trace_header>(header),
 			samples_count(), 
 			trace
 		);
@@ -360,8 +360,8 @@ void segy_reader::preprocessing() {
 
 	geometry.il_start = il_min;
 	geometry.xl_start = xl_min;
-	geometry.il_count = il_max - il_min;
-	geometry.xl_count = xl_max - xl_min;
+	geometry.il_count = il_max - il_min + 1;
+	geometry.xl_count = xl_max - xl_min + 1;
 }
 
 segy_line::segy_line(

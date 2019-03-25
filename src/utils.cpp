@@ -105,17 +105,3 @@ cseis_geolib::type_t geolib_type_converter::convert(seismic_data_type type) {
 		break;
 	}
 }
-
-typemap = {
-	{}
-}
-
-void smatr_any_cast(std::any a, void *buffer) {
-	switch (a.type().hash_code())
-	{
-		case 
-	default:
-		break;
-	}
-	a.type()
-}

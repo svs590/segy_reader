@@ -220,6 +220,7 @@ map<string, int> segy_bin_header::to_map() {
 	map<string, int> res;
 	copy(fields.begin(), fields.end(),
 		inserter(res, res.begin()));
+	return res;
 }
 
 void segy_bin_header::initialize() {

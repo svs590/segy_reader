@@ -10,6 +10,7 @@
 #include "segy_bin_header.h"
 #include "segy_header_map.h"
 #include "segy_trace.h"
+#include "seismic_geometry.h"
 
 #ifdef PYTHON
 #include <pybind11/stl.h>
@@ -19,61 +20,12 @@
 namespace py = pybind11;
 #endif
 
-class segy_line {
-public:
-	segy_line(
-		int il_index,
-		int xl_index,
-		int cdpx_index,
-		int cdpy_index,
-		int srcx_index,
-		int srcy_index
-	);
-
-	std::vector<int> traces;
-
-	std::vector<segy_traceheader_field> trace_headers;
-	
-	std::pair<double, double> start_coord;
-	std::pair<double, double> end_coord;
-
-	std::vector<segy_trace> get();
-	std::vector<segy_trace> get(
-		std::pair<double, double> start_point,
-		std::pair<double, double> end_point
-	);
-	
-private:
-	// Индексы полей в заголовках трасс
-	int il_index;
-	int xl_index;
-	int cdpx_index;
-	int cdpy_index;
-	int srcx_index;
-	int srcy_index;
-};
-
-class segy_cube_geometry {
-public:
-	int il_count;
-	int xl_count;
-	int il_offset;
-	int xl_offset;
-	int il_start;
-	int xl_start;
-};
 
 class segy_reader : public seismic_data_provider {
 	int f_samples_count = NOT_INDEX;
 	void *obj;
-
-	enum class segy_sorting { iline, xline, unsorted, unknown };
-	segy_sorting sorting = segy_sorting::unknown;
-	segy_cube_geometry geometry;
-
-	std::map<int, std::vector<int>> iline_trcs;
-	std::map<int, std::vector<int>> xline_trcs;
-
+	bool processed = false;
+	
 public:
 	segy_reader(const void *obj);
 	segy_reader(const segy_reader &obj);
@@ -99,6 +51,10 @@ public:
 	virtual std::shared_ptr<seismic_trace_header> trace_header(int index);
 	virtual std::shared_ptr<seismic_trace> get_trace(int index);
 
+	virtual std::shared_ptr<seismic_geometry_info> get_geometry() { return geometry; }
+
+	virtual std::vector<seismic_trace> get_traces(seismic_line_info line);
+
 	std::shared_ptr<seismic_trace_header> current_trace_header();
 
 	int sampleByteSize();
@@ -114,7 +70,7 @@ public:
 
 	std::vector<float> get_trace_data(int index);
 
-	std::vector<segy_trace> iline(int il_num);
+	std::vector<segy_trace> iline(seismic_line_info line);
 	std::vector<segy_trace> xline(int xl_num);
 
 	virtual void preprocessing();
@@ -126,7 +82,15 @@ public:
 #endif
 
 private:
-	void getLine(const std::vector<int> &trcs, int trc_buffer, std::vector<segy_trace> &line);
+	void get_traces(const std::vector<int> &trcs, int trc_buffer, std::vector<segy_trace> &seismic_line_info);
+	void get_traces(int start_trace, int end_trace, std::vector<segy_trace> &line);
+	void line_processing(std::map<int, seismic_line_info> &line, 
+		seismic_line_info::seismic_line_type type,
+		std::string name_prefix, 
+		int line_no,
+		int trace_no, 
+		std::pair<float, float> point
+	);
 };
 
 #endif

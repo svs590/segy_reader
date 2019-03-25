@@ -9,11 +9,13 @@
 #include "seismic_header_map.h"
 #include "seismic_abstract_header.h"
 #include "seismic_trace_header.h"
-
+#include "seismic_geometry.h"
 
 class seismic_data_provider : public obj_base {
 protected:
 	std::string filename;
+	std::vector<std::shared_ptr<seismic_trace_header>> headers;
+	std::shared_ptr<seismic_geometry_info> geometry;
 
 public:
 	seismic_data_provider(const std::string &filename_in) {
@@ -30,9 +32,10 @@ public:
 
 	virtual void preprocessing() = 0;
 
-	// get_geometry
-	// get_traces(ilineno)
-	// get_traces(xlineno)
+	virtual std::shared_ptr<seismic_geometry_info> get_geometry() = 0;
+
+	virtual std::vector<seismic_trace> get_traces(seismic_line_info line) = 0;
+	// get_headers(line)
 	// get_traces(points) (interpolation)
 
 	virtual void close() = 0;

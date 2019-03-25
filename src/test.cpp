@@ -16,7 +16,7 @@ using namespace std::chrono;
 
 int main() {
 
-	string file = "F:/cdpgathers_2-80.sgy";
+	string file = "D:/FullStack_PSTM.segy";
 
 	auto reader = shared_ptr<seismic_data_provider>(
 			new segy_reader(
@@ -50,13 +50,13 @@ int main() {
 	cout << "num heders in map: " << numHeaders << endl;
 	cout << "traces count: " << reader->traces_count() << endl;
 
-	//for (int i = 0; i < numHeaders; ++i) {
-	//	segy_traceheader_field headerInfo = hdrMap.headerInfo(i);
-	//	cout << headerInfo.getName() << '\t'
-	//		<< headerInfo.getByteLoc() << '\t'
-	//		<< headerInfo.getByteSize() << '\t'
-	//		<< (int)headerInfo.getInType() << endl;
-	//}
+	for (int i = 0; i < numHeaders; ++i) {
+		auto headerInfo = hdrMap->get_field(i);
+		cout << headerInfo->name() << '\t'
+			<< headerInfo->byte_loc() << '\t'
+			<< headerInfo->byte_size() << '\t'
+			<< (int)headerInfo->type_out() << endl;
+	}
 
 	//cout << reader.tracesCount() << endl;
 	//cout << reader.headersCount() << endl;
@@ -73,11 +73,11 @@ int main() {
 	////cout << "Пробег по всем трассам: " << duration_cast<seconds>(end - start).count() << endl;
 
 	start = system_clock::now();
-	cout << "Determine sorting..." << endl;
+	cout << "Preprocessing..." << endl;
 	reader->preprocessing();
 	cout << "Done" << endl;
 	end = system_clock::now();
-	cout << "Sorting time: " << duration_cast<milliseconds>(end - start).count() << endl;
+	cout << "Preprocessing time: " << duration_cast<milliseconds>(end - start).count() << endl;
 
 	//system("pause");
 	std::vector<segy_trace> iline;
@@ -86,13 +86,13 @@ int main() {
 	start = system_clock::now();
 	//for (int i = 0; i < 100; ++i) {
 	//	cout << i << endl;
-		iline = segyreader->iline(65536);
+	//	iline = segyreader->iline(312);
 	//}
 	//iline = reader.iline(16);
 	end = system_clock::now();
 	cout << "100 Line time: " << duration_cast<milliseconds>(end - start).count() << endl;
 
-	ofstream ilinefile("iline.dat");
+	/*ofstream ilinefile("iline.dat");
 	for (int i = 0; i < iline.size(); ++i) {
 		int x = i;
 		for (int j = 0; j < iline[i].get_data().size(); ++j) {
@@ -100,7 +100,7 @@ int main() {
 			ilinefile << x << '\t' << y << '\t' << iline[i].get_data()[j] << endl;
 		}
 	}
-	ilinefile.close();
+	ilinefile.close();*/
 	
 	auto t = reader->get_trace(100000);
 	auto th = t->get_header();

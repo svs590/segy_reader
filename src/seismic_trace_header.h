@@ -3,6 +3,7 @@
 
 #include <string>
 #include <any>
+#include <map>
 
 #ifdef PYTHON
 #include <pybind11/pybind11.h>
@@ -27,9 +28,21 @@ public:
 	virtual int						byte_loc(int index) const = 0;
 	virtual int						byte_pos(int index) const = 0;
 
+	virtual std::map<std::string, std::pair<std::any, seismic_data_type>> to_map() {
+		std::map<std::string, std::pair<std::any, seismic_data_type>> res;
+		for (int i = 0; i < count(); ++i) {
+			std::string f_name = name(i);
+			res[f_name] = get(i);
+		}
+		return res;
+	}
+
 #ifdef PYTHON
-	virtual std::map<std::string, py::object> to_dict();
+	std::map<std::string, py::object> to_dict();
 #endif
 };
+
+//std::map<std::string, std::pair<std::any, seismic_data_type>> 
+//seismic_trace_header::to_map()
 
 #endif

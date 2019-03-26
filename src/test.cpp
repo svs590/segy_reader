@@ -58,49 +58,38 @@ int main() {
 			<< (int)headerInfo->type_out() << endl;
 	}
 
-	//cout << reader.tracesCount() << endl;
-	//cout << reader.headersCount() << endl;
-
 	int n = reader->samples_count();
 
-	auto start = system_clock::now();
-	////reader.moveToTrace(0, reader.tracesCount());
-	////for (int i = 0; i < reader.tracesCount(); ++i) {
-	////	reader.getNextTrace();
-	////}
-	auto end = system_clock::now();
-
-	////cout << "Пробег по всем трассам: " << duration_cast<seconds>(end - start).count() << endl;
-
-	start = system_clock::now();
 	cout << "Preprocessing..." << endl;
+	auto start = system_clock::now();
 	reader->preprocessing();
+	auto end = system_clock::now();
 	cout << "Done" << endl;
-	end = system_clock::now();
 	cout << "Preprocessing time: " << duration_cast<milliseconds>(end - start).count() << endl;
 
-	//system("pause");
-	std::vector<segy_trace> iline;
 	auto segyreader = dynamic_pointer_cast<segy_reader>(reader);
 
+	auto iline_headers = segyreader->get_headers(segyreader->get_geometry()->get_lines()[1200]);
+
 	start = system_clock::now();
-	//for (int i = 0; i < 100; ++i) {
-	//	cout << i << endl;
-	//	iline = segyreader->iline(312);
-	//}
-	//iline = reader.iline(16);
+	for (int i = 0; i < 100; ++i) {
+		cout << i << endl;
+		auto iline = segyreader->get_traces(segyreader->get_geometry()->get_lines()[i]);
+	}
 	end = system_clock::now();
 	cout << "100 Line time: " << duration_cast<milliseconds>(end - start).count() << endl;
 
-	/*ofstream ilinefile("iline.dat");
+	auto iline = segyreader->get_traces(segyreader->get_geometry()->get_lines()[0]);
+	ofstream ilinefile("iline.dat");
 	for (int i = 0; i < iline.size(); ++i) {
 		int x = i;
-		for (int j = 0; j < iline[i].get_data().size(); ++j) {
+		auto data = iline[i]->get_data();
+		for (int j = 0; j < data.size(); ++j) {
 			int y = n - j;
-			ilinefile << x << '\t' << y << '\t' << iline[i].get_data()[j] << endl;
+			ilinefile << x << '\t' << y << '\t' << data[j] << endl;
 		}
 	}
-	ilinefile.close();*/
+	ilinefile.close();
 	
 	auto t = reader->get_trace(100000);
 	auto th = t->get_header();

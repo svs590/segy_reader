@@ -5,6 +5,14 @@
 #include <codecvt>
 #include <cassert>
 
+#ifdef _WIN32
+#define NOMINMAX
+#include <Windows.h>
+#undef small
+#elif __linux__
+// TODO
+#endif
+
 #include "data_types.h"
 
 using namespace std;
@@ -104,4 +112,18 @@ cseis_geolib::type_t geolib_type_converter::convert(seismic_data_type type) {
 		return cseis_geolib::TYPE_UNKNOWN;
 		break;
 	}
+}
+
+long long get_available_memory() {
+
+#ifdef _WIN32
+	MEMORYSTATUSEX statex;
+	statex.dwLength = sizeof(statex);
+	GlobalMemoryStatusEx(&statex);
+	return statex.ullAvailPhys;
+#elif __linux__
+	// TODO
+	return;
+#endif
+
 }

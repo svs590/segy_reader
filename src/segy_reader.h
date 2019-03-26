@@ -23,8 +23,12 @@ namespace py = pybind11;
 
 class segy_reader : public seismic_data_provider {
 	int f_samples_count = NOT_INDEX;
+	int f_traces_count = NOT_INDEX;
 	void *obj;
 	bool processed = false;
+	bool headers_in_memory = false;
+	std::vector<std::shared_ptr<seismic_trace_header>> headers;
+	std::shared_ptr<seismic_geometry_info> geometry;
 	
 public:
 	segy_reader(const void *obj);
@@ -53,7 +57,8 @@ public:
 
 	virtual std::shared_ptr<seismic_geometry_info> get_geometry() { return geometry; }
 
-	virtual std::vector<seismic_trace> get_traces(seismic_line_info line);
+	virtual std::vector<std::shared_ptr<seismic_trace>> get_traces(seismic_line_info line);
+	virtual std::vector<std::shared_ptr<seismic_trace_header>> get_headers(seismic_line_info line);
 
 	std::shared_ptr<seismic_trace_header> current_trace_header();
 
@@ -82,15 +87,37 @@ public:
 #endif
 
 private:
-	void get_traces(const std::vector<int> &trcs, int trc_buffer, std::vector<segy_trace> &seismic_line_info);
-	void get_traces(int start_trace, int end_trace, std::vector<segy_trace> &line);
-	void line_processing(std::map<int, seismic_line_info> &line, 
+	void get_traces(
+		const std::vector<int> &trcs, 
+		int trc_buffer, 
+		std::vector<std::shared_ptr<seismic_trace>> &seismic_line_info
+	);
+	void get_traces(
+		int start_trace,
+		int end_trace, 
+		std::vector<std::shared_ptr<seismic_trace>> &line
+	);
+	void get_headers(
+		const std::vector<int> &trcs,
+		int trc_buffer,
+		std::vector<std::shared_ptr<seismic_trace_header>> &seismic_line_info
+	);
+	void get_headers(
+		int start_trace,
+		int end_trace,
+		std::vector<std::shared_ptr<seismic_trace_header>> &seismic_line_info
+	);
+
+	void line_processing(
+		std::map<int, seismic_line_info> &line, 
 		seismic_line_info::seismic_line_type type,
 		std::string name_prefix, 
 		int line_no,
 		int trace_no, 
 		std::pair<float, float> point
 	);
+
+	void check_memory_for_headers();
 };
 
 #endif

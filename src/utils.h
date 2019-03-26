@@ -27,4 +27,6 @@ public:
 	void cast(std::any a, void *buffer);
 };
 
+long long get_available_memory();
+
 #endif

@@ -7,6 +7,7 @@ using namespace std;
 #ifdef PYTHON
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <pybind11/eigen.h>
 
 py::object seismic_trace_header::py_get(int index) {
 	py::object value;

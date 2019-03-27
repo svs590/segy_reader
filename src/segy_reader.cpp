@@ -157,18 +157,18 @@ const float *segy_reader::nextTraceRef() {
 	return cseis_csSegyReader_1getNextTrace(obj);
 }
 
-vector<float> segy_reader::getNextTrace() {
+Eigen::VectorXf segy_reader::getNextTrace() {
 	const float *nativeTrace = nextTraceRef();
 	if (nativeTrace == nullptr)
 		return {};
 
 	samples_count();
-	vector<float> trace(f_samples_count);
+	Eigen::VectorXf trace(f_samples_count);
 	memcpy((void*)trace.data(), (void*)nativeTrace, f_samples_count * sizeof(float));
 	return trace;
 }
 
-vector<float> segy_reader::get_trace_data(int index) {
+Eigen::VectorXf segy_reader::get_trace_data(int index) {
 	moveToTrace(index, 1);
 	return getNextTrace();
 }

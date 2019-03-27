@@ -79,9 +79,9 @@ public:
 	void moveToTrace(int firstTraceIndex, int numTracesToRead);
 	void moveToTrace(int firstTraceIndex);
 	const float *nextTraceRef();
-	std::vector<float> getNextTrace();
+	Eigen::VectorXf getNextTrace();
 
-	std::vector<float> get_trace_data(int index);
+	Eigen::VectorXf get_trace_data(int index);
 
 	std::vector<segy_trace> iline(seismic_line_info line);
 	std::vector<segy_trace> xline(int xl_num);

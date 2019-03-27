@@ -38,11 +38,19 @@ public:
 	segy_reader(
 		std::string filename_in,
 		int nTracesBuffer,
-		int segyHeaderMap,
+		header_map_type segyHeaderMap,
 		bool reverseByteOrderData_in,
 		bool reverseByteOrderHdr_in,
 		bool autoscale_hdrs_in
 	);
+	segy_reader(
+		std::string filename_in,
+		header_map_type segyHeaderMap,
+		bool reverseByteOrderData_in,
+		bool reverseByteOrderHdr_in,
+		bool autoscale_hdrs_in
+	);
+	segy_reader(std::string filename_in, header_map_type segyHeaderMap);
 
 	virtual void close();
 	virtual int traces_count();
@@ -82,10 +90,6 @@ public:
 
 	virtual object_type type_id() { return object_type::SEGY_READER; }
 
-#ifdef PYTHON
-	segy_trace py_get_trace();
-#endif
-
 private:
 	void get_traces(
 		const std::vector<int> &trcs, 
@@ -119,5 +123,10 @@ private:
 
 	void check_memory_for_headers();
 };
+
+#ifdef PYTHON
+void py_segy_reader_init(py::module &m,
+	py::class_<segy_reader, std::shared_ptr<segy_reader>> &py_segy_reader);
+#endif
 
 #endif

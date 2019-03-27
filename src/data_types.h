@@ -1,6 +1,12 @@
 #ifndef __DATA_TYPES
 #define __DATA_TYPES
 
+#ifdef PYTHON
+#include <pybind11/stl.h>
+
+namespace py = pybind11;
+#endif
+
 enum class seismic_data_type {
 	UNKNOWN,
 	EMPTY,
@@ -29,5 +35,9 @@ enum class object_type {
 	SEGY_BIN_HEADER
 
 };
+
+#ifdef PYTHON
+void py_seismic_data_types_init(py::module &m);
+#endif
 
 #endif

@@ -43,12 +43,11 @@ public:
 	}
 
 	virtual std::pair<std::any, seismic_data_type> get(int index) const;
-	virtual void set(int index, std::pair<std::any, seismic_data_type>);
+	virtual void set_field(int index, std::pair<std::any, seismic_data_type>);
 
 	virtual object_type type_id() { return object_type::SEGY_TRACEHEADER; }
 
 #ifdef PYTHON
-	virtual std::map<std::string, py::object> to_dict();
 	segy_trace_header(py::dict trace_header) { throw std::runtime_error("Method not implemented"); }
 #endif
 };

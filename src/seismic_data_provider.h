@@ -11,6 +11,14 @@
 #include "seismic_trace_header.h"
 #include "seismic_geometry.h"
 
+#ifdef PYTHON
+#include <pybind11/stl.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+
+namespace py = pybind11;
+#endif
+
 class seismic_data_provider : public obj_base {
 protected:
 	std::string filename;
@@ -40,5 +48,10 @@ public:
 	virtual int													samples_count() = 0;
 	virtual float												sample_interval() = 0;
 };
+
+#ifdef PYTHON
+void py_seismic_data_provider_init(py::module &m, 
+	py::class_<seismic_data_provider, std::shared_ptr<seismic_data_provider>> &data_provider);
+#endif
 
 #endif

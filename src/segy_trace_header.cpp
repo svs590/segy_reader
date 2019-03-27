@@ -110,52 +110,10 @@ pair<any, seismic_data_type> segy_trace_header::get(int index) const {
 	return { res, type };
 }
 
-void segy_trace_header::set(int index, std::pair<std::any, seismic_data_type>) {
+void segy_trace_header::set_field(int index, std::pair<std::any, seismic_data_type>) {
 	throw runtime_error("segy_trace_header::set: method not implemented");
 }
 
 #ifdef PYTHON
-
-map<string, py::object> segy_trace_header::to_dict() {
-	map<string, py::object> res;
-	for (int i = 0; i < count(); ++i) {
-		auto n = name(i);
-		type_t t = type(i);
-		py::object v;
-		switch (t) {
-			case TYPE_INT:
-				v = py::int_(get<int>(i));
-				break;
-			case TYPE_FLOAT:
-				v = py::float_(get<float>(i));
-				break;
-			case TYPE_DOUBLE:
-				v = py::float_(get<double>(i));
-				break;
-			case TYPE_CHAR:
-				v = py::str(get<string>(i));
-				break;
-			case TYPE_STRING:
-				v = py::str(get<string>(i));
-				break;
-			case TYPE_INT64:
-				throw std::runtime_error("Header value type int64 not supported yet");
-				break;
-			case TYPE_SHORT:
-				throw std::runtime_error("Header value type int16 not supported yet");
-				break;
-			case TYPE_USHORT:
-				throw std::runtime_error("Header value type uint16 not supported yet");
-				break;
-		default:
-			v = py::float_(get<double>(i));
-			break;
-		}
-
-		res[n] = v;
-	}
-
-	return res;
-}
 
 #endif

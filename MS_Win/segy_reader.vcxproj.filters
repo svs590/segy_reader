@@ -81,6 +81,9 @@
     <ClInclude Include="..\src\seismic_trace.h">
       <Filter>Файлы заголовков\base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\seismic_geometry.h">
+      <Filter>Файлы заголовков\base</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\test.cpp">
@@ -109,6 +112,9 @@
     </ClCompile>
     <ClCompile Include="..\src\segy_trace_header.cpp">
       <Filter>Исходные файлы\segy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base.cpp">
+      <Filter>Файлы заголовков\base</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

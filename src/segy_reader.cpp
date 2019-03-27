@@ -10,6 +10,7 @@
 #include "segy_reader.h"
 #include "segy_bin_header.h"
 #include "utils.h"
+#include "array.h"
 
 using namespace std;
 using namespace cseis_geolib;
@@ -52,6 +53,7 @@ segy_reader::segy_reader(const segy_reader &obj) {
 }
 
 segy_reader::~segy_reader() {
+	close();
 	cseis_csNativeSegyReader_deleteInstance(obj);
 }
 
@@ -64,7 +66,7 @@ segy_reader& segy_reader::operator=(const void *obj) {
 segy_reader::segy_reader(
 	string filename_in,
 	int nTracesBuffer,
-	int segyHeaderMap,
+	header_map_type segyHeaderMap,
 	bool reverseByteOrderData_in,
 	bool reverseByteOrderHdr_in,
 	bool autoscale_hdrs_in
@@ -73,7 +75,7 @@ segy_reader::segy_reader(
 	obj = cseis_csNativeSegyReader_createInstance(
 		filename_in.c_str(),
 		nTracesBuffer,
-		segyHeaderMap,
+		geolib_type_converter::convert<header_map_type, const int>(segyHeaderMap),
 		reverseByteOrderData_in,
 		reverseByteOrderHdr_in,
 		autoscale_hdrs_in
@@ -81,6 +83,31 @@ segy_reader::segy_reader(
 
 	geometry = shared_ptr<seismic_geometry_info>(new seismic_geometry_info);
 }
+
+segy_reader::segy_reader(
+	std::string filename_in,
+	header_map_type segyHeaderMap,
+	bool reverseByteOrderData_in,
+	bool reverseByteOrderHdr_in,
+	bool autoscale_hdrs_in
+) : segy_reader(
+		filename_in, 
+		1, 
+		segyHeaderMap, 
+		reverseByteOrderData_in, 
+		reverseByteOrderHdr_in, 
+		autoscale_hdrs_in
+	) { }
+
+segy_reader::segy_reader(std::string filename_in, header_map_type segyHeaderMap) 
+	: segy_reader(
+		filename_in,
+		1,
+		segyHeaderMap,
+		false,
+		false,
+		false
+	) { }
 
 void segy_reader::close() {
 	cseis_csNativeSegyReader_closeFile(obj);
@@ -449,17 +476,29 @@ void segy_reader::preprocessing() {
 
 #ifdef PYTHON
 
-void vector_to_numpy(vector<float> &x, py::array_t<float> y) {
-	y.resize({ x.size() });
-	memcpy((void*)y.data(), (void*)x.data(), x.size() * sizeof(float));
-}
+//void vector_to_numpy(vector<float> &x, py::array_t<float> y) {
+//	y.resize({ x.size() });
+//	memcpy((void*)y.data(), (void*)x.data(), x.size() * sizeof(float));
+//}
+//
+//segy_trace segy_reader::py_get_trace() {
+//	const float *nativeTrace = nextTraceRef();
+//
+//	samplesCount();
+//
+//	return segy_trace(trace_header(), samples_count, nativeTrace);
+//}
 
-segy_trace segy_reader::py_get_trace() {
-	const float *nativeTrace = nextTraceRef();
+void py_segy_reader_init(py::module &m,
+	py::class_<segy_reader, std::shared_ptr<segy_reader>> &py_segy_reader) {
 
-	samplesCount();
-
-	return segy_trace(trace_header(), samples_count, nativeTrace);
+	py_segy_reader.def(py::init<std::string, header_map_type, bool, bool, bool>(),
+		py::arg("filename"), py::arg("header_map_type"), py::arg("reverse_byte_order_data"),
+		py::arg("reverse_byte_order_header"), py::arg("autoscale_hdrs")
+	);
+	py_segy_reader.def(py::init<std::string, header_map_type>(),
+		py::arg("filename"), py::arg("header_map_type")
+	);
 }
 
 #endif

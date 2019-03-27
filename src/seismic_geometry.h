@@ -4,8 +4,15 @@
 #include <string>
 #include <vector>
 
-#include "seismic_data_provider.h"
-#include "segy_reader.h"
+#include "utils.h"
+
+#ifdef PYTHON
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+#endif
+
+class segy_reader;
 
 class seismic_line_info {
 public:
@@ -66,5 +73,10 @@ public:
 protected:
 
 };
+
+#ifdef PYTHON
+void py_seismic_geometry_info_init(py::module &m);
+void py_seismic_line_info_init(py::module &m);
+#endif
 
 #endif

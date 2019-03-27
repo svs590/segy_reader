@@ -22,27 +22,23 @@ public:
 	virtual seismic_data_type		type(int index) const = 0;
 
 	virtual std::pair<std::any, seismic_data_type> get(int index) const = 0;
-	virtual void set(int index, std::pair<std::any, seismic_data_type>) = 0;
+	virtual void set_field(int index, std::pair<std::any, seismic_data_type>) = 0;
 
 	//Not implemented
 	virtual int						byte_loc(int index) const = 0;
 	virtual int						byte_pos(int index) const = 0;
 
-	virtual std::map<std::string, std::pair<std::any, seismic_data_type>> to_map() {
-		std::map<std::string, std::pair<std::any, seismic_data_type>> res;
-		for (int i = 0; i < count(); ++i) {
-			std::string f_name = name(i);
-			res[f_name] = get(i);
-		}
-		return res;
-	}
+	std::map<std::string, std::pair<std::any, seismic_data_type>> to_map();
 
 #ifdef PYTHON
 	std::map<std::string, py::object> to_dict();
+	py::object py_get(int index);
 #endif
 };
 
-//std::map<std::string, std::pair<std::any, seismic_data_type>> 
-//seismic_trace_header::to_map()
+#ifdef PYTHON
+void py_seismic_trace_header_init(py::module &m,
+	py::class_<seismic_trace_header, std::shared_ptr<seismic_trace_header>> &py_segy_reader);
+#endif
 
 #endif

@@ -5,6 +5,12 @@
 #include <string>
 #include <vector>
 
+#ifdef PYTHON
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+#endif
+
 #include "seismic_abstract_header.h"
 
 class segy_bin_header : public seismic_abstract_header {
@@ -49,5 +55,10 @@ public:
 private:
 	void initialize();
 };
+
+#ifdef PYTHON
+void py_segy_bin_header_init(py::module &m,
+	py::class_<segy_bin_header, std::shared_ptr<segy_bin_header>> &py_segy_bin_header);
+#endif
 
 #endif

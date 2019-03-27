@@ -249,6 +249,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\data_types.h" />
+    <ClInclude Include="..\src\seismic_geometry.h" />
     <ClInclude Include="..\src\obj_base.h" />
     <ClInclude Include="..\src\segy_bin_header.h" />
     <ClInclude Include="..\src\segy_header_info.h" />
@@ -266,6 +267,7 @@
     <ClInclude Include="..\src\utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\base.cpp" />
     <ClCompile Include="..\src\py_mudule.cpp" />
     <ClCompile Include="..\src\segy_bin_header.cpp" />
     <ClCompile Include="..\src\segy_header_info.cpp" />

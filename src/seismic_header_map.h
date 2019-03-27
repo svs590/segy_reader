@@ -3,14 +3,34 @@
 
 #include <string>
 #include <memory>
+#include <map>
+#include <tuple>
 
 #include "data_types.h"
 
 #include "seismic_header_field.h"
 #include "obj_base.h"
 
+#ifdef PYTHON
+#include <pybind11/stl.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+
+namespace py = pybind11;
+#endif
+
 enum class header_map_type {
-	STARNDART
+	CUSTOM,
+	STANDARD,
+	OBC,
+	SEND,
+	ARMSS,
+	PSEGY,
+	NODE_OLD,
+	NODE,
+	SU,
+	SU_ONLY,
+	SU_BOTH
 };
 
 class seismic_header_map : public obj_base {
@@ -23,16 +43,25 @@ public:
 		std::string desc
 	) = 0;
 
-	virtual void									set(std::shared_ptr<seismic_traceheader_field> header) = 0;
+	virtual void									set_field(std::shared_ptr<seismic_traceheader_field> header) = 0;
 	virtual void									remove(int index) = 0;
 	virtual void									remove(const std::string &name) = 0;
 	virtual void									clear() = 0;
-	virtual int										index_of(const std::string &name) = 0;
-	virtual int										contains(const std::string &name) = 0;
-	virtual std::shared_ptr<seismic_traceheader_field>	get_field(int index) = 0;
-	virtual std::shared_ptr<seismic_traceheader_field>	get_field(const std::string &name) = 0;
+	virtual int										index_of(const std::string &name) const = 0;
+	virtual int										contains(const std::string &name) const = 0;
+	virtual std::shared_ptr<seismic_traceheader_field>	get_field(int index) const = 0;
+	virtual std::shared_ptr<seismic_traceheader_field>	get_field(const std::string &name) const = 0;
 	virtual int										count() const = 0;
 	virtual header_map_type							type() const = 0;
+
+	// Словарь вида {name : (byte_position, byte_size, data_type, description)}
+	virtual std::map<std::string, std::tuple<int, int, seismic_data_type, std::string>> to_map() const = 0;
+	virtual void set(
+		const std::map<std::string, std::tuple<int, int, seismic_data_type, std::string>> &m) = 0;
 };
+
+#ifdef PYTHON
+void py_seismic_header_map_init(py::module &m);
+#endif
 
 #endif

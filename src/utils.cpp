@@ -14,6 +14,9 @@
 #endif
 
 #include "data_types.h"
+#include "csSegyHdrMap.h"
+
+#include "seismic_header_map.h"
 
 using namespace std;
 
@@ -110,6 +113,84 @@ cseis_geolib::type_t geolib_type_converter::convert(seismic_data_type type) {
 		break;
 	default:
 		return cseis_geolib::TYPE_UNKNOWN;
+		break;
+	}
+}
+
+template <>
+header_map_type geolib_type_converter::convert(const int type) {
+	switch (type) {
+	case cseis_geolib::csSegyHdrMap::SEGY_STANDARD:
+		return header_map_type::STANDARD;
+		break;
+	case cseis_geolib::csSegyHdrMap::SEGY_OBC:
+		return header_map_type::OBC;
+		break;
+	case cseis_geolib::csSegyHdrMap::SEGY_SEND:
+		return header_map_type::SEND;
+		break;
+	case cseis_geolib::csSegyHdrMap::SEGY_ARMSS:
+		return header_map_type::ARMSS;
+		break;
+	case cseis_geolib::csSegyHdrMap::SEGY_PSEGY:
+		return header_map_type::PSEGY;
+		break;
+	case cseis_geolib::csSegyHdrMap::SEGY_NODE_OLD:
+		return header_map_type::NODE_OLD;
+		break;
+	case cseis_geolib::csSegyHdrMap::SEGY_NODE:
+		return header_map_type::NODE;
+		break;
+	case cseis_geolib::csSegyHdrMap::SEGY_SU:
+		return header_map_type::SU;
+		break;
+	case cseis_geolib::csSegyHdrMap::SEGY_SU_ONLY:
+		return header_map_type::SU_ONLY;
+		break;
+	case cseis_geolib::csSegyHdrMap::SEGY_SU_BOTH:
+		return header_map_type::SU_BOTH;
+		break;
+	default:
+		return header_map_type::CUSTOM;
+		break;
+	}
+}
+
+template <>
+const int  geolib_type_converter::convert(header_map_type type) {
+	switch (type) {
+	case header_map_type::STANDARD:
+		return cseis_geolib::csSegyHdrMap::SEGY_STANDARD;
+		break;
+	case header_map_type::OBC:
+		return cseis_geolib::csSegyHdrMap::SEGY_OBC;
+		break;
+	case header_map_type::SEND:
+		return cseis_geolib::csSegyHdrMap::SEGY_SEND;
+		break;
+	case header_map_type::ARMSS:
+		return cseis_geolib::csSegyHdrMap::SEGY_ARMSS;
+		break;
+	case header_map_type::PSEGY:
+		return cseis_geolib::csSegyHdrMap::SEGY_PSEGY;
+		break;
+	case header_map_type::NODE_OLD:
+		return cseis_geolib::csSegyHdrMap::SEGY_NODE_OLD;
+		break;
+	case header_map_type::NODE:
+		return cseis_geolib::csSegyHdrMap::SEGY_NODE;
+		break;
+	case header_map_type::SU:
+		return cseis_geolib::csSegyHdrMap::SEGY_SU;
+		break;
+	case header_map_type::SU_ONLY:
+		return cseis_geolib::csSegyHdrMap::SEGY_SU_ONLY;
+		break;
+	case header_map_type::SU_BOTH:
+		return cseis_geolib::csSegyHdrMap::SEGY_SU_BOTH;
+		break;
+	default:
+		return cseis_geolib::csSegyHdrMap::NONE;
 		break;
 	}
 }

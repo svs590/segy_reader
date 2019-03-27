@@ -254,3 +254,10 @@ void segy_bin_header::initialize() {
 		{"num Extended Blocks",		numExtendedBlocks()}
 	};
 }
+
+#ifdef PYTHON
+void py_segy_bin_header_init(py::module &m,
+	py::class_<segy_bin_header, std::shared_ptr<segy_bin_header>> &py_segy_bin_header) {
+
+}
+#endif

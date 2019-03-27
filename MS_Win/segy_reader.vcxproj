@@ -147,7 +147,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -211,7 +211,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(PYTHON_PATH)include;..\lib\pybind11\include;..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PYTHON_PATH)include;..\lib\pybind11\include;..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PYTHON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -233,7 +233,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>

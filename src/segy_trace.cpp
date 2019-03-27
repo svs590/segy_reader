@@ -37,11 +37,11 @@ segy_trace::segy_trace(shared_ptr<segy_trace_header> header, int num_samples, co
 segy_trace::~segy_trace() { }
 
 
-std::shared_ptr<seismic_trace_header> segy_trace::get_header() {
+shared_ptr<seismic_trace_header> segy_trace::get_header() {
 	return header;
 }
 
-void segy_trace::set_header(std::shared_ptr<seismic_trace_header> header) {
+void segy_trace::set_header(shared_ptr<seismic_trace_header> header) {
 	this->header = header;
 }
 

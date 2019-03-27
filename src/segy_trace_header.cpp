@@ -25,7 +25,7 @@ DLLIMPORT int			cseis_csNativecsSegyTraceHeader_bytePos(const void *obj, int hdr
 DLLIMPORT void			cseis_csNativecsSegyTraceHeader_setIntValue(int hdrIndex, int value);
 DLLIMPORT void			cseis_csNativecsSegyTraceHeader_setFloatValue(int hdrIndex, float value);
 DLLIMPORT void			cseis_csNativecsSegyTraceHeader_setDoubleValue(int hdrIndex, double value);
-DLLIMPORT void			cseis_csNativecsSegyTraceHeader_setStringValue(int hdrIndex, std::string const& value);
+DLLIMPORT void			cseis_csNativecsSegyTraceHeader_setStringValue(int hdrIndex, string const& value);
 
 
 void native_trace_header_deleter(void *header) {
@@ -55,33 +55,33 @@ segy_trace_header& segy_trace_header::operator=(const segy_trace_header &obj) {
 
 int segy_trace_header::count() const {
 	if (obj == nullptr)
-		throw std::runtime_error("Object segy_trace_header is not initialized in native code");
+		throw runtime_error("Object segy_trace_header is not initialized in native code");
 	return cseis_csNativecsSegyTraceHeader_numHeaders(obj.get());
 }
 
-std::string segy_trace_header::description(int index) const {
+string segy_trace_header::description(int index) const {
 	if (obj == nullptr)
-		throw std::runtime_error("Object segy_trace_header is not initialized in native code");
+		throw runtime_error("Object segy_trace_header is not initialized in native code");
 	const char *const descr = cseis_csNativecsSegyTraceHeader_headerDesc(obj.get(), index);
-	return std::string(descr);
+	return string(descr);
 }
 
-std::string segy_trace_header::name(int index) const {
+string segy_trace_header::name(int index) const {
 	if (obj == nullptr)
-		throw std::runtime_error("Object segy_trace_header is not initialized in native code");
+		throw runtime_error("Object segy_trace_header is not initialized in native code");
 	const char *const name = cseis_csNativecsSegyTraceHeader_headerName(obj.get(), index);
-	return std::string(name);
+	return string(name);
 }
 
-int segy_trace_header::index_of(const std::string &name) const {
+int segy_trace_header::index_of(const string &name) const {
 	if (obj == nullptr)
-		throw std::runtime_error("Object segy_trace_header is not initialized in native code");
+		throw runtime_error("Object segy_trace_header is not initialized in native code");
 	return cseis_csNativecsSegyTraceHeader_headerIndex(obj.get(), name.c_str());
 }
 
 seismic_data_type segy_trace_header::type(int index) const {
 	if (obj == nullptr)
-		throw std::runtime_error("Object segy_trace_header is not initialized in native code");
+		throw runtime_error("Object segy_trace_header is not initialized in native code");
 	cseis_geolib::type_t geolibtype = cseis_csNativecsSegyTraceHeader_headerType(obj.get(), index);
 	return geolib_type_converter::convert<cseis_geolib::type_t, seismic_data_type>(geolibtype);
 }
@@ -110,7 +110,7 @@ pair<any, seismic_data_type> segy_trace_header::get(int index) const {
 	return { res, type };
 }
 
-void segy_trace_header::set_field(int index, std::pair<std::any, seismic_data_type>) {
+void segy_trace_header::set_field(int index, pair<any, seismic_data_type>) {
 	throw runtime_error("segy_trace_header::set: method not implemented");
 }
 

@@ -44,14 +44,14 @@ map<string, py::object> seismic_trace_header::to_dict() {
 map<string, pair<any, seismic_data_type>> seismic_trace_header::to_map() {
 	map<string, pair<any, seismic_data_type>> res;
 	for (int i = 0; i < count(); ++i) {
-		std::string f_name = name(i);
+		string f_name = name(i);
 		res[f_name] = get(i);
 	}
 	return res;
 }
 
 void py_seismic_data_provider_init(py::module &m,
-	py::class_<seismic_data_provider, std::shared_ptr<seismic_data_provider>> &data_provider) {
+	py::class_<seismic_data_provider, shared_ptr<seismic_data_provider>> &data_provider) {
 	
 	data_provider.def("text_header", &seismic_data_provider::text_header,
 		"Returns textural file header");
@@ -67,7 +67,8 @@ void py_seismic_data_provider_init(py::module &m,
 		"Returns trace by trace index");
 	data_provider.def("preprocessing", &seismic_data_provider::preprocessing,
 		"Determine how file sorted and map some necessary information. "
-		"This method will be called implicitly before seismic_line or geometry downloading");
+		"This method will be called implicitly before seismic_line or "
+		"geometry downloading");
 	data_provider.def("get_geometry", &seismic_data_provider::get_geometry,
 		"Returns all seismic line information");
 	data_provider.def("get_traces", &seismic_data_provider::get_traces,
@@ -104,7 +105,7 @@ void py_seismic_header_map_init(py::module &m) {
 		.value("SU_BOTH",	header_map_type::SU_BOTH)
 		.export_values();
 
-	py::class_<seismic_header_map, std::shared_ptr<seismic_header_map>>
+	py::class_<seismic_header_map, shared_ptr<seismic_header_map>>
 		header_map(m, "header_map");
 
 	header_map.def("set_field", &seismic_header_map::add_field,
@@ -120,11 +121,13 @@ void py_seismic_header_map_init(py::module &m) {
 		"Replace existance header field or add new if there is not "
 		"field with the same name"
 	);
-	header_map.def("remove", (void(seismic_header_map::*)(int))&seismic_header_map::remove,
+	header_map.def("remove", 
+		(void(seismic_header_map::*)(int))&seismic_header_map::remove,
 		py::arg("field_index"),
 		"Remove header field by index"
 		);
-	header_map.def("remove", (void(seismic_header_map::*)(const std::string &))&seismic_header_map::remove,
+	header_map.def("remove", (
+		void(seismic_header_map::*)(const string &))&seismic_header_map::remove,
 		py::arg("field_name"),
 		"Remove header field by name"
 	);
@@ -139,12 +142,14 @@ void py_seismic_header_map_init(py::module &m) {
 		"Returns field index by name if map contains field, return -1 otherwise"
 	);
 	header_map.def("get_field", 
-		(std::shared_ptr<seismic_traceheader_field>(seismic_header_map::*)(int)const)&seismic_header_map::get_field,
+		(shared_ptr<seismic_traceheader_field>(seismic_header_map::*)
+			(int)const)&seismic_header_map::get_field,
 		py::arg("field_index"),
 		"Returns field by index"
 	);
 	header_map.def("get_field",
-		(std::shared_ptr<seismic_traceheader_field>(seismic_header_map::*)(const std::string &)const)&seismic_header_map::get_field,
+		(shared_ptr<seismic_traceheader_field>
+			(seismic_header_map::*)(const string &)const)&seismic_header_map::get_field,
 		py::arg("field_name"),
 		"Returns field by name"
 	);
@@ -158,10 +163,10 @@ void py_seismic_header_map_init(py::module &m) {
 }
 
 void py_seismic_geometry_info_init(py::module &m) {
-	py::class_<seismic_geometry_info, std::shared_ptr<seismic_geometry_info>>
+	py::class_<seismic_geometry_info, shared_ptr<seismic_geometry_info>>
 		py_geometry_info(m, "geometry_info");
 
-	py_geometry_info.def(py::init<std::vector<seismic_line_info>>(),
+	py_geometry_info.def(py::init<vector<seismic_line_info>>(),
 		py::arg("line_info_array")
 	);
 	py_geometry_info.def("get_lines", &seismic_geometry_info::get_lines,
@@ -175,12 +180,12 @@ void py_seismic_line_info_init(py::module &m) {
 		.value("none",	seismic_line_info::seismic_line_type::none)
 		.export_values();
 
-	py::class_<seismic_line_info, std::shared_ptr<seismic_line_info>>
+	py::class_<seismic_line_info, shared_ptr<seismic_line_info>>
 		line_info(m, "line_info");
 	line_info.def(py::init<
-			std::string, 
-			std::pair<float, float>, 
-			std::pair<float, float>,
+			string, 
+			pair<float, float>, 
+			pair<float, float>,
 			int,
 			seismic_line_info::seismic_line_type
 		>(),
@@ -196,7 +201,8 @@ void py_seismic_line_info_init(py::module &m) {
 }
 
 void py_segy_abstract_header_init(py::module &m,
-	py::class_<seismic_abstract_header, std::shared_ptr<seismic_abstract_header>> &py_abstract_header) {
+	py::class_<seismic_abstract_header, 
+		shared_ptr<seismic_abstract_header>> &py_abstract_header) {
 	
 	py_abstract_header.def("get_field", &seismic_abstract_header::get,
 		py::arg("index"),
@@ -224,7 +230,8 @@ void py_seismic_data_types_init(py::module &m) {
 }
 
 void py_seismic_traceheader_field_init(py::module &m,
-	py::class_<seismic_traceheader_field, std::shared_ptr<seismic_traceheader_field>> &py_traceheader_field) {
+	py::class_<seismic_traceheader_field,
+		shared_ptr<seismic_traceheader_field>> &py_traceheader_field) {
 
 	py_traceheader_field.def("byte_loc", &seismic_traceheader_field::byte_loc,
 		"Returns field byte location");
@@ -245,7 +252,8 @@ void py_seismic_traceheader_field_init(py::module &m,
 }
 
 void py_seismic_trace_header_init(py::module &m,
-	py::class_<seismic_trace_header, std::shared_ptr<seismic_trace_header>> &py_seismic_trace_header) {
+	py::class_<seismic_trace_header, 
+		shared_ptr<seismic_trace_header>> &py_seismic_trace_header) {
 
 	py_seismic_trace_header.def("count", &seismic_trace_header::count,
 		"Returns fields count in seismic header");
@@ -273,7 +281,7 @@ void py_seismic_trace_header_init(py::module &m,
 }
 
 void py_seismic_trace_header_init(py::module &m,
-	py::class_<seismic_trace, std::shared_ptr<seismic_trace>> &py_trace) {
+	py::class_<seismic_trace, shared_ptr<seismic_trace>> &py_trace) {
 
 	py_trace.def("get_header", &seismic_trace::get_header);
 	py_trace.def("set_header", &seismic_trace::set_header);

@@ -31,7 +31,7 @@ segy_header_map& segy_header_map::operator=(const void *obj) {
 	return *this;
 }
 
-void segy_header_map::set_field(std::shared_ptr<seismic_traceheader_field> header) {
+void segy_header_map::set_field(shared_ptr<seismic_traceheader_field> header) {
 	segy_traceheader_field *sgyfield = nullptr;
 
 	switch (header->type_id())
@@ -52,24 +52,40 @@ void segy_header_map::set_field(std::shared_ptr<seismic_traceheader_field> heade
 	}
 }
 
-void segy_header_map::add_field(std::string name, int byte_loc,	int byte_size, seismic_data_type type, std::string desc) {
+void segy_header_map::add_field(
+	string name, 
+	int byte_loc,	
+	int byte_size, 
+	seismic_data_type type, 
+	string desc) {
+
 	cseis_csNativeSegyHdrMap_unlockUserDefenition(obj);
-	cseis_geolib::type_t geolibtype = geolib_type_converter::convert<seismic_data_type, cseis_geolib::type_t>(type);
-	if (!cseis_csNativeSegyHdrMap_addHeader(obj, name.c_str(), byte_loc, byte_size, geolibtype, desc.c_str()))
-		throw std::runtime_error("Error while adding header in map");
+	cseis_geolib::type_t geolibtype =
+		geolib_type_converter::convert<seismic_data_type, cseis_geolib::type_t>(type);
+
+	int flag = cseis_csNativeSegyHdrMap_addHeader(
+		obj,
+		name.c_str(),
+		byte_loc,
+		byte_size,
+		geolibtype,
+		desc.c_str()
+	);
+	if (!flag)
+		throw runtime_error("Error while adding header in map");
 	cseis_csNativeSegyHdrMap_lockUserDefenition(obj);
 }
 
 void segy_header_map::remove(int index) {
 	if (delete_check(index))
 		if (!cseis_csNativeSegyHdrMap_removeHeaderByIndex(obj, index))
-			throw std::runtime_error("Error while deleting header in map");
+			throw runtime_error("Error while deleting header in map");
 }
 
 void segy_header_map::remove(const string &name) {
 	if (delete_check(name))
 		if (!cseis_csNativeSegyHdrMap_removeHeaderByName(obj, name.c_str()))
-			throw std::runtime_error("Error while deleting header from map");
+			throw runtime_error("Error while deleting header from map");
 }
 
 void segy_header_map::clear() {
@@ -77,11 +93,11 @@ void segy_header_map::clear() {
 		remove(i);
 }
 
-int segy_header_map::index_of(const std::string &name) const {
+int segy_header_map::index_of(const string &name) const {
 	return cseis_csNativeSegyHdrMap_headerIndex(obj, name.c_str());
 }
 
-int segy_header_map::contains(const std::string &name) const {
+int segy_header_map::contains(const string &name) const {
 	int index;
 	if (!cseis_csNativeSegyHdrMap_contains(obj, name.c_str(), &index))
 		return NOT_INDEX;
@@ -90,13 +106,17 @@ int segy_header_map::contains(const std::string &name) const {
 
 shared_ptr<seismic_traceheader_field> segy_header_map::get_field(int index) const {
 	return shared_ptr<seismic_traceheader_field>(
-			new segy_traceheader_field(cseis_csNativeSegyHdrMap_headerByIndex(obj, index))
+			new segy_traceheader_field(
+				cseis_csNativeSegyHdrMap_headerByIndex(obj, index)
+			)
 		);
 }
 
 shared_ptr<seismic_traceheader_field> segy_header_map::get_field(const string &name) const {
 	return shared_ptr<seismic_traceheader_field>(
-			new segy_traceheader_field(cseis_csNativeSegyHdrMap_headerByName(obj, name.c_str()))
+			new segy_traceheader_field(
+				cseis_csNativeSegyHdrMap_headerByName(obj, name.c_str())
+			)
 		);
 }
 
@@ -105,9 +125,7 @@ int segy_header_map::count() const {
 }
 
 header_map_type segy_header_map::type() const {
-	// TODO!!!
-	//return cseis_csNativeSegyHdrMap_getMapID(obj);
-	return header_map_type::STANDARD;
+	return map_type;
 }
 
 bool segy_header_map::delete_check(int index) {
@@ -121,7 +139,7 @@ bool segy_header_map::delete_check(int index) {
 	return false;
 }
 
-bool segy_header_map::delete_check(const std::string name) {
+bool segy_header_map::delete_check(const string name) {
 	if (contains(name) < 0)
 		return false;
 	int index = index_of(name);
@@ -133,7 +151,12 @@ map<string, tuple<int, int, seismic_data_type, string>> segy_header_map::to_map(
 	map<string, tuple<int, int, seismic_data_type, string>> res;
 	for (int i = 0; i < count(); ++i) {
 		auto f = get_field(i);
-		res[f->name()] = make_tuple(f->byte_loc(), f->byte_size(), f->type_out(), f->description());
+		res[f->name()] = make_tuple(
+				f->byte_loc(), 
+				f->byte_size(),
+				f->type_out(), 
+				f->description()
+			);
 	}
 	return res;
 }

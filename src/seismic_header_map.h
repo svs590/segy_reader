@@ -34,6 +34,8 @@ enum class header_map_type {
 };
 
 class seismic_header_map : public obj_base {
+protected:
+	header_map_type map_type;
 public:
 	virtual void add_field(
 		std::string name,

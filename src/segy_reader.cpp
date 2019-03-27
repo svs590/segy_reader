@@ -10,10 +10,10 @@
 #include "segy_reader.h"
 #include "segy_bin_header.h"
 #include "utils.h"
-#include "array.h"
 
 using namespace std;
 using namespace cseis_geolib;
+
 
 DLLIMPORT void* cseis_csNativeSegyReader_createInstance(
 	const char *filename_in,
@@ -85,7 +85,7 @@ segy_reader::segy_reader(
 }
 
 segy_reader::segy_reader(
-	std::string filename_in,
+	string filename_in,
 	header_map_type segyHeaderMap,
 	bool reverseByteOrderData_in,
 	bool reverseByteOrderHdr_in,
@@ -99,7 +99,7 @@ segy_reader::segy_reader(
 		autoscale_hdrs_in
 	) { }
 
-segy_reader::segy_reader(std::string filename_in, header_map_type segyHeaderMap) 
+segy_reader::segy_reader(string filename_in, header_map_type segyHeaderMap) 
 	: segy_reader(
 		filename_in,
 		1,
@@ -475,30 +475,19 @@ void segy_reader::preprocessing() {
 }
 
 #ifdef PYTHON
-
-//void vector_to_numpy(vector<float> &x, py::array_t<float> y) {
-//	y.resize({ x.size() });
-//	memcpy((void*)y.data(), (void*)x.data(), x.size() * sizeof(float));
-//}
-//
-//segy_trace segy_reader::py_get_trace() {
-//	const float *nativeTrace = nextTraceRef();
-//
-//	samplesCount();
-//
-//	return segy_trace(trace_header(), samples_count, nativeTrace);
-//}
-
 void py_segy_reader_init(py::module &m,
-	py::class_<segy_reader, std::shared_ptr<segy_reader>> &py_segy_reader) {
+	py::class_<segy_reader, shared_ptr<segy_reader>> &py_segy_reader) {
 
-	py_segy_reader.def(py::init<std::string, header_map_type, bool, bool, bool>(),
-		py::arg("filename"), py::arg("header_map_type"), py::arg("reverse_byte_order_data"),
-		py::arg("reverse_byte_order_header"), py::arg("autoscale_hdrs")
+	py_segy_reader.def(py::init<string, header_map_type, bool, bool, bool>(),
+		py::arg("filename"), 
+		py::arg("header_map_type"), 
+		py::arg("reverse_byte_order_data"),
+		py::arg("reverse_byte_order_header"), 
+		py::arg("autoscale_headers")
 	);
-	py_segy_reader.def(py::init<std::string, header_map_type>(),
-		py::arg("filename"), py::arg("header_map_type")
+	py_segy_reader.def(py::init<string, header_map_type>(),
+		py::arg("filename"), 
+		py::arg("header_map_type")
 	);
 }
-
 #endif

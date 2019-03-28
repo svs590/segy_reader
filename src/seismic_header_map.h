@@ -12,9 +12,7 @@
 #include "obj_base.h"
 
 #ifdef PYTHON
-#include <pybind11/stl.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
 
 namespace py = pybind11;
 #endif
@@ -63,7 +61,8 @@ public:
 };
 
 #ifdef PYTHON
-void py_seismic_header_map_init(py::module &m);
+void py_seismic_header_map_init(py::module &m,
+	py::class_<seismic_header_map, std::shared_ptr<seismic_header_map>> &py_header_map);
 #endif
 
 #endif

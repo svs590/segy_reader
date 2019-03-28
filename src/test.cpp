@@ -19,44 +19,19 @@ int main() {
 	string file = "D:/FullStack_PSTM.segy";
 
 	auto reader = shared_ptr<seismic_data_provider>(
-			new segy_reader(
-			file,
-			1,
-			1110,
-			false,
-			false,
-			false)
+		new segy_reader(file, header_map_type::STANDARD)
 		);
 
-	auto bh = reader->bin_header();
-	bh->to_map();
-
 	cout << reader->text_header() << endl;
-	auto binHeader = dynamic_pointer_cast<segy_bin_header>(reader->bin_header());
-	cout << "LINE_NUM: " << binHeader->reelNum() << endl;
-	cout << "LINE_NUM: " << binHeader->correlatedTraces() << endl;
+	
+	auto new_map = shared_ptr<segy_header_map>(
+		new segy_header_map(header_map_type::STANDARD)
+		);
+	new_map->clear();
+	reader->set_header_map(new_map);
 
-	// Âûגמה בטעמגמי ךאנעû ץ‎הונמג
-	auto hdrMap = reader->header_map();
-	int row_index = hdrMap->contains("row");
-	int col_index = hdrMap->contains("col");
-
-	cout << row_index << endl;
-	cout << col_index << endl;
-
-	//hdrMap->add_field("row", 8, 4, seismic_data_type::INT, "");
-	//hdrMap->add_field("col", 20, 4, seismic_data_type::INT, "");
-	int numHeaders = hdrMap->count();
-	cout << "num heders in map: " << numHeaders << endl;
-	cout << "traces count: " << reader->traces_count() << endl;
-
-	for (int i = 0; i < numHeaders; ++i) {
-		auto headerInfo = hdrMap->get_field(i);
-		cout << headerInfo->name() << '\t'
-			<< headerInfo->byte_loc() << '\t'
-			<< headerInfo->byte_size() << '\t'
-			<< (int)headerInfo->type_out() << endl;
-	}
+	auto trace0 = reader->get_trace(0);
+	auto header0 = trace0->get_header();
 
 	int n = reader->samples_count();
 

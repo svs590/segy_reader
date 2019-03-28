@@ -35,6 +35,10 @@ PYBIND11_MODULE(segy_reader, m)
 		py_segy_trace_header(m, "segy_trace_header", py_seismic_trace_header);
 	py::class_<seismic_trace, std::shared_ptr<seismic_trace>>
 		py_seismic_trace(m, "trace");
+	py::class_<seismic_header_map, shared_ptr<seismic_header_map>>
+		py_header_map(m, "header_map");
+	py::class_<segy_header_map, shared_ptr<segy_header_map>>
+		py_segy_header_map(m, "segy_header_map", py_header_map);
 
 	// Инициализация абстрактных классов и их наследников
 	py_seismic_data_provider_init(m, data_provider);
@@ -42,9 +46,10 @@ PYBIND11_MODULE(segy_reader, m)
 	py_segy_abstract_header_init(m, py_abstract_header);
 	py_seismic_trace_header_init(m, py_seismic_trace_header);
 	py_seismic_trace_header_init(m, py_seismic_trace);
+	py_seismic_header_map_init(m, py_header_map);
+	py_segy_header_map_init(m, py_segy_header_map);
 	
 	// Прочие классы
-	py_seismic_header_map_init(m);
 	py_seismic_geometry_info_init(m);
 	py_seismic_line_info_init(m);
 	py_seismic_data_types_init(m);

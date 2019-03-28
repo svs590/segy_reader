@@ -31,6 +31,7 @@ public:
 	virtual std::string											text_header() = 0;
 	virtual std::shared_ptr<seismic_abstract_header>			bin_header() = 0;
 	virtual std::shared_ptr<seismic_header_map>					header_map() = 0;
+	virtual void												set_header_map(std::shared_ptr<seismic_header_map> map) = 0;
 
 	virtual std::shared_ptr<seismic_trace_header>				trace_header(int index) = 0;
 	virtual std::shared_ptr<seismic_trace>						get_trace(int index) = 0;

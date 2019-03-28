@@ -21,12 +21,6 @@ public:
 	static _To convert(_From type);
 };
 
-class smatr_any_cast {
-	static const std::map<int, seismic_data_type> typemap;
-public:
-	void cast(std::any a, void *buffer);
-};
-
 long long get_available_memory();
 
 #endif

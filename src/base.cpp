@@ -53,12 +53,17 @@ map<string, pair<any, seismic_data_type>> seismic_trace_header::to_map() {
 void py_seismic_data_provider_init(py::module &m,
 	py::class_<seismic_data_provider, shared_ptr<seismic_data_provider>> &data_provider) {
 	
-	data_provider.def("text_header", &seismic_data_provider::text_header,
-		"Returns textural file header");
+	data_provider.def("text_header", [](seismic_data_provider &obj) {
+			return utf8_to_unicode(obj.text_header());
+		},
+		"Returns textural file header"
+	);
 	data_provider.def("bin_header", &seismic_data_provider::bin_header,
 		"Returns binary file header");
 	data_provider.def("header_map", &seismic_data_provider::header_map,
-		"Returns header mapping wich uses to parse trace headers");
+		"Returns copy of header map wich uses to parse trace headers");
+	data_provider.def("set_header_map", &seismic_data_provider::set_header_map,
+		py::arg("header_map"));
 	data_provider.def("trace_header", &seismic_data_provider::trace_header,
 		py::arg("trace_index"),
 		"Returns trace header by trace index");
@@ -89,7 +94,8 @@ void py_seismic_data_provider_init(py::module &m,
 		"Returns sampling interval (usually in ms)");
 }
 
-void py_seismic_header_map_init(py::module &m) {
+void py_seismic_header_map_init(py::module &m,
+	py::class_<seismic_header_map, shared_ptr<seismic_header_map>> &py_header_map) {
 
 	py::enum_<header_map_type>(m, "header_map_type")
 		.value("CUSTOM",	header_map_type::CUSTOM)
@@ -105,10 +111,7 @@ void py_seismic_header_map_init(py::module &m) {
 		.value("SU_BOTH",	header_map_type::SU_BOTH)
 		.export_values();
 
-	py::class_<seismic_header_map, shared_ptr<seismic_header_map>>
-		header_map(m, "header_map");
-
-	header_map.def("set_field", &seismic_header_map::add_field,
+	py_header_map.def("set_field", &seismic_header_map::add_field,
 		py::arg("field_name"),
 		py::arg("byte_location"),
 		py::arg("byte_size"),
@@ -116,50 +119,50 @@ void py_seismic_header_map_init(py::module &m) {
 		py::arg("description") = "",
 		"Add field in trace header map"
 		);
-	header_map.def("set_field", &seismic_header_map::set_field,
+	py_header_map.def("set_field", &seismic_header_map::set_field,
 		py::arg("traceheader_field"),
 		"Replace existance header field or add new if there is not "
 		"field with the same name"
 	);
-	header_map.def("remove", 
+	py_header_map.def("remove",
 		(void(seismic_header_map::*)(int))&seismic_header_map::remove,
 		py::arg("field_index"),
 		"Remove header field by index"
 		);
-	header_map.def("remove", (
+	py_header_map.def("remove", (
 		void(seismic_header_map::*)(const string &))&seismic_header_map::remove,
 		py::arg("field_name"),
 		"Remove header field by name"
 	);
-	header_map.def("clear", &seismic_header_map::clear,
+	py_header_map.def("clear", &seismic_header_map::clear,
 		"Remove all headers field from map");
-	header_map.def("index_of", &seismic_header_map::index_of,
+	py_header_map.def("index_of", &seismic_header_map::index_of,
 		py::arg("field_name"),
 		"Returns field index by name"
 		);
-	header_map.def("contains", &seismic_header_map::contains,
+	py_header_map.def("contains", &seismic_header_map::contains,
 		py::arg("field_name"),
 		"Returns field index by name if map contains field, return -1 otherwise"
 	);
-	header_map.def("get_field", 
+	py_header_map.def("get_field",
 		(shared_ptr<seismic_traceheader_field>(seismic_header_map::*)
 			(int)const)&seismic_header_map::get_field,
 		py::arg("field_index"),
 		"Returns field by index"
 	);
-	header_map.def("get_field",
+	py_header_map.def("get_field",
 		(shared_ptr<seismic_traceheader_field>
 			(seismic_header_map::*)(const string &)const)&seismic_header_map::get_field,
 		py::arg("field_name"),
 		"Returns field by name"
 	);
-	header_map.def_property_readonly("count", &seismic_header_map::count,
+	py_header_map.def_property_readonly("count", &seismic_header_map::count,
 		"Returns fields count"
 	);
-	header_map.def_property_readonly("type", &seismic_header_map::type,
+	py_header_map.def_property_readonly("type", &seismic_header_map::type,
 		"Returns map type"
 	);
-	header_map.def("to_dict", &seismic_header_map::to_map);
+	py_header_map.def("to_dict", &seismic_header_map::to_map);
 }
 
 void py_seismic_geometry_info_init(py::module &m) {

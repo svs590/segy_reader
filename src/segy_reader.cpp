@@ -37,7 +37,8 @@ DLLIMPORT float				cseis_csSegyReader_1hdrFloatValue(void *obj, int hdrIndex);
 DLLIMPORT double			cseis_csSegyReader_1hdrDoubleValue(void *obj, int hdrIndex);
 DLLIMPORT bool				cseis_csSegyReader_1moveToTrace(void *obj, int firstTraceIndex, int numTracesToRead);
 DLLIMPORT const float *		cseis_csSegyReader_1getNextTrace(void *obj);
-DLLIMPORT const void * const cseis_csSegyReader_getTrcHdrMap(void *obj);
+DLLIMPORT void * const		cseis_csSegyReader_getTrcHdrMap(void *obj);
+DLLIMPORT void				cseis_csSegyReader_setTrcHdrMap(void *obj, void *map);
 DLLIMPORT void				cseis_csNativeSegyReader_charBinHeader(void *obj, char *buf);
 DLLIMPORT bool				cseis_csSegyReader_2moveToTrace(void *obj, int firstTraceIndex);
 DLLIMPORT const void*const	cseis_csNativeSegyReader_getTraceHeader(void *obj);
@@ -188,6 +189,19 @@ shared_ptr<seismic_header_map> segy_reader::header_map() {
 	return shared_ptr<seismic_header_map>(
 		new segy_header_map(cseis_csSegyReader_getTrcHdrMap(obj))
 		);
+}
+
+void segy_reader::set_header_map(shared_ptr<seismic_header_map> map) {
+	shared_ptr<segy_header_map> segy_map;
+	switch (map->type_id()) {
+	case object_type::SEGY_HEADERMAP:
+		segy_map = dynamic_pointer_cast<segy_header_map>(map);
+		break;
+	default:
+		segy_map->set(map->to_map());
+		break;
+	}
+	cseis_csSegyReader_setTrcHdrMap(obj, segy_map->obj.get());
 }
 
 string segy_reader::text_header() {

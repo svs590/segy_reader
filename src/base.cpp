@@ -76,13 +76,31 @@ void py_seismic_data_provider_init(py::module &m,
 		"geometry downloading");
 	data_provider.def("get_geometry", &seismic_data_provider::get_geometry,
 		"Returns all seismic line information");
-	data_provider.def("get_traces", &seismic_data_provider::get_traces,
+	data_provider.def("get_traces", 
+		(vector<shared_ptr<seismic_trace>>(seismic_data_provider::*)(seismic_line_info))
+		&seismic_data_provider::get_traces,
 		py::arg("line_info"),
 		"Returns all traces in seismic line"
 	);
-	data_provider.def("get_headers", &seismic_data_provider::get_headers,
+	data_provider.def("get_headers", 
+		(vector<shared_ptr<seismic_trace_header>>(seismic_data_provider::*)(seismic_line_info))
+		&seismic_data_provider::get_headers,
 		py::arg("line_info"),
 		"Returns trace headers in seismic line"
+	);
+	data_provider.def("get_traces",
+		(vector<shared_ptr<seismic_trace>>(seismic_data_provider::*)(int, int))
+		&seismic_data_provider::get_traces,
+		py::arg("start_trace"),
+		py::arg("end_trace"),
+		"Returns traces from start_trace to end_trace"
+	);
+	data_provider.def("get_headers",
+		(vector<shared_ptr<seismic_trace_header>>(seismic_data_provider::*)(int, int))
+		&seismic_data_provider::get_headers,
+		py::arg("start_trace"),
+		py::arg("end_trace"),
+		"Returns trace headers from start_trace to end_trace"
 	);
 	data_provider.def("close", &seismic_data_provider::close,
 		"Close file");

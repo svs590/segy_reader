@@ -224,6 +224,12 @@ shared_ptr<seismic_trace_header> segy_reader::current_trace_header() {
 		);
 }
 
+vector<shared_ptr<seismic_trace>> segy_reader::get_traces(int start, int end) {
+	vector<shared_ptr<seismic_trace>> res;
+	get_traces(start, end, res);
+	return res;
+}
+
 vector<shared_ptr<seismic_trace>> segy_reader::get_traces(seismic_line_info line_info) {
 	preprocessing();
 	samples_count();
@@ -301,6 +307,12 @@ vector<shared_ptr<seismic_trace_header>> segy_reader::get_headers(seismic_line_i
 		get_headers(line_info.traces_indexes, 1, res);
 	}
 
+	return res;
+}
+
+vector<shared_ptr<seismic_trace_header>> segy_reader::get_headers(int start, int end) {
+	vector<shared_ptr<seismic_trace_header>> res;
+	get_headers(start, end, res);
 	return res;
 }
 

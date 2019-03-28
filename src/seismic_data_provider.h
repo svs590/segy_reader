@@ -41,7 +41,9 @@ public:
 	virtual std::shared_ptr<seismic_geometry_info>				get_geometry() = 0;
 
 	virtual std::vector<std::shared_ptr<seismic_trace>>			get_traces(seismic_line_info line) = 0;
+	virtual std::vector<std::shared_ptr<seismic_trace>>			get_traces(int start, int end) = 0;
 	virtual std::vector<std::shared_ptr<seismic_trace_header>>	get_headers(seismic_line_info line) = 0;
+	virtual std::vector<std::shared_ptr<seismic_trace_header>>	get_headers(int start, int end) = 0;
 	// get_traces(points) (interpolation)
 
 	virtual void												close() = 0;

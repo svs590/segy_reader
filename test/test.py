@@ -7,6 +7,7 @@ sys.path.insert(0, '../bin')
 import segy_reader as sgr
 import matplotlib.pyplot as plt
 import numpy as np
+from timeit import default_timer as timer
 
 reader = sgr.segy_reader('D:/FullStack_PSTM.segy', sgr.header_map_type.STANDARD)
 
@@ -75,14 +76,21 @@ for i in range(0, len(lines), 100):
 plt.show()
 
 ''' line 370 plot '''
-l370 = reader.get_traces(lines[370])
+start = timer()
+l370 = reader.get_traces(lines[1370])
+end = timer()
+print(f'Get line time: {end-start} s')
 
 ''' It may be optimal and faster! '''
-trc_array = l370[0].get_data()
-for i in range(1, len(l370)):
-    trc_array = np.column_stack((trc_array, l370[i].get_data()))
+trc_array = np.zeros((len(l370), reader.samples_count()))
 
-plt.imshow(trc_array, cmap='gray_r', aspect='auto')
+start = timer()
+for i in range(0, len(l370)):
+    trc_array[i, :] = l370[i].get_data()
+end = timer()
+print(f'Build matrix time: {end-start} s')
+
+plt.imshow(trc_array.T, cmap='gray_r', aspect='auto')
 plt.show()
 
 reader.close()

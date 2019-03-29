@@ -7,7 +7,7 @@
 using namespace std;
 using namespace cseis_geolib;
 
-DLLIMPORT void*			cseis_csNativecsSegyTraceHeader_createInstance(const void *hdrMap);
+DLLIMPORT void*			cseis_csNativecsSegyTraceHeader_createInstance(void *hdrMap);
 DLLIMPORT void*			cseis_csNativecsSegyTraceHeader_copyInstance(const void *obj);
 DLLIMPORT void			cseis_csNativecsSegyTraceHeader_deleteInstance(const void *obj);
 DLLIMPORT int			cseis_csNativecsSegyTraceHeader_numHeaders(const void *obj);
@@ -34,11 +34,12 @@ void native_trace_header_deleter(void *header) {
 }
 
 segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map) {
-	this->map = shared_ptr<segy_header_map>(new segy_header_map(map));
+	auto segy_map = shared_ptr<segy_header_map>(new segy_header_map(map));
 	obj = shared_ptr<void>(
-		cseis_csNativecsSegyTraceHeader_createInstance(this->map.get()),
+		cseis_csNativecsSegyTraceHeader_createInstance(segy_map->obj.get()),
 		native_trace_header_deleter
 	);
+	this->map = segy_map;
 }
 
 segy_trace_header::segy_trace_header(const void *const native_header) {
@@ -127,5 +128,12 @@ void segy_trace_header::set_field(int index, pair<any, seismic_data_type>) {
 }
 
 #ifdef PYTHON
+void py_segy_trace_header_init(py::module &m,
+	py::class_<segy_trace_header,
+	shared_ptr<segy_trace_header>> &py_segy_trace_header) {
 
+	py_segy_trace_header.def(py::init<shared_ptr<seismic_header_map>>(),
+		py::arg("header_map")
+	);
+}
 #endif

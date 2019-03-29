@@ -31,7 +31,7 @@ public:
 };
 
 #ifdef PYTHON
-void py_seismic_trace_header_init(py::module &m,
+void py_seismic_trace_init(py::module &m,
 	py::class_<seismic_trace, std::shared_ptr<seismic_trace>> &py_trace);
 #endif
 

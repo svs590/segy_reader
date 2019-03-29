@@ -7,6 +7,7 @@
 #include "segy_header_info.h"
 #include "seismic_header_map.h"
 #include "segy_reader.h"
+#include "segy_trace_header.h"
 
 #include "geolib_defines.h"
 
@@ -51,6 +52,7 @@ public:
 	virtual object_type type_id() { return object_type::SEGY_HEADERMAP; }
 
 	friend class segy_reader;
+	friend class segy_trace_header;
 private:
 	bool delete_check(int index);
 	bool delete_check(const std::string name);

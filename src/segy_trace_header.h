@@ -54,3 +54,9 @@ public:
 	segy_trace_header(py::dict trace_header) { throw std::runtime_error("Method not implemented"); }
 #endif
 };
+
+#ifdef PYTHON
+void py_segy_trace_header_init(py::module &m,
+	py::class_<segy_trace_header,
+		std::shared_ptr<segy_trace_header>> &py_segy_trace_header);
+#endif

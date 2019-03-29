@@ -47,9 +47,11 @@ PYBIND11_MODULE(segy_reader, m)
 	py_segy_reader_init(m, py_segy_reader);
 	py_segy_abstract_header_init(m, py_abstract_header);
 	py_seismic_trace_header_init(m, py_seismic_trace_header);
-	py_seismic_trace_header_init(m, py_seismic_trace);
+	py_seismic_trace_init(m, py_seismic_trace);
 	py_seismic_header_map_init(m, py_header_map);
 	py_segy_header_map_init(m, py_segy_header_map);
+	py_segy_trace_header_init(m, py_segy_trace_header);
+
 	
 	// Прочие классы
 	py_seismic_geometry_info_init(m);

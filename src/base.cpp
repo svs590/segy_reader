@@ -301,7 +301,7 @@ void py_seismic_trace_header_init(py::module &m,
 	py_seismic_trace_header.def("to_dict", &seismic_trace_header::to_dict);
 }
 
-void py_seismic_trace_header_init(py::module &m,
+void py_seismic_trace_init(py::module &m,
 	py::class_<seismic_trace, shared_ptr<seismic_trace>> &py_trace) {
 
 	py_trace.def("get_header", &seismic_trace::get_header);

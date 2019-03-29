@@ -6,6 +6,8 @@
 
 #include "seismic_data_provider.h"
 #include "segy_reader.h"
+#include "segy_bin_header.h"
+#include "segy_header_map.h"
 
 
 using namespace pybind11::literals;

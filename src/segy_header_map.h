@@ -1,5 +1,4 @@
-#ifndef __SEGY_HEADER_MAP
-#define __SEGY_HEADER_MAP
+#pragma once
 
 #include <memory>
 #include <string>
@@ -24,6 +23,7 @@ public:
 	segy_header_map(header_map_type type);
 	segy_header_map(const void *obj);
 	segy_header_map(const segy_header_map &map);
+	segy_header_map(std::shared_ptr<seismic_header_map> map);
 	segy_header_map& operator=(const void *obj);
 
 	virtual void set_field(std::shared_ptr<seismic_traceheader_field> header);
@@ -60,6 +60,4 @@ private:
 #ifdef PYTHON
 void py_segy_header_map_init(py::module &m,
 	py::class_<segy_header_map, std::shared_ptr<segy_header_map>> &py_segy_header_map);
-#endif
-
 #endif

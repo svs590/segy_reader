@@ -1,5 +1,4 @@
-#ifndef __SEGY_TRACE_HEADER
-#define __SEGY_TRACE_HEADER
+#pragma once
 
 #include <string>
 #include <exception>
@@ -9,6 +8,7 @@
 #include "geolib_defines.h"
 
 #include "seismic_trace_header.h"
+#include "seismic_header_map.h"
 
 #ifdef PYTHON
 #include <pybind11/pybind11.h>
@@ -18,10 +18,13 @@
 namespace py = pybind11;
 #endif
 
+
 class segy_trace_header : public seismic_trace_header {
 	std::shared_ptr<void> obj;
+	std::shared_ptr<seismic_header_map> map;
 public:
 	segy_trace_header() {}
+	segy_trace_header(std::shared_ptr<seismic_header_map> map);
 	segy_trace_header(const void *const native_header);
 	segy_trace_header(const segy_trace_header &header);
 	~segy_trace_header() {}
@@ -51,5 +54,3 @@ public:
 	segy_trace_header(py::dict trace_header) { throw std::runtime_error("Method not implemented"); }
 #endif
 };
-
-#endif

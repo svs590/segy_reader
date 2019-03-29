@@ -14,6 +14,8 @@
 #include "seismic_trace.h"
 #include "seismic_trace_header.h"
 
+class segy_trace_header;
+
 class segy_trace : public seismic_trace {
 public:
 	segy_trace() {}

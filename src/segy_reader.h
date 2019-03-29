@@ -7,9 +7,7 @@
 
 #include "utils.h"
 #include "seismic_data_provider.h"
-#include "segy_bin_header.h"
-#include "segy_header_map.h"
-#include "segy_trace.h"
+#include "seismic_header_map.h"
 #include "seismic_geometry.h"
 
 #ifdef PYTHON
@@ -85,9 +83,6 @@ public:
 	Eigen::VectorXf getNextTrace();
 
 	Eigen::VectorXf get_trace_data(int index);
-
-	std::vector<segy_trace> iline(seismic_line_info line);
-	std::vector<segy_trace> xline(int xl_num);
 
 	virtual void preprocessing();
 

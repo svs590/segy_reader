@@ -2,11 +2,12 @@
 #include "utils.h"
 
 #include "geolib_defines.h"
+#include "segy_header_map.h"
 
 using namespace std;
 using namespace cseis_geolib;
 
-
+DLLIMPORT void*			cseis_csNativecsSegyTraceHeader_createInstance(const void *hdrMap);
 DLLIMPORT void*			cseis_csNativecsSegyTraceHeader_copyInstance(const void *obj);
 DLLIMPORT void			cseis_csNativecsSegyTraceHeader_deleteInstance(const void *obj);
 DLLIMPORT int			cseis_csNativecsSegyTraceHeader_numHeaders(const void *obj);
@@ -32,6 +33,14 @@ void native_trace_header_deleter(void *header) {
 	cseis_csNativecsSegyTraceHeader_deleteInstance(header);
 }
 
+segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map) {
+	this->map = shared_ptr<segy_header_map>(new segy_header_map(map));
+	obj = shared_ptr<void>(
+		cseis_csNativecsSegyTraceHeader_createInstance(this->map.get()),
+		native_trace_header_deleter
+	);
+}
+
 segy_trace_header::segy_trace_header(const void *const native_header) {
 	obj = shared_ptr<void>(
 		cseis_csNativecsSegyTraceHeader_copyInstance(native_header),
@@ -40,7 +49,10 @@ segy_trace_header::segy_trace_header(const void *const native_header) {
 }
 
 segy_trace_header::segy_trace_header(const segy_trace_header &header) {
-	obj = header.obj;
+	obj = shared_ptr<void>(
+		cseis_csNativecsSegyTraceHeader_copyInstance(header.obj.get()),
+		native_trace_header_deleter
+		);
 }
 
 segy_trace_header& segy_trace_header::operator=(const void *obj) {

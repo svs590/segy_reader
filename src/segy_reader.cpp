@@ -9,6 +9,7 @@
 
 #include "segy_reader.h"
 #include "segy_bin_header.h"
+#include "segy_header_map.h"
 #include "utils.h"
 
 using namespace std;
@@ -192,15 +193,7 @@ shared_ptr<seismic_header_map> segy_reader::header_map() {
 }
 
 void segy_reader::set_header_map(shared_ptr<seismic_header_map> map) {
-	shared_ptr<segy_header_map> segy_map;
-	switch (map->type_id()) {
-	case object_type::SEGY_HEADERMAP:
-		segy_map = dynamic_pointer_cast<segy_header_map>(map);
-		break;
-	default:
-		segy_map->set(map->to_map());
-		break;
-	}
+	shared_ptr<segy_header_map> segy_map(new segy_header_map(map));
 	cseis_csSegyReader_setTrcHdrMap(obj, segy_map->obj.get());
 }
 

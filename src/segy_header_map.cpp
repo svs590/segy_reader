@@ -2,6 +2,7 @@
 
 #include "segy_header_map.h"
 #include "segy_header_info.h"
+#include "data_types.h"
 #include "utils.h"
 
 using namespace std;
@@ -57,11 +58,16 @@ segy_header_map::segy_header_map() : segy_header_map(header_map_type::STANDARD) 
 	map_type = header_map_type::CUSTOM;
 }
 
-segy_header_map::segy_header_map(const segy_header_map &map) 
+segy_header_map::segy_header_map(const segy_header_map &map)
 	: segy_header_map(map.type()) {
 	map_type = map.type();
 	for (int i = 0; i < map.count(); ++i)
 		set_field(map.get_field(i));
+}
+
+segy_header_map::segy_header_map(shared_ptr<seismic_header_map> map) : segy_header_map() {
+	set(map->to_map());
+	map_type = map->type();
 }
 
 void segy_header_map::set_field(shared_ptr<seismic_traceheader_field> header) {
@@ -210,7 +216,7 @@ map<string, tuple<int, int, seismic_data_type, string>> segy_header_map::to_map(
 		res[f->name()] = make_tuple(
 				f->byte_loc(), 
 				f->byte_size(),
-				f->type_out(), 
+				f->type_in(),
 				f->description()
 			);
 	}

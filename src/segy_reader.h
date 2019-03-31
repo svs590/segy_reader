@@ -5,10 +5,14 @@
 #include <string>
 #include <map>
 
+#include <boost/filesystem.hpp>
+namespace bfs = boost::filesystem;
+
 #include "utils.h"
 #include "seismic_data_provider.h"
 #include "seismic_header_map.h"
 #include "seismic_geometry.h"
+#include "segy_bin_header.h"
 
 #ifdef PYTHON
 #include <pybind11/stl.h>
@@ -25,8 +29,14 @@ class segy_reader : public seismic_data_provider {
 	void *obj;
 	bool processed = false;
 	bool headers_in_memory = false;
+
+	std::shared_ptr<segy_bin_header> f_bin_header;
+	std::string f_text_header;
 	std::vector<std::shared_ptr<seismic_trace_header>> headers;
 	std::shared_ptr<seismic_geometry_info> geometry;
+
+	bool f_ebcdic_header = true;
+	bfs::ifstream f_istream;
 	
 public:
 	segy_reader(const void *obj);
@@ -34,7 +44,7 @@ public:
 	~segy_reader();
 	segy_reader& operator=(const void *obj);
 	segy_reader(
-		std::string filename_in,
+		std::wstring filename_in,
 		int nTracesBuffer,
 		header_map_type segyHeaderMap,
 		bool reverseByteOrderData_in,
@@ -42,13 +52,13 @@ public:
 		bool autoscale_hdrs_in
 	);
 	segy_reader(
-		std::string filename_in,
+		std::wstring filename_in,
 		header_map_type segyHeaderMap,
 		bool reverseByteOrderData_in,
 		bool reverseByteOrderHdr_in,
 		bool autoscale_hdrs_in
 	);
-	segy_reader(std::string filename_in, header_map_type segyHeaderMap);
+	segy_reader(std::wstring filename_in, header_map_type segyHeaderMap);
 
 	virtual void close();
 	virtual int traces_count();
@@ -89,6 +99,9 @@ public:
 	virtual object_type type_id() { return object_type::SEGY_READER; }
 
 private:
+	void open_file();
+	void close_file();
+
 	void get_traces(
 		const std::vector<int> &trcs, 
 		int trc_buffer, 

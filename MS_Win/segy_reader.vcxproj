@@ -129,13 +129,13 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>csCAPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(BOOST_ROOT)lib64;..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "..\lib\OpenSeaSeis\bin\*.dll" "..\bin" /K /D /H /Y</Command>
@@ -147,13 +147,13 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>csCAPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(BOOST_ROOT)lib64;..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "..\lib\OpenSeaSeis\bin\*.dll" "..\bin" /K /D /H /Y</Command>
@@ -167,7 +167,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(PYTHON_PATH)include;..\lib\pybind11\include;..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);$(PYTHON_PATH)include;..\lib\pybind11\include;..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PYTHON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -175,7 +175,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>csCAPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(PYTHON_PATH)libs;..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(BOOST_ROOT)lib64;$(PYTHON_PATH)libs;..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "..\lib\OpenSeaSeis\bin\*.dll" "..\bin" /K /D /H /Y</Command>
@@ -189,7 +189,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -197,7 +197,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>csCAPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(BOOST_ROOT)lib64;..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "..\lib\OpenSeaSeis\bin\*.dll" "..\bin" /K /D /H /Y</Command>
@@ -211,7 +211,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(PYTHON_PATH)include;..\lib\pybind11\include;..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);$(PYTHON_PATH)include;..\lib\pybind11\include;..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PYTHON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -219,7 +219,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>csCAPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(PYTHON_PATH)libs;..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(BOOST_ROOT)lib64;$(PYTHON_PATH)libs;..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "..\lib\OpenSeaSeis\bin\*.dll" "..\bin" /K /D /H /Y</Command>
@@ -233,7 +233,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -241,13 +241,14 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>csCAPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(BOOST_ROOT)lib64;..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "..\lib\OpenSeaSeis\bin\*.dll" "..\bin" /K /D /H /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\data_conversion.h" />
     <ClInclude Include="..\src\data_types.h" />
     <ClInclude Include="..\src\seismic_geometry.h" />
     <ClInclude Include="..\src\obj_base.h" />
@@ -268,6 +269,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\base.cpp" />
+    <ClCompile Include="..\src\data_conversion.cpp" />
     <ClCompile Include="..\src\py_mudule.cpp" />
     <ClCompile Include="..\src\segy_bin_header.cpp" />
     <ClCompile Include="..\src\segy_header_info.cpp" />

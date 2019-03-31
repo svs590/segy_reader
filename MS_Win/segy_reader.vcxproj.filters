@@ -84,6 +84,9 @@
     <ClInclude Include="..\src\seismic_geometry.h">
       <Filter>Файлы заголовков\base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\data_conversion.h">
+      <Filter>Файлы заголовков\utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\test.cpp">
@@ -115,6 +118,9 @@
     </ClCompile>
     <ClCompile Include="..\src\base.cpp">
       <Filter>Файлы заголовков\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\data_conversion.cpp">
+      <Filter>Исходные файлы\utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

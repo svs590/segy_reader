@@ -35,6 +35,35 @@ DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_fixedTraceLengthFlag(const 
 DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_numExtendedBlocks(const void *obj);
 
 
+const vector<tuple<string, string, int>> segy_bin_header::f_map = {
+	{"Job identification number",	"",				4},
+	{"Line number", 	"",				4},
+	{"Reel number",		"",			4},
+	{"Number of data traces", "",					2},
+	{"Number of auxiliary", 	"",			2},
+	{"Sample interval", 	"",		2},
+	{"Sample interval original field recording", "",	2},
+	{"Number of samples", 	"",		2},
+	{"Number of samples per data trace original field recording", "",		2},
+	{"Data sample format code",	"",	2},
+	{"Ensemble fold", 			"",		2},
+	{"Trace sorting code", 		"",		2},
+	{"Vertical sum code", 		"",	2},
+	{"Sweep frequency start", 	"",	2},
+	{"Sweep frequency end", 	"",		2},
+	{"Sweep length", 			"",	2},
+	{"Sweep type code", 			"",	2},
+	{"Trace number of sweep channel",	"",	2},
+	{"Sweep trace taper length at start",	"",		2},
+	{"Sweep trace taper length at end",	"",	2},
+	{"Taper type", 		"",	2},
+	{"Correlated data traces ", 	"",			2},
+	{"Binary gain recovered",	"",	2},
+	{"Amplitude recovery method", 		"",	2},
+	{"Measurement system",			"",	2},
+	{"num Extended Blocks",	"",	numExtendedBlocks()}
+}
+
 segy_bin_header::segy_bin_header(const void *obj) {
 	this->obj = const_cast<void*>(obj);
 	initialize();

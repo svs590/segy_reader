@@ -11,6 +11,7 @@
 #include "segy_bin_header.h"
 #include "segy_header_map.h"
 #include "utils.h"
+#include "data_conversion.h"
 
 using namespace std;
 using namespace cseis_geolib;
@@ -47,7 +48,7 @@ DLLIMPORT const char*		cseis_csNativeSegyReader_getFileName(void *obj);
 
 segy_reader::segy_reader(const void *obj) {
 	this->obj = const_cast<void*>(obj);
-	filename = string(cseis_csNativeSegyReader_getFileName(this->obj));
+	//filename = string(cseis_csNativeSegyReader_getFileName(this->obj));
 }
 
 segy_reader::segy_reader(const segy_reader &obj) {
@@ -55,8 +56,7 @@ segy_reader::segy_reader(const segy_reader &obj) {
 }
 
 segy_reader::~segy_reader() {
-	close();
-	cseis_csNativeSegyReader_deleteInstance(obj);
+	close_file();
 }
 
 segy_reader& segy_reader::operator=(const void *obj) {
@@ -66,7 +66,7 @@ segy_reader& segy_reader::operator=(const void *obj) {
 }
 
 segy_reader::segy_reader(
-	string filename_in,
+	wstring filename_in,
 	int nTracesBuffer,
 	header_map_type segyHeaderMap,
 	bool reverseByteOrderData_in,
@@ -74,20 +74,13 @@ segy_reader::segy_reader(
 	bool autoscale_hdrs_in
 ) : seismic_data_provider(filename_in) {
 
-	obj = cseis_csNativeSegyReader_createInstance(
-		filename_in.c_str(),
-		nTracesBuffer,
-		geolib_type_converter::convert<header_map_type, const int>(segyHeaderMap),
-		reverseByteOrderData_in,
-		reverseByteOrderHdr_in,
-		autoscale_hdrs_in
-	);
+	open_file();
 
 	geometry = shared_ptr<seismic_geometry_info>(new seismic_geometry_info);
 }
 
 segy_reader::segy_reader(
-	string filename_in,
+	wstring filename_in,
 	header_map_type segyHeaderMap,
 	bool reverseByteOrderData_in,
 	bool reverseByteOrderHdr_in,
@@ -101,7 +94,7 @@ segy_reader::segy_reader(
 		autoscale_hdrs_in
 	) { }
 
-segy_reader::segy_reader(string filename_in, header_map_type segyHeaderMap) 
+segy_reader::segy_reader(wstring filename_in, header_map_type segyHeaderMap)
 	: segy_reader(
 		filename_in,
 		1,
@@ -198,11 +191,22 @@ void segy_reader::set_header_map(shared_ptr<seismic_header_map> map) {
 }
 
 string segy_reader::text_header() {
+	if (!f_text_header.empty())
+		return f_text_header;
+
 	char *buf = new char[csSegyHeader::SIZE_CHARHDR];
-	cseis_csNativeSegyReader_charBinHeader(obj, buf);
-	auto res = string(buf);
-	delete[] buf;
-	return res;
+
+	f_istream.seekg(0);
+	f_istream.read(buf, csSegyHeader::SIZE_CHARHDR);
+	if (f_istream.fail()) 
+		throw runtime_error("segy_reader: unexpected error occurred when reading segy text header");
+	
+	if (f_ebcdic_header)
+		f_text_header = ebcdic_to_char(buf);
+	else
+		f_text_header = string(buf);
+	
+	return f_text_header;
 }
 
 shared_ptr<seismic_trace_header> segy_reader::trace_header(int index) {
@@ -492,6 +496,19 @@ void segy_reader::preprocessing() {
 
 	processed = true;
 }
+
+void segy_reader::open_file() {
+	f_istream.open(filename, std::ios_base::in | std::ios_base::binary);
+	if (f_istream.fail()) {
+		throw runtime_error("segy_reader: could not open segy file");
+	}
+}
+
+void segy_reader::close_file() {
+	if (f_istream.is_open())
+		f_istream.close();
+}
+
 
 #ifdef PYTHON
 void py_segy_reader_init(py::module &m,

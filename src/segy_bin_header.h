@@ -15,7 +15,8 @@ namespace py = pybind11;
 
 class segy_bin_header : public seismic_abstract_header {
 	void *obj = nullptr;
-	std::vector<std::pair<std::string, int>> fields;
+	static const std::vector<std::tuple<std::string, std::string, int>> f_map;
+	std::map<std::string, int> fields;
 public:
 	segy_bin_header(const void *obj);
 	segy_bin_header& operator=(const void *obj);

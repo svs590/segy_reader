@@ -16,14 +16,14 @@ using namespace std::chrono;
 
 int main() {
 
-	string file = "D:/FullStack_PSTM.segy";
+	wstring file = L"F:/FullStack_PSTM.segy";
 
 	auto reader = shared_ptr<seismic_data_provider>(
 		new segy_reader(file, header_map_type::STANDARD)
 		);
 
 	cout << reader->text_header() << endl;
-	
+	/*
 	auto new_map = shared_ptr<segy_header_map>(
 		new segy_header_map(header_map_type::STANDARD)
 		);
@@ -98,7 +98,7 @@ int main() {
 	for (int i = 0; i < trace_data.size(); ++i)
 		fout << trace_data[i] << endl;
 	fout.close();
-	
+	*/
 	system("pause");
 	return 0;
 }

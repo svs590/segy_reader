@@ -16,13 +16,17 @@ using namespace std::chrono;
 
 int main() {
 
-	wstring file = L"F:/FullStack_PSTM.segy";
+	wstring file = L"D:/FullStack_PSTM.segy";
 
 	auto reader = shared_ptr<seismic_data_provider>(
 		new segy_reader(file, header_map_type::STANDARD)
 		);
 
 	cout << reader->text_header() << endl;
+
+	auto bh = reader->bin_header();
+
+
 	/*
 	auto new_map = shared_ptr<segy_header_map>(
 		new segy_header_map(header_map_type::STANDARD)

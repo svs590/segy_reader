@@ -12,6 +12,7 @@
 #include "segy_header_map.h"
 #include "utils.h"
 #include "data_conversion.h"
+#include "segy_defines.h"
 
 using namespace std;
 using namespace cseis_geolib;
@@ -133,9 +134,22 @@ float segy_reader::sample_interval() {
 }
 
 shared_ptr<seismic_abstract_header> segy_reader::bin_header() {
-	return shared_ptr<seismic_abstract_header>(
-		new segy_bin_header(cseis_SegyReader_binHeader(obj))
-		);
+	if (f_bin_header != nullptr)
+		return f_bin_header;
+
+	std::vector<byte_t> buf(segy_file::bin_header_size);
+
+	size_t pos = f_istream.tellg();
+	f_istream.seekg(segy_file::text_header_size, ios::beg);
+	f_istream.read((char*)buf.data(), segy_file::bin_header_size);
+	f_istream.seekg(pos, ios::beg);
+
+	if (f_istream.fail())
+		throw runtime_error("segy_reader: unexpected error occurred when reading segy binary header");
+
+	f_bin_header.reset(new segy_bin_header(buf, endian_swap::reverse));
+
+	return f_bin_header;
 }
 
 void segy_reader::moveToTrace(int firstTraceIndex, int numTracesToRead) {

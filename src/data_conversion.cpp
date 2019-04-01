@@ -66,45 +66,173 @@ std::string char_to_ecdic(const std::string &str) {
 	return res;
 }
 
-inline int byte_to_short_swap(byte_t const* ptr) {
-	return((short)((ptr[0] << 8) + ptr[1]));
+short byte_to_short(byte_t const* ptr) {
+	return ((short)ptr[1] << 8) + (short)ptr[0];
 }
 
-inline int byte_to_short(byte_t const* ptr) {
-	return((short)((ptr[1] << 8) + ptr[0]));
+short byte_to_short_swap(byte_t const* ptr) {
+	return ((short)ptr[0] << 8) + (short)ptr[1];
 }
 
-inline unsigned short byte_to_ushort_swap(byte_t const* ptr) {
-	return((unsigned short)((ptr[0] << 8) + ptr[1]));
+short byte_to_short_swap_pair(byte_t const* ptr) {
+	return ((short)ptr[0] << 8) + (short)ptr[1];
 }
 
-inline unsigned short byte_to_ushort(byte_t const* ptr) {
-	return((unsigned short)((ptr[1] << 8) + ptr[0]));
+short byte_to_short(byte_t const* ptr, endian_swap swap) {
+	switch (swap)
+	{
+	case endian_swap::none:
+		return byte_to_short(ptr);
+		break;
+	case endian_swap::reverse:
+		return byte_to_short_swap(ptr);
+		break;
+	case endian_swap::pair:
+		return byte_to_short_swap_pair(ptr);
+		break;
+	default:
+		break;
+	}
 }
 
-inline int byte_to_int(byte_t const* ptr) {
-	return((int)((ptr[3] << 24) + (ptr[2] << 16) + (ptr[1] << 8) + ptr[0]));
+unsigned short byte_to_ushort(byte_t const* ptr) {
+	return ((unsigned short)ptr[1] << 8) + (unsigned short)ptr[0];
 }
 
-inline uint64_t byte_to_uint64(byte_t const* ptr) {
-	uint64_t value;
-	memcpy(&value, ptr, 8);
-	return value;
+unsigned short byte_to_ushort_swap(byte_t const* ptr) {
+	return ((unsigned short)ptr[0] << 8) + (unsigned short)ptr[1];
 }
 
-inline int byte_to_int_swap(byte_t const* ptr) {
-	return((int)((ptr[0] << 24) + (ptr[1] << 16) + (ptr[2] << 8) + ptr[3]));
+unsigned short byte_to_ushort_swap_pair(byte_t const* ptr) {
+	return ((unsigned short)ptr[0] << 8) + (unsigned short)ptr[1];
 }
 
-inline float byte_to_float(byte_t const* ptr) {
-	return((float)((ptr[3] << 24) + (ptr[2] << 16) + (ptr[1] << 8) + ptr[0]));
+unsigned short byte_to_ushort(byte_t const* ptr, endian_swap swap) {
+	switch (swap)
+	{
+	case endian_swap::none:
+		return byte_to_ushort(ptr);
+		break;
+	case endian_swap::reverse:
+		return byte_to_ushort_swap(ptr);
+		break;
+	case endian_swap::pair:
+		return byte_to_ushort_swap_pair(ptr);
+		break;
+	default:
+		break;
+	}
 }
 
-//inline double byte_to_double( byte_t const* ptr ) {
-//  return( (double)( (ptr[7] << 56) + (ptr[6] << 48) + (ptr[5] << 40) + (ptr[4] << 32) + (ptr[3] << 24) + (ptr[2] << 16) + (ptr[1] << 8) + ptr[0] ) );
-//}
+int byte_to_int(byte_t const* ptr) {
+	return
+		((int)ptr[3] << 24) + ((int)ptr[2] << 16) + ((int)ptr[1] << 8) + (int)ptr[0];
+}
 
-inline float byte_to_float_swap(byte_t const* ptr) {
+int byte_to_int_swap(byte_t const* ptr) {
+	return
+		((int)ptr[0] << 24) + ((int)ptr[1] << 16) + ((int)ptr[2] << 8) + (int)ptr[3];
+}
+
+int byte_to_int_swap_pair(byte_t const* ptr) {
+	return
+		((int)ptr[0] << 16) + ((int)ptr[1] << 24) + (int)ptr[2] + ((int)ptr[3] << 8);
+}
+
+int byte_to_int(byte_t const* ptr, endian_swap swap) {
+	switch (swap)
+	{
+	case endian_swap::none:
+		return byte_to_int(ptr);
+		break;
+	case endian_swap::reverse:
+		return byte_to_int_swap(ptr);
+		break;
+	case endian_swap::pair:
+		return byte_to_int_swap_pair(ptr);
+		break;
+	default:
+		break;
+	}
+}
+
+uint64_t byte_to_uint64(byte_t const* ptr) {
+	return
+		((uint64_t)ptr[7] << 56) + ((uint64_t)ptr[6] << 48) + ((uint64_t)ptr[5] << 40) + ((uint64_t)ptr[4] << 32) +
+		((uint64_t)ptr[3] << 24) + ((uint64_t)ptr[2] << 16) + ((uint64_t)ptr[1] << 8) + (uint64_t)ptr[0];
+}
+
+uint64_t byte_to_uint64_swap(byte_t const* ptr) {
+	return
+		((uint64_t)ptr[0] << 56) + ((uint64_t)ptr[1] << 48) + ((uint64_t)ptr[2] << 40) + ((uint64_t)ptr[3] << 32) +
+		((uint64_t)ptr[4] << 24) + ((uint64_t)ptr[5] << 16) + ((uint64_t)ptr[6] << 8) + (uint64_t)ptr[7];
+}
+
+uint64_t byte_to_uint64_swap_pair(byte_t const* ptr) {
+	return
+		((uint64_t)ptr[1] << 56) + ((uint64_t)ptr[0] << 48) + ((uint64_t)ptr[3] << 40) + ((uint64_t)ptr[2] << 32) +
+		((uint64_t)ptr[5] << 24) + ((uint64_t)ptr[4] << 16) + ((uint64_t)ptr[7] << 8) + (uint64_t)ptr[6];
+}
+
+uint64_t byte_to_uint64(byte_t const* ptr, endian_swap swap) {
+	switch (swap)
+	{
+	case endian_swap::none:
+		return byte_to_uint64(ptr);
+		break;
+	case endian_swap::reverse:
+		return byte_to_uint64_swap(ptr);
+		break;
+	case endian_swap::pair:
+		return byte_to_uint64_swap_pair(ptr);
+		break;
+	default:
+		break;
+	}
+}
+
+int64_t byte_to_int64(byte_t const* ptr) {
+	return
+		((int64_t)ptr[7] << 56) + ((int64_t)ptr[6] << 48) + ((int64_t)ptr[5] << 40) + ((int64_t)ptr[4] << 32) +
+		((int64_t)ptr[3] << 24) + ((int64_t)ptr[2] << 16) + ((int64_t)ptr[1] << 8) + (int64_t)ptr[0];
+}
+
+int64_t byte_to_int64_swap(byte_t const* ptr) {
+	return
+		((int64_t)ptr[0] << 56) + ((int64_t)ptr[1] << 48) + ((int64_t)ptr[2] << 40) + ((int64_t)ptr[3] << 32) +
+		((int64_t)ptr[4] << 24) + ((int64_t)ptr[5] << 16) + ((int64_t)ptr[6] << 8) + (int64_t)ptr[7];
+}
+
+int64_t byte_to_int64_swap_pair(byte_t const* ptr) {
+	return
+		((int64_t)ptr[1] << 56) + ((int64_t)ptr[0] << 48) + ((int64_t)ptr[3] << 40) + ((int64_t)ptr[2] << 32) +
+		((int64_t)ptr[5] << 24) + ((int64_t)ptr[4] << 16) + ((int64_t)ptr[7] << 8) + (int64_t)ptr[6];
+}
+
+int64_t byte_to_int64(byte_t const* ptr, endian_swap swap) {
+	switch (swap)
+	{
+	case endian_swap::none:
+		return byte_to_int64(ptr);
+		break;
+	case endian_swap::reverse:
+		return byte_to_int64_swap(ptr);
+		break;
+	case endian_swap::pair:
+		return byte_to_int64_swap_pair(ptr);
+		break;
+	default:
+		break;
+	}
+}
+
+float byte_to_float(byte_t const* ptr) {
+	float f;
+	memcpy(&f, ptr, 4);
+	return f;
+}
+
+float byte_to_float_swap(byte_t const* ptr) {
 	char c[4];
 	c[0] = ptr[3];
 	c[1] = ptr[2];
@@ -115,51 +243,115 @@ inline float byte_to_float_swap(byte_t const* ptr) {
 	return f;
 }
 
-/*
-inline double byte_to_double_swap( byte_t const* ptr ) {
-  char c[8];
-  c[0] = ptr[3];
-  c[1] = ptr[2];
-  c[2] = ptr[1];
-  c[3] = ptr[0];
-  c[4] = ptr[7];
-  c[5] = ptr[6];
-  c[6] = ptr[5];
-  c[7] = ptr[4];
-  double d;
-  memcpy( &d, c, 8 );
-  return d;
+float byte_to_float_swap_pair(byte_t const* ptr) {
+	char c[4];
+	c[0] = ptr[2];
+	c[1] = ptr[3];
+	c[2] = ptr[0];
+	c[3] = ptr[1];
+	float f;
+	memcpy(&f, c, 4);
+	return f;
 }
-*/
 
-inline void short_to_byte_swap(short value, byte_t* outPtr) {
+float byte_to_float(byte_t const* ptr, endian_swap swap) {
+	switch (swap)
+	{
+	case endian_swap::none:
+		return byte_to_float(ptr);
+		break;
+	case endian_swap::reverse:
+		return byte_to_float_swap(ptr);
+		break;
+	case endian_swap::pair:
+		return byte_to_float_swap_pair(ptr);
+		break;
+	default:
+		break;
+	}
+}
+
+double byte_to_double( byte_t const* ptr ) {
+	double f;
+	memcpy(&f, ptr, 8);
+	return f;
+}
+
+double byte_to_double_swap( byte_t const* ptr ) {
+	char c[8];
+	c[0] = ptr[7];
+	c[1] = ptr[6];
+	c[2] = ptr[5];
+	c[3] = ptr[4];
+	c[4] = ptr[3];
+	c[5] = ptr[2];
+	c[6] = ptr[1];
+	c[7] = ptr[0];
+	double f;
+	memcpy(&f, c, 8);
+	return f;
+}
+
+double byte_to_double_swap_pair(byte_t const* ptr) {
+	char c[8];
+	c[0] = ptr[6];
+	c[1] = ptr[7];
+	c[2] = ptr[4];
+	c[3] = ptr[5];
+	c[4] = ptr[2];
+	c[5] = ptr[3];
+	c[6] = ptr[0];
+	c[7] = ptr[1];
+	double f;
+	memcpy(&f, c, 8);
+	return f;
+}
+
+double byte_to_double(byte_t const* ptr, endian_swap swap) {
+	switch (swap)
+	{
+	case endian_swap::none:
+		return byte_to_double(ptr);
+		break;
+	case endian_swap::reverse:
+		return byte_to_double_swap(ptr);
+		break;
+	case endian_swap::pair:
+		return byte_to_double_swap_pair(ptr);
+		break;
+	default:
+		break;
+	}
+}
+
+void short_to_byte_swap(short value, byte_t* outPtr) {
 	outPtr[1] = value & 0xff;
 	outPtr[0] = (value & 0xff00) >> 8;
 }
 
-inline void short_to_byte(short value, byte_t* outPtr) {
+void short_to_byte(short value, byte_t* outPtr) {
 	outPtr[0] = value & 0xff;
 	outPtr[1] = (value & 0xff00) >> 8;
 }
 
-inline void int_to_byte(int value, byte_t* outPtr) {
+void int_to_byte(int value, byte_t* outPtr) {
 	outPtr[0] = value & 0xff;
 	outPtr[1] = (value & 0xff00) >> 8;
 	outPtr[2] = (value & 0xff0000) >> 16;
 	outPtr[3] = (value & 0xff000000) >> 24;
 }
 
-inline void int_to_byte_swap(int value, byte_t* outPtr) {
+void int_to_byte_swap(int value, byte_t* outPtr) {
 	outPtr[3] = value & 0xff;
 	outPtr[2] = (value & 0xff00) >> 8;
 	outPtr[1] = (value & 0xff0000) >> 16;
 	outPtr[0] = (value & 0xff000000) >> 24;
 }
 
-inline void float_to_byte_swap(float value, byte_t* outPtr) {
+void float_to_byte_swap(float value, byte_t* outPtr) {
 	// ???
 }
 
-inline void float_to_byte(float value, byte_t* outPtr) {
+void float_to_byte(float value, byte_t* outPtr) {
 	// ???
 }

@@ -87,6 +87,9 @@
     <ClInclude Include="..\src\data_conversion.h">
       <Filter>Файлы заголовков\utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\segy_defines.h">
+      <Filter>Файлы заголовков\segy</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\test.cpp">

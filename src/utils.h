@@ -5,8 +5,6 @@
 #include <map>
 #include <any>
 
-#include "geolib_defines.h"
-
 #include "data_types.h"
 
 #define NOT_INDEX -1

@@ -7,7 +7,7 @@
 namespace py = pybind11;
 #endif
 
-typedef char byte_t;
+typedef unsigned char byte_t;
 
 enum class seismic_data_type {
 	UNKNOWN,

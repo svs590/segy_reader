@@ -7,7 +7,7 @@
 using namespace std;
 using namespace cseis_geolib;
 
-DLLIMPORT void*			cseis_csNativecsSegyTraceHeader_createInstance(void *hdrMap);
+//DLLIMPORT void*			cseis_csNativecsSegyTraceHeader_createInstance(void *hdrMap);
 DLLIMPORT void*			cseis_csNativecsSegyTraceHeader_copyInstance(const void *obj);
 DLLIMPORT void			cseis_csNativecsSegyTraceHeader_deleteInstance(const void *obj);
 DLLIMPORT int			cseis_csNativecsSegyTraceHeader_numHeaders(const void *obj);
@@ -36,7 +36,8 @@ void native_trace_header_deleter(void *header) {
 segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map) {
 	auto segy_map = shared_ptr<segy_header_map>(new segy_header_map(map));
 	obj = shared_ptr<void>(
-		cseis_csNativecsSegyTraceHeader_createInstance(segy_map->obj.get()),
+		nullptr,
+		//cseis_csNativecsSegyTraceHeader_createInstance(segy_map->obj.get()),
 		native_trace_header_deleter
 	);
 	this->map = segy_map;

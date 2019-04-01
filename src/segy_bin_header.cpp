@@ -1,4 +1,6 @@
 #include "segy_bin_header.h"
+#include "segy_defines.h"
+#include "data_conversion.h"
 #include "utils.h"
 
 #include <iostream>
@@ -6,282 +8,145 @@
 
 using namespace std;
 
-DLLIMPORT int				cseis_csNativeSegyBinHeader_jobID(const void *obj);
-DLLIMPORT int				cseis_csNativeSegyBinHeader_jobID(const void *obj);
-DLLIMPORT int				cseis_csNativeSegyBinHeader_lineNum(const void *obj);
-DLLIMPORT int				cseis_csNativeSegyBinHeader_reelNum(const void *obj);
-DLLIMPORT int				cseis_csNativeSegyBinHeader_numTraces(const void *obj);
-DLLIMPORT int				cseis_csNativeSegyBinHeader_numAuxTraces(const void *obj);
-DLLIMPORT int				cseis_csNativeSegyBinHeader_sampleIntUS(const void *obj);
-DLLIMPORT int				cseis_csNativeSegyBinHeader_sampleIntOrigUS(const void *obj);
-DLLIMPORT int				cseis_csNativeSegyBinHeader_numSamples(const void *obj);
-DLLIMPORT int				cseis_csNativeSegyBinHeader_numSamplesOrig(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_dataSampleFormat(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_fold(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_sortCode(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_vertSumCode(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_sweepFreqStart(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_sweepFreqEnd(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_sweepCode(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_taperType(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_correlatedTraces(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_gainRecovered(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_ampRecoveryMethod(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_unitSystem(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_polarity(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_vibPolarityCode(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_revisionNum(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_fixedTraceLengthFlag(const void *obj);
-DLLIMPORT unsigned short	cseis_csNativeSegyBinHeader_numExtendedBlocks(const void *obj);
-
-
-const vector<tuple<string, string, int>> segy_bin_header::f_map = {
-	{"Job identification number",	"",				4},
-	{"Line number", 	"",				4},
-	{"Reel number",		"",			4},
-	{"Number of data traces", "",					2},
-	{"Number of auxiliary", 	"",			2},
-	{"Sample interval", 	"",		2},
-	{"Sample interval original field recording", "",	2},
-	{"Number of samples", 	"",		2},
-	{"Number of samples per data trace original field recording", "",		2},
-	{"Data sample format code",	"",	2},
-	{"Ensemble fold", 			"",		2},
-	{"Trace sorting code", 		"",		2},
-	{"Vertical sum code", 		"",	2},
-	{"Sweep frequency start", 	"",	2},
-	{"Sweep frequency end", 	"",		2},
-	{"Sweep length", 			"",	2},
-	{"Sweep type code", 			"",	2},
-	{"Trace number of sweep channel",	"",	2},
-	{"Sweep trace taper length at start",	"",		2},
-	{"Sweep trace taper length at end",	"",	2},
-	{"Taper type", 		"",	2},
-	{"Correlated data traces ", 	"",			2},
-	{"Binary gain recovered",	"",	2},
-	{"Amplitude recovery method", 		"",	2},
-	{"Measurement system",			"",	2},
-	{"num Extended Blocks",	"",	numExtendedBlocks()}
-}
-
-segy_bin_header::segy_bin_header(const void *obj) {
-	this->obj = const_cast<void*>(obj);
-	initialize();
-}
-
-segy_bin_header& segy_bin_header::operator=(const void *obj) {
-	this->obj = const_cast<void*>(obj);
-	initialize();
-	return *this;
-}
-
 segy_bin_header::~segy_bin_header() {
 
 }
 
-int				segy_bin_header::jobID() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_jobID(obj);
+segy_bin_header::segy_bin_header() {
+	set_zero();
 }
 
-int				segy_bin_header::lineNum() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_lineNum(obj);
+segy_bin_header::segy_bin_header(const vector<byte_t> &raw_data, endian_swap swap_endian) {
+	initialize(raw_data, swap_endian);
 }
 
-int				segy_bin_header::reelNum() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_reelNum(obj);
+void segy_bin_header::initialize(const vector<byte_t> &raw_data, endian_swap swap_endian) {
+	if (raw_data.size() != segy_file::bin_header_size)
+		throw runtime_error("segy_bin_header: binary file header has invalid size");
+
+	f_is_segy_2 = (unsigned char)raw_data[300] != 0 ? true : false;
+
+	int endian_swap = byte_to_int(&raw_data[96]);
+	if (endian_swap == 16909060)
+		f_endian_swap = endian_swap::none;
+	else if (endian_swap == 67305985)
+		f_endian_swap = endian_swap::reverse;
+	else if (endian_swap == 33620995)
+		f_endian_swap = endian_swap::pair;
+	else
+		f_endian_swap = swap_endian;
+
+	f_job_id = byte_to_int(&raw_data[0], f_endian_swap);
+	f_line_num = byte_to_int(&raw_data[4], f_endian_swap);
+	f_reel_num = byte_to_int(&raw_data[8], f_endian_swap);
+	f_traces_count = (int)byte_to_ushort(&raw_data[12], f_endian_swap);
+	f_aux_traces_count = (int)byte_to_ushort(&raw_data[14], f_endian_swap);
+	f_sample_interval = (double)byte_to_ushort(&raw_data[16], f_endian_swap);
+	f_sample_interval_orig = (double)byte_to_ushort(&raw_data[18], f_endian_swap);
+	f_samples_count = (int)byte_to_ushort(&raw_data[20], f_endian_swap);
+	f_samples_count_orig = (int)byte_to_ushort(&raw_data[22], f_endian_swap);
+	f_data_format = (int)byte_to_ushort(&raw_data[24], f_endian_swap);
+
+	f_ensemble_fold = (int)byte_to_ushort(&raw_data[26], f_endian_swap);
+	f_sorting_code = (int)byte_to_ushort(&raw_data[28], f_endian_swap);
+	f_vert_sum_code = (int)byte_to_ushort(&raw_data[30], f_endian_swap);
+	f_sweep_fr_start = (int)byte_to_ushort(&raw_data[32], f_endian_swap);
+	f_sweep_fr_end = (int)byte_to_ushort(&raw_data[34], f_endian_swap);
+	f_sweep_len = (int)byte_to_ushort(&raw_data[36], f_endian_swap);
+	f_sweep_type = (int)byte_to_ushort(&raw_data[38], f_endian_swap);
+	f_sweep_chanel_trcs_count = (int)byte_to_ushort(&raw_data[40], f_endian_swap);
+	f_sweep_trc_taper_len_start = (int)byte_to_ushort(&raw_data[42], f_endian_swap);
+	f_sweep_trc_taper_len_end = (int)byte_to_ushort(&raw_data[44], f_endian_swap);
+	f_taper_type = (int)byte_to_ushort(&raw_data[46], f_endian_swap);
+	f_correlated_traces = (int)byte_to_ushort(&raw_data[48], f_endian_swap);
+	f_gain_recovered = (int)byte_to_ushort(&raw_data[50], f_endian_swap);
+	f_amplitude_rec_method = (int)byte_to_ushort(&raw_data[52], f_endian_swap);
+	f_measurement_system = (int)byte_to_ushort(&raw_data[54], f_endian_swap);
+
+	f_signal_polarity = (int)byte_to_ushort(&raw_data[56], f_endian_swap);
+	f_polarity_code = (int)byte_to_ushort(&raw_data[58], f_endian_swap);
+
+	f_extended_traces_count = byte_to_int(&raw_data[60], f_endian_swap);
+	f_extended_aux_traces_count = byte_to_int(&raw_data[64], f_endian_swap);
+	f_extended_samples_count = byte_to_int(&raw_data[68], f_endian_swap);
+	f_extended_sample_interval = byte_to_double(&raw_data[72], f_endian_swap);
+	f_extended_sample_interval_orig = byte_to_double(&raw_data[80], f_endian_swap);
+	f_extended_samples_count_orig = byte_to_int(&raw_data[88], f_endian_swap);
+	f_extended_ensemble_fold = byte_to_int(&raw_data[92], f_endian_swap);
+
+	if (f_extended_traces_count != 0)
+		f_traces_count = f_extended_traces_count;
+	if (f_extended_aux_traces_count != 0)
+		f_aux_traces_count = f_extended_aux_traces_count;
+	if (f_extended_samples_count != 0)
+		f_samples_count = f_extended_samples_count;
+	if (f_extended_sample_interval != 0)
+		f_sample_interval = f_extended_sample_interval;
+	if (f_extended_sample_interval_orig != 0)
+		f_sample_interval_orig = f_extended_sample_interval_orig;
+	if (f_extended_ensemble_fold != 0)
+		f_ensemble_fold = f_extended_ensemble_fold;
+
+	f_is_same_for_file = (int)byte_to_short(&raw_data[302], f_endian_swap);
+	f_extended_headers_count = (int)byte_to_short(&raw_data[304], f_endian_swap);
+	f_max_add_trc_headers_count = byte_to_int(&raw_data[306], f_endian_swap);
+	f_time_basis = (int)byte_to_ushort(&raw_data[310], f_endian_swap);
+	f_stream_traces_count = byte_to_uint64(&raw_data[312], f_endian_swap);
+	f_first_trace_offset = byte_to_uint64(&raw_data[320], f_endian_swap);
 }
 
-int				segy_bin_header::numTraces() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_numTraces(obj);
+void segy_bin_header::set_zero() {
+	vector<byte_t> raw_data(segy_file::bin_header_size, (byte_t)0);
+	initialize(raw_data, endian_swap::none);
 }
 
-int				segy_bin_header::numAuxTraces() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_numAuxTraces(obj);
-}
-
-int				segy_bin_header::sampleIntUS() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_sampleIntUS(obj);
-}
-
-int				segy_bin_header::sampleIntOrigUS() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_sampleIntOrigUS(obj);
-}
-
-int				segy_bin_header::numSamples() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_numSamples(obj);
-}
-
-int				segy_bin_header::numSamplesOrig() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_numSamplesOrig(obj);
-}
-
-unsigned short	segy_bin_header::dataSampleFormat() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_dataSampleFormat(obj);
-}
-
-unsigned short	segy_bin_header::fold() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_fold(obj);
-}
-
-unsigned short	segy_bin_header::sortCode() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_sortCode(obj);
-}
-
-unsigned short	segy_bin_header::vertSumCode() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_vertSumCode(obj);
-}
-
-unsigned short	segy_bin_header::sweepFreqStart() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_sweepFreqStart(obj);
-}
-
-unsigned short	segy_bin_header::sweepFreqEnd() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_sweepFreqEnd(obj);
-}
-
-unsigned short	segy_bin_header::sweepCode() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_sweepCode(obj);
-}
-
-unsigned short	segy_bin_header::taperType() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_taperType(obj);
-}
-
-unsigned short	segy_bin_header::correlatedTraces() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_correlatedTraces(obj);
-}
-
-unsigned short	segy_bin_header::gainRecovered() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_gainRecovered(obj);
-}
-
-unsigned short	segy_bin_header::ampRecoveryMethod() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_ampRecoveryMethod(obj);
-}
-
-unsigned short	segy_bin_header::unitSystem() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_unitSystem(obj);
-}
-
-unsigned short	segy_bin_header::polarity() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_polarity(obj);
-}
-
-unsigned short	segy_bin_header::vibPolarityCode() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_vibPolarityCode(obj);
-}
-unsigned short	segy_bin_header::revisionNum() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_revisionNum(obj);
-}
-
-unsigned short	segy_bin_header::fixedTraceLengthFlag() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_fixedTraceLengthFlag(obj);
-}
-
-unsigned short	segy_bin_header::numExtendedBlocks() {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_bin_header is not initialized");
-	return cseis_csNativeSegyBinHeader_numExtendedBlocks(obj);
-}
-
-pair<string, int> segy_bin_header::get(int index) {
-	return fields[index];
-}
-
-int segy_bin_header::index_of(const string &name) {
-	for (int i = 0; i < fields.size(); ++i)
-		if (fields[i].first == name)
-			return i;
-	return NOT_INDEX;
-}
-
-map<string, int> segy_bin_header::to_map() {
-	map<string, int> res;
-	copy(fields.begin(), fields.end(),
-		inserter(res, res.begin()));
-	return res;
-}
-
-void segy_bin_header::initialize() {
-	fields = {
-		{"job ID",					jobID()},
-		{"job ID",					jobID()},
-		{"line Num", 				lineNum()},
-		{"reel Num",				reelNum()},
-		{"num Traces", 				numTraces()},
-		{"num Aux Traces", 			numAuxTraces()},
-		{"sample Interval US", 		sampleIntUS()},
-		{"sample Interval Orig US",	sampleIntOrigUS()},
-		{"num Samples", 			numSamples()},
-		{"num Samples Orig", 		numSamplesOrig()},
-		{"data Sample Format",		dataSampleFormat()},
-		{"fold", 					fold()},
-		{"sort Code", 				sortCode()},
-		{"vert Sum Code", 			vertSumCode()},
-		{"sweep FreqStart", 		sweepFreqStart()},
-		{"sweep Freq End", 			sweepFreqEnd()},
-		{"sweep Code", 				sweepCode()},
-		{"taper Type", 				taperType()},
-		{"correlated Traces",		correlatedTraces()},
-		{"gain Recovered",			gainRecovered()},
-		{"amp Recovery Method",		ampRecoveryMethod()},
-		{"unit System", 			unitSystem()},
-		{"polarity ", 				polarity()},
-		{"vib Polarity Code",		vibPolarityCode()},
-		{"revision Num", 			revisionNum()},
-		{"fixed Trace Length Flag", fixedTraceLengthFlag()},
-		{"num Extended Blocks",		numExtendedBlocks()}
+map<std::string, int64_t> segy_bin_header::to_map() {
+	map<std::string, int64_t> res = {
+		{ "f_job_id", f_job_id },
+		{ "f_line_num", f_line_num },
+		{ "f_reel_num",  f_reel_num},
+		{ "f_traces_count",  f_traces_count},
+		{ "f_aux_traces_count", f_aux_traces_count },
+		{ "f_sample_interval", f_sample_interval },
+		{ "f_sample_interval_orig", f_sample_interval_orig },
+		{ "f_samples_count",  f_samples_count},
+		{ "f_samples_count_orig",  f_samples_count_orig},
+		{ "f_data_format", f_data_format },
+		{ "f_ensemble_fold", f_ensemble_fold },
+		{ "f_sorting_code",  f_sorting_code},
+		{ "f_vert_sum_code", f_vert_sum_code },
+		{ "f_sweep_fr_start",  f_sweep_fr_start},
+		{ "f_sweep_fr_end",  f_sweep_fr_end},
+		{ "f_sweep_len",  f_sweep_len},
+		{ "f_sweep_type", f_sweep_type },
+		{ "f_sweep_chanel_trcs_count",  f_sweep_chanel_trcs_count},
+		{ "f_sweep_trc_taper_len_start", f_sweep_trc_taper_len_start },
+		{ "f_sweep_trc_taper_len_end", f_sweep_trc_taper_len_end },
+		{ "f_taper_type", f_taper_type },
+		{ "f_correlated_traces", f_correlated_traces },
+		{ "f_gain_recovered", f_gain_recovered },
+		{ "f_amplitude_rec_method", f_amplitude_rec_method },
+		{ "f_measurement_system",  f_measurement_system},
+		{ "f_signal_polarity", f_signal_polarity },
+		{ "f_polarity_code", f_polarity_code },
+		{ "f_extended_traces_count", f_extended_traces_count },
+		{ "f_extended_aux_traces_count",  f_extended_aux_traces_count},
+		{ "f_extended_samples_count", f_extended_samples_count },
+		{ "f_extended_sample_interval",f_extended_sample_interval  },
+		{ "f_extended_sample_interval_orig",  f_extended_sample_interval_orig},
+		{ "f_extended_samples_count_orig", f_extended_samples_count_orig },
+		{ "f_extended_ensemble_fold", f_extended_ensemble_fold },
+		{ "f_endian_swap",  (int64_t)f_endian_swap},
+		{ "f_is_segy_2", f_is_segy_2 },
+		{ "f_is_same_for_file", f_is_same_for_file },
+		{ "f_extended_headers_count",  f_extended_headers_count},
+		{ "f_max_add_trc_headers_count", f_max_add_trc_headers_count },
+		{ "f_time_basis", f_time_basis },
+		{ "f_stream_traces_count", f_stream_traces_count },
+		{ "f_first_trace_offset",  f_first_trace_offset}
 	};
+
+	return res;
 }
 
 #ifdef PYTHON

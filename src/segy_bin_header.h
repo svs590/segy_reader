@@ -26,8 +26,8 @@ public:
 	int reel_num()								{ return f_reel_num; }
 	int traces_count()							{ return f_traces_count; }
 	int aux_traces_count()						{ return f_aux_traces_count; }
-	int sample_interval()						{ return f_sample_interval; }
-	int sample_interval_orig()					{ return f_sample_interval_orig; }
+	double sample_interval()					{ return f_sample_interval; }
+	double sample_interval_orig()				{ return f_sample_interval_orig; }
 	int samples_count()							{ return f_samples_count; }
 	int samples_count_orig()					{ return f_samples_count_orig; }
 	int data_format()							{ return f_data_format; }
@@ -96,7 +96,8 @@ public:
 
 	//virtual std::pair<std::string, int> get(int index);
 	//virtual int index_of(const std::string &name);
-	virtual std::map<std::string, int64_t> to_map();
+    virtual std::map<std::string,
+        std::pair<std::variant<int, uint64_t, double>, seismic_data_type>> to_map();
 
 private:
 	void initialize(const std::vector<byte_t> &raw_data, endian_swap swap_endian);

@@ -3,6 +3,9 @@
 
 #include <string>
 #include <map>
+#include <variant>
+
+#include "data_types.h"
 
 #ifdef PYTHON
 #include <pybind11/pybind11.h>
@@ -15,7 +18,8 @@ class seismic_abstract_header {
 public:
 	//virtual std::pair<std::string, int> get(int index) = 0;
 	//virtual int index_of(const std::string &name) = 0;
-	virtual std::map<std::string, int64_t> to_map() = 0;
+	virtual std::map<std::string,
+        std::pair<std::variant<int, uint64_t, double>, seismic_data_type>> to_map() = 0;
 };
 
 #ifdef PYTHON

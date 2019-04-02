@@ -60,7 +60,7 @@ std::string char_to_ecdic(const std::string &str) {
 	for (int i = 0; i < str.length(); i++) {
 		int c = (int)str[i];
 
-		res[i] = a2e[c];
+		res[i] = (char)a2e[c];
 	}
 
 	return res;
@@ -91,6 +91,7 @@ short byte_to_short(byte_t const* ptr, endian_swap swap) {
 		return byte_to_short_swap_pair(ptr);
 		break;
 	default:
+		return 0;
 		break;
 	}
 }
@@ -120,6 +121,7 @@ unsigned short byte_to_ushort(byte_t const* ptr, endian_swap swap) {
 		return byte_to_ushort_swap_pair(ptr);
 		break;
 	default:
+		return 0;
 		break;
 	}
 }
@@ -152,6 +154,7 @@ int byte_to_int(byte_t const* ptr, endian_swap swap) {
 		return byte_to_int_swap_pair(ptr);
 		break;
 	default:
+		return 0;
 		break;
 	}
 }
@@ -187,6 +190,7 @@ uint64_t byte_to_uint64(byte_t const* ptr, endian_swap swap) {
 		return byte_to_uint64_swap_pair(ptr);
 		break;
 	default:
+		return 0;
 		break;
 	}
 }
@@ -320,6 +324,7 @@ double byte_to_double(byte_t const* ptr, endian_swap swap) {
 		return byte_to_double_swap_pair(ptr);
 		break;
 	default:
+		return 0;
 		break;
 	}
 }

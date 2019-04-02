@@ -18,6 +18,7 @@ enum class seismic_data_type {
 	CHAR,
 	STRING,
 	INT64,
+    UINT64,
 	SHORT,
 	USHORT,
 };

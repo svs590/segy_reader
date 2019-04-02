@@ -13,9 +13,11 @@ namespace py = pybind11;
 
 #include "seismic_abstract_header.h"
 #include "data_conversion.h"
+#include "segy_defines.h"
 
 class segy_bin_header : public seismic_abstract_header {
-	std::map<std::string, int> fields;
+    bool f_map_need_update;
+    std::map<std::string, seismic_variant_value> fields;
 public:
 	segy_bin_header();
 	segy_bin_header(const std::vector<byte_t> &raw_data, endian_swap swap_endian);
@@ -30,7 +32,7 @@ public:
 	double sample_interval_orig()				{ return f_sample_interval_orig; }
 	int samples_count()							{ return f_samples_count; }
 	int samples_count_orig()					{ return f_samples_count_orig; }
-	int data_format()							{ return f_data_format; }
+    segy_data_format data_format()				{ return f_data_format; }
 	int ensemble_fold()							{ return f_ensemble_fold; }
 	int sorting_code()							{ return f_sorting_code; }
 	int vert_sum_code()							{ return f_vert_sum_code; }
@@ -57,50 +59,49 @@ public:
 	int64_t first_trace_offset()				{ return f_first_trace_offset; }
 	endian_swap endian()						{ return f_endian_swap; }
 
-	void set_job_id(int val)					{ f_job_id = val; }
-	void set_line_num(int val)					{ f_line_num = val; }
-	void set_reel_num(int val)					{ f_reel_num = val; }
-	void set_traces_count(int val)				{ f_traces_count = val; }
-	void set_aux_traces_count(int val)			{ f_aux_traces_count = val; }
-	void set_sample_interval(int val)			{ f_sample_interval = val; }
-	void set_sample_interval_orig(int val)		{ f_sample_interval_orig = val; }
-	void set_samples_count(int val)				{ f_samples_count = val; }
-	void set_samples_count_orig(int val)		{ f_samples_count_orig = val; }
-	void set_data_format(int val)				{ f_data_format = val; }
-	void set_ensemble_fold(int val)				{ f_ensemble_fold = val; }
-	void set_sorting_code(int val)				{ f_sorting_code = val; }
-	void set_vert_sum_code(int val)				{ f_vert_sum_code = val; }
-	void set_sweep_fr_start(int val)			{ f_sweep_fr_start = val; }
-	void set_sweep_fr_end(int val)				{ f_sweep_fr_end = val; }
-	void set_sweep_len(int val)					{ f_sweep_len = val; }
-	void set_sweep_type(int val)				{ f_sweep_type = val; }
-	void set_sweep_chanel_trcs_count(int val)	{ f_sweep_chanel_trcs_count = val; }
-	void set_sweep_trc_taper_len_start(int val)	{ f_sweep_trc_taper_len_start = val; }
-	void set_sweep_trc_taper_len_end(int val)	{ f_sweep_trc_taper_len_end = val; }
-	void set_taper_type(int val)				{ f_taper_type = val; }
-	void set_correlated_traces(int val)			{ f_correlated_traces = val; }
-	void set_gain_recovered(int val)			{ f_gain_recovered = val; }
-	void set_amplitude_rec_method(int val)		{ f_amplitude_rec_method = val; }
-	void set_measurement_system(int val)		{ f_measurement_system = val; }
-	void set_signal_polarity(int val)			{ f_signal_polarity = val; }
-	void set_polarity_code(int val)				{ f_polarity_code = val; }
-	void set_segy_2(bool val)					{ f_is_segy_2 = val; }
-	void set_same_for_file(bool val)			{ f_is_same_for_file = val; }
-	void extended_headers_count(int val)		{ f_extended_headers_count = val; }
-	void max_add_trc_headers_count(int val)		{ f_max_add_trc_headers_count = val; }
-	void time_basis(int val)					{ f_time_basis = val; }
-	void stream_traces_count(int64_t val)		{ f_stream_traces_count = val; }
-	void first_trace_offset(int64_t val)		{ f_first_trace_offset = val; }
-	void set_endian(endian_swap val)			{ f_endian_swap = val; }
+	void set_job_id(int val)					{ f_map_need_update = true; f_job_id = val; }
+	void set_line_num(int val)					{ f_map_need_update = true; f_line_num = val; }
+	void set_reel_num(int val)					{ f_map_need_update = true; f_reel_num = val; }
+	void set_traces_count(int val)				{ f_map_need_update = true; f_traces_count = val; }
+	void set_aux_traces_count(int val)			{ f_map_need_update = true; f_aux_traces_count = val; }
+	void set_sample_interval(int val)			{ f_map_need_update = true; f_sample_interval = val; }
+	void set_sample_interval_orig(int val)		{ f_map_need_update = true; f_sample_interval_orig = val; }
+	void set_samples_count(int val)				{ f_map_need_update = true; f_samples_count = val; }
+	void set_samples_count_orig(int val)		{ f_map_need_update = true; f_samples_count_orig = val; }
+	void set_data_format(segy_data_format val)  { f_map_need_update = true; f_data_format = val; }
+	void set_ensemble_fold(int val)				{ f_map_need_update = true; f_ensemble_fold = val; }
+	void set_sorting_code(int val)				{ f_map_need_update = true; f_sorting_code = val; }
+	void set_vert_sum_code(int val)				{ f_map_need_update = true; f_vert_sum_code = val; }
+	void set_sweep_fr_start(int val)			{ f_map_need_update = true; f_sweep_fr_start = val; }
+	void set_sweep_fr_end(int val)				{ f_map_need_update = true; f_sweep_fr_end = val; }
+	void set_sweep_len(int val)					{ f_map_need_update = true; f_sweep_len = val; }
+	void set_sweep_type(int val)				{ f_map_need_update = true; f_sweep_type = val; }
+	void set_sweep_chanel_trcs_count(int val)	{ f_map_need_update = true; f_sweep_chanel_trcs_count = val; }
+	void set_sweep_trc_taper_len_start(int val)	{ f_map_need_update = true; f_sweep_trc_taper_len_start = val; }
+	void set_sweep_trc_taper_len_end(int val)	{ f_map_need_update = true; f_sweep_trc_taper_len_end = val; }
+	void set_taper_type(int val)				{ f_map_need_update = true; f_taper_type = val; }
+	void set_correlated_traces(int val)			{ f_map_need_update = true; f_correlated_traces = val; }
+	void set_gain_recovered(int val)			{ f_map_need_update = true; f_gain_recovered = val; }
+	void set_amplitude_rec_method(int val)		{ f_map_need_update = true; f_amplitude_rec_method = val; }
+	void set_measurement_system(int val)		{ f_map_need_update = true; f_measurement_system = val; }
+	void set_signal_polarity(int val)			{ f_map_need_update = true; f_signal_polarity = val; }
+	void set_polarity_code(int val)				{ f_map_need_update = true; f_polarity_code = val; }
+	void set_segy_2(bool val)					{ f_map_need_update = true; f_is_segy_2 = val; }
+	void set_same_for_file(bool val)			{ f_map_need_update = true; f_is_same_for_file = val; }
+	void extended_headers_count(int val)		{ f_map_need_update = true; f_extended_headers_count = val; }
+	void max_add_trc_headers_count(int val)		{ f_map_need_update = true; f_max_add_trc_headers_count = val; }
+	void time_basis(int val)					{ f_map_need_update = true; f_time_basis = val; }
+	void stream_traces_count(int64_t val)		{ f_map_need_update = true; f_stream_traces_count = val; }
+	void first_trace_offset(int64_t val)		{ f_map_need_update = true; f_first_trace_offset = val; }
+	void set_endian(endian_swap val)			{ f_map_need_update = true; f_endian_swap = val; }
 
 
-	//virtual std::pair<std::string, int> get(int index);
-	//virtual int index_of(const std::string &name);
-    virtual std::map<std::string,
-        std::pair<std::variant<int, uint64_t, double>, seismic_data_type>> to_map();
+    virtual std::pair<std::string, seismic_variant_value> get(const std::string &name);
+    virtual std::map<std::string, seismic_variant_value> to_map();
 
 private:
 	void initialize(const std::vector<byte_t> &raw_data, endian_swap swap_endian);
+    void init_map();
 	void set_zero();
 
 	int f_job_id;						// 4 bytes
@@ -112,7 +113,7 @@ private:
 	double f_sample_interval_orig;		// 2 bytes
 	int f_samples_count;				// 2 bytes
 	int f_samples_count_orig;			// 2 bytes
-	int f_data_format;					// 2 bytes
+    segy_data_format f_data_format;		// 2 bytes
 	int f_ensemble_fold;				// 2 bytes
 	int f_sorting_code;					// 2 bytes
 	int f_vert_sum_code;				// 2 bytes

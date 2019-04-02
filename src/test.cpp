@@ -18,14 +18,41 @@ int main() {
 
 	wstring file = L"D:/FullStack_PSTM.segy";
 
+    segy_reader_config config;
+    config.filename = L"D:/FullStack_PSTM.segy";
+
 	auto reader = shared_ptr<seismic_data_provider>(
-		new segy_reader(file, header_map_type::STANDARD)
+		new segy_reader(config)
 		);
 
 	cout << reader->text_header() << endl;
 
 	auto bh = reader->bin_header();
+    auto bh_map = bh->to_map();
 
+    for (auto m_pair : bh_map) {
+        cout << m_pair.first << '\t';
+        int ibuf;
+        uint64_t fbuf;
+        double dbuf;
+        switch (m_pair.second.type)
+        {
+        case seismic_data_type::INT:
+            ibuf = std::get<int>(m_pair.second.val);
+            cout << ibuf << endl;
+            break;
+        case seismic_data_type::UINT64:
+            fbuf = std::get<uint64_t>(m_pair.second.val);
+            cout << fbuf << endl;
+            break;
+        case seismic_data_type::DOUBLE:
+            dbuf = std::get<double>(m_pair.second.val);
+            cout << dbuf << endl;
+            break;
+        default:
+            break;
+        }
+    }
 
 	/*
 	auto new_map = shared_ptr<segy_header_map>(

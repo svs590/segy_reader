@@ -20,12 +20,7 @@ namespace py = pybind11;
 #endif
 
 class seismic_data_provider : public obj_base {
-protected:
-	std::wstring filename;
 public:
-	seismic_data_provider(const std::wstring &filename_in) {
-		filename = filename_in;
-	}
 	seismic_data_provider() { }
 
 	virtual std::string											text_header() = 0;

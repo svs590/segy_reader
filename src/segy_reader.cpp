@@ -17,120 +17,68 @@
 using namespace std;
 using namespace cseis_geolib;
 
+void segy_reader::init(bool reopen) {
+    headers.clear();
 
-DLLIMPORT void* cseis_csNativeSegyReader_createInstance(
-	const char *filename_in,
-	int nTracesBuffer,
-	int segyHeaderMap,
-	bool reverseByteOrderData_in,
-	bool reverseByteOrderHdr_in,
-	bool autoscale_hdrs_in
-);
-DLLIMPORT void				cseis_csNativeSegyReader_deleteInstance(void *obj);
-DLLIMPORT void				cseis_csNativeSegyReader_closeFile(void *obj);
-DLLIMPORT int				cseis_SegyReader_sampleByteSize(void *obj);
-DLLIMPORT int				cseis_SegyReader_numTraces(void *obj);
-DLLIMPORT int				cseis_SegyReader_numSamples(void *obj);
-DLLIMPORT int				cseis_SegyReader_numHeaders(void *obj);
-DLLIMPORT float				cseis_SegyReader_sampleInterval(void *obj);
-DLLIMPORT const void *		cseis_SegyReader_binHeader(void *obj);
-DLLIMPORT const char *		cseis_csSegyReader_1charHeader(void *obj);
-DLLIMPORT int				cseis_csReader_1hdrIntValue(void *obj, int hdrIndex);
-DLLIMPORT float				cseis_csSegyReader_1hdrFloatValue(void *obj, int hdrIndex);
-DLLIMPORT double			cseis_csSegyReader_1hdrDoubleValue(void *obj, int hdrIndex);
-DLLIMPORT bool				cseis_csSegyReader_1moveToTrace(void *obj, int firstTraceIndex, int numTracesToRead);
-DLLIMPORT const float *		cseis_csSegyReader_1getNextTrace(void *obj);
-DLLIMPORT void * const		cseis_csSegyReader_getTrcHdrMap(void *obj);
-DLLIMPORT void				cseis_csSegyReader_setTrcHdrMap(void *obj, void *map);
-DLLIMPORT void				cseis_csNativeSegyReader_charBinHeader(void *obj, char *buf);
-DLLIMPORT bool				cseis_csSegyReader_2moveToTrace(void *obj, int firstTraceIndex);
-DLLIMPORT const void*const	cseis_csNativeSegyReader_getTraceHeader(void *obj);
-DLLIMPORT const char*		cseis_csNativeSegyReader_getFileName(void *obj);
+    if (reopen) {
+        if (f_istream.is_open())
+            close_file();
+        open_file();
+    }
+    
+    f_text_header.clear();
+    text_header();
 
-segy_reader::segy_reader(const void *obj) {
-	this->obj = const_cast<void*>(obj);
-	//filename = string(cseis_csNativeSegyReader_getFileName(this->obj));
+    f_bin_header = nullptr;
+    bin_header();
+
+    geometry = shared_ptr<seismic_geometry_info>(new seismic_geometry_info);
+
+    processed = false;
+    headers_in_memory = false;
 }
 
-segy_reader::segy_reader(const segy_reader &obj) {
-	this->obj = obj.obj;
+segy_reader::segy_reader(const segy_reader_config &config) {
+    f_config = config;
+    init(true);
 }
 
 segy_reader::~segy_reader() {
-	close_file();
+    close_file();
 }
 
-segy_reader& segy_reader::operator=(const void *obj) {
-	this->obj = const_cast<void*>(obj);
-	f_samples_count = NOT_INDEX;
-	return *this;
+void segy_reader::set_config(const segy_reader_config &config) {
+    bool reopen = f_config.filename == config.filename;
+    f_config = config;
+    init(reopen);
 }
-
-segy_reader::segy_reader(
-	wstring filename_in,
-	int nTracesBuffer,
-	header_map_type segyHeaderMap,
-	bool reverseByteOrderData_in,
-	bool reverseByteOrderHdr_in,
-	bool autoscale_hdrs_in
-) : seismic_data_provider(filename_in) {
-
-	open_file();
-
-	geometry = shared_ptr<seismic_geometry_info>(new seismic_geometry_info);
-}
-
-segy_reader::segy_reader(
-	wstring filename_in,
-	header_map_type segyHeaderMap,
-	bool reverseByteOrderData_in,
-	bool reverseByteOrderHdr_in,
-	bool autoscale_hdrs_in
-) : segy_reader(
-		filename_in, 
-		1, 
-		segyHeaderMap, 
-		reverseByteOrderData_in, 
-		reverseByteOrderHdr_in, 
-		autoscale_hdrs_in
-	) { }
-
-segy_reader::segy_reader(wstring filename_in, header_map_type segyHeaderMap)
-	: segy_reader(
-		filename_in,
-		1,
-		segyHeaderMap,
-		false,
-		false,
-		false
-	) { }
 
 void segy_reader::close() {
-	cseis_csNativeSegyReader_closeFile(obj);
+
 }
 
 int segy_reader::sampleByteSize() {
-	return cseis_SegyReader_sampleByteSize(obj);
+	return 0;
 }
 
 int segy_reader::traces_count() {
 	if (f_traces_count == NOT_INDEX)
-		f_traces_count = cseis_SegyReader_numTraces(obj);
+		f_traces_count = 0;
 	return f_traces_count;
 }
 
 int segy_reader::samples_count() {
 	if (f_samples_count == NOT_INDEX)
-		f_samples_count = cseis_SegyReader_numSamples(obj);
+		f_samples_count = 0;
 	return f_samples_count;
 }
 
 int segy_reader::headersCount() {
-	return cseis_SegyReader_numHeaders(obj);
+	return 0;
 }
 
 float segy_reader::sample_interval() {
-	return cseis_SegyReader_sampleInterval(obj);
+	return 0;
 }
 
 shared_ptr<seismic_abstract_header> segy_reader::bin_header() {
@@ -153,17 +101,13 @@ shared_ptr<seismic_abstract_header> segy_reader::bin_header() {
 }
 
 void segy_reader::moveToTrace(int firstTraceIndex, int numTracesToRead) {
-	if (!cseis_csSegyReader_1moveToTrace(obj, firstTraceIndex, numTracesToRead))
-		throw runtime_error("Error while moving to trace " +
-			to_string(firstTraceIndex));
+	
 }
 void segy_reader::moveToTrace(int firstTraceIndex) {
-	if (!cseis_csSegyReader_2moveToTrace(obj, firstTraceIndex))
-		throw runtime_error("Error while moving to trace " +
-			to_string(firstTraceIndex));
+	
 }
 const float *segy_reader::nextTraceRef() {
-	return cseis_csSegyReader_1getNextTrace(obj);
+	return nullptr;
 }
 
 Eigen::VectorXf segy_reader::getNextTrace() {
@@ -187,7 +131,7 @@ shared_ptr<seismic_trace> segy_reader::get_trace(int index) {
 	moveToTrace(index, 1);
 	return shared_ptr<segy_trace>(
 		new segy_trace(
-			segy_trace_header(cseis_csNativeSegyReader_getTraceHeader(obj)),
+			(float*)nullptr,
 			getNextTrace()
 		)
 		);
@@ -195,13 +139,12 @@ shared_ptr<seismic_trace> segy_reader::get_trace(int index) {
 
 shared_ptr<seismic_header_map> segy_reader::header_map() {
 	return shared_ptr<seismic_header_map>(
-		new segy_header_map(cseis_csSegyReader_getTrcHdrMap(obj))
+		new segy_header_map(nullptr)
 		);
 }
 
 void segy_reader::set_header_map(shared_ptr<seismic_header_map> map) {
-	shared_ptr<segy_header_map> segy_map(new segy_header_map(map));
-	cseis_csSegyReader_setTrcHdrMap(obj, segy_map->obj.get());
+	
 }
 
 string segy_reader::text_header() {
@@ -215,7 +158,7 @@ string segy_reader::text_header() {
 	if (f_istream.fail()) 
 		throw runtime_error("segy_reader: unexpected error occurred when reading segy text header");
 	
-	if (f_ebcdic_header)
+	if (f_config.ebcdic_header)
 		f_text_header = ebcdic_to_char(buf);
 	else
 		f_text_header = string(buf);
@@ -231,7 +174,7 @@ shared_ptr<seismic_trace_header> segy_reader::trace_header(int index) {
 
 shared_ptr<seismic_trace_header> segy_reader::current_trace_header() {
 	return shared_ptr<seismic_trace_header>(
-		new segy_trace_header(cseis_csNativeSegyReader_getTraceHeader(obj))
+		new segy_trace_header(nullptr)
 		);
 }
 
@@ -371,17 +314,17 @@ void segy_reader::get_headers(
 
 template <>
 int segy_reader::headerValue(int index) {
-	return cseis_csReader_1hdrIntValue(obj, index);
+	return 0;
 }
 
 template <>
 float segy_reader::headerValue(int index) {
-	return cseis_csSegyReader_1hdrFloatValue(obj, index);
+	return 0;
 }
 
 template <>
 double segy_reader::headerValue(int index) {
-	return cseis_csSegyReader_1hdrDoubleValue(obj, index);
+	return 0;
 }
 
 void segy_reader::line_processing(
@@ -512,7 +455,7 @@ void segy_reader::preprocessing() {
 }
 
 void segy_reader::open_file() {
-	f_istream.open(filename, std::ios_base::in | std::ios_base::binary);
+	f_istream.open(f_config.filename, std::ios_base::in | std::ios_base::binary);
 	if (f_istream.fail()) {
 		throw runtime_error("segy_reader: could not open segy file");
 	}

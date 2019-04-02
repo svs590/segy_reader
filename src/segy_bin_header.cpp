@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <iterator>
+#include <string>
 
 using namespace std;
 
@@ -45,7 +46,7 @@ void segy_bin_header::initialize(const vector<byte_t> &raw_data, endian_swap swa
 	f_sample_interval_orig          = (double)byte_to_ushort(&raw_data[18], f_endian_swap);
 	f_samples_count                 = (int)byte_to_ushort(&raw_data[20], f_endian_swap);
 	f_samples_count_orig            = (int)byte_to_ushort(&raw_data[22], f_endian_swap);
-	f_data_format                   = (int)byte_to_ushort(&raw_data[24], f_endian_swap);
+	f_data_format                   = (segy_data_format)byte_to_ushort(&raw_data[24], f_endian_swap);
 
 	f_ensemble_fold                 = (int)byte_to_ushort(&raw_data[26], f_endian_swap);
 	f_sorting_code                  = (int)byte_to_ushort(&raw_data[28], f_endian_swap);
@@ -93,6 +94,8 @@ void segy_bin_header::initialize(const vector<byte_t> &raw_data, endian_swap swa
 	f_time_basis                    = (int)byte_to_ushort(&raw_data[310], f_endian_swap);
 	f_stream_traces_count           = byte_to_uint64(&raw_data[312], f_endian_swap);
 	f_first_trace_offset            = byte_to_uint64(&raw_data[320], f_endian_swap);
+
+    init_map();
 }
 
 void segy_bin_header::set_zero() {
@@ -100,46 +103,62 @@ void segy_bin_header::set_zero() {
 	initialize(raw_data, endian_swap::none);
 }
 
-map<string, pair<variant<int, uint64_t, double>, seismic_data_type>> segy_bin_header::to_map() {
-    map<string, pair<variant<int, uint64_t, double>, seismic_data_type>> res = {
-        { "f_job_id",                   {f_job_id,                      seismic_data_type::INT} },
-		{ "f_line_num",                 {f_line_num,                    seismic_data_type::INT} },
-		{ "f_reel_num",                 {f_reel_num,                    seismic_data_type::INT} },
-		{ "f_traces_count",             {f_traces_count,                seismic_data_type::INT} },
-		{ "f_aux_traces_count",         {f_aux_traces_count,            seismic_data_type::INT} },
-		{ "f_sample_interval",          {f_sample_interval,             seismic_data_type::DOUBLE} },
-		{ "f_sample_interval_orig",     {f_sample_interval_orig,        seismic_data_type::DOUBLE} },
-		{ "f_samples_count",            {f_samples_count,               seismic_data_type::INT} },
-		{ "f_samples_count_orig",       {f_samples_count_orig,          seismic_data_type::INT} },
-		{ "f_data_format",              {f_data_format,                 seismic_data_type::INT} },
-		{ "f_ensemble_fold",            {f_ensemble_fold,               seismic_data_type::INT} },
-		{ "f_sorting_code",             {f_sorting_code,                seismic_data_type::INT} },
-		{ "f_vert_sum_code",            {f_vert_sum_code,               seismic_data_type::INT} },
-		{ "f_sweep_fr_start",           {f_sweep_fr_start,              seismic_data_type::INT} },
-		{ "f_sweep_fr_end",             {f_sweep_fr_end,                seismic_data_type::INT} },
-		{ "f_sweep_len",                {f_sweep_len,                   seismic_data_type::INT} },
-		{ "f_sweep_type",               {f_sweep_type,                  seismic_data_type::INT} },
-		{ "f_sweep_chanel_trcs_count",  {f_sweep_chanel_trcs_count,     seismic_data_type::INT} },
-		{ "f_sweep_trc_taper_len_start",{f_sweep_trc_taper_len_start,   seismic_data_type::INT} },
-		{ "f_sweep_trc_taper_len_end",  {f_sweep_trc_taper_len_end,     seismic_data_type::INT} },
-		{ "f_taper_type",               {f_taper_type,                  seismic_data_type::INT} },
-		{ "f_correlated_traces",        {f_correlated_traces,           seismic_data_type::INT} },
-		{ "f_gain_recovered",           {f_gain_recovered,              seismic_data_type::INT} },
-		{ "f_amplitude_rec_method",     {f_amplitude_rec_method,        seismic_data_type::INT} },
-		{ "f_measurement_system",       {f_measurement_system,          seismic_data_type::INT} },
-		{ "f_signal_polarity",          {f_signal_polarity,             seismic_data_type::INT} },
-		{ "f_polarity_code",            {f_polarity_code,               seismic_data_type::INT} },
-		{ "f_endian_swap",              {(int)f_endian_swap,            seismic_data_type::INT} },
-		{ "f_is_segy_2",                {(int)f_is_segy_2,              seismic_data_type::INT} },
-		{ "f_is_same_for_file",         {f_is_same_for_file,            seismic_data_type::INT} },
-		{ "f_extended_headers_count",   {f_extended_headers_count,      seismic_data_type::INT} },
-		{ "f_max_add_trc_headers_count",{f_max_add_trc_headers_count,   seismic_data_type::INT} },
-		{ "f_time_basis",               {f_time_basis,                  seismic_data_type::INT} },
-		{ "f_stream_traces_count",      {f_stream_traces_count,         seismic_data_type::UINT64} },
-		{ "f_first_trace_offset",       {f_first_trace_offset,          seismic_data_type::UINT64} }
-	};
+pair<string, seismic_variant_value> segy_bin_header::get(const string &name) {
+    if (f_map_need_update)
+        init_map();
+    auto it = fields.find(name);
+    if (it != fields.cend())
+        return *(it);
+    else
+        return {};
+}
 
-	return res;
+map<string, seismic_variant_value> segy_bin_header::to_map() {
+    if (f_map_need_update)
+        init_map();
+	return fields;
+}
+
+void segy_bin_header::init_map() {
+    fields = {
+    { "f_job_id",                   {f_job_id,                      seismic_data_type::INT} },
+    { "f_line_num",                 {f_line_num,                    seismic_data_type::INT} },
+    { "f_reel_num",                 {f_reel_num,                    seismic_data_type::INT} },
+    { "f_traces_count",             {f_traces_count,                seismic_data_type::INT} },
+    { "f_aux_traces_count",         {f_aux_traces_count,            seismic_data_type::INT} },
+    { "f_sample_interval",          {f_sample_interval,             seismic_data_type::DOUBLE} },
+    { "f_sample_interval_orig",     {f_sample_interval_orig,        seismic_data_type::DOUBLE} },
+    { "f_samples_count",            {f_samples_count,               seismic_data_type::INT} },
+    { "f_samples_count_orig",       {f_samples_count_orig,          seismic_data_type::INT} },
+    { "f_data_format",              {(int)f_data_format,            seismic_data_type::INT} },
+    { "f_ensemble_fold",            {f_ensemble_fold,               seismic_data_type::INT} },
+    { "f_sorting_code",             {f_sorting_code,                seismic_data_type::INT} },
+    { "f_vert_sum_code",            {f_vert_sum_code,               seismic_data_type::INT} },
+    { "f_sweep_fr_start",           {f_sweep_fr_start,              seismic_data_type::INT} },
+    { "f_sweep_fr_end",             {f_sweep_fr_end,                seismic_data_type::INT} },
+    { "f_sweep_len",                {f_sweep_len,                   seismic_data_type::INT} },
+    { "f_sweep_type",               {f_sweep_type,                  seismic_data_type::INT} },
+    { "f_sweep_chanel_trcs_count",  {f_sweep_chanel_trcs_count,     seismic_data_type::INT} },
+    { "f_sweep_trc_taper_len_start",{f_sweep_trc_taper_len_start,   seismic_data_type::INT} },
+    { "f_sweep_trc_taper_len_end",  {f_sweep_trc_taper_len_end,     seismic_data_type::INT} },
+    { "f_taper_type",               {f_taper_type,                  seismic_data_type::INT} },
+    { "f_correlated_traces",        {f_correlated_traces,           seismic_data_type::INT} },
+    { "f_gain_recovered",           {f_gain_recovered,              seismic_data_type::INT} },
+    { "f_amplitude_rec_method",     {f_amplitude_rec_method,        seismic_data_type::INT} },
+    { "f_measurement_system",       {f_measurement_system,          seismic_data_type::INT} },
+    { "f_signal_polarity",          {f_signal_polarity,             seismic_data_type::INT} },
+    { "f_polarity_code",            {f_polarity_code,               seismic_data_type::INT} },
+    { "f_endian_swap",              {(int)f_endian_swap,            seismic_data_type::INT} },
+    { "f_is_segy_2",                {(int)f_is_segy_2,              seismic_data_type::INT} },
+    { "f_is_same_for_file",         {f_is_same_for_file,            seismic_data_type::INT} },
+    { "f_extended_headers_count",   {f_extended_headers_count,      seismic_data_type::INT} },
+    { "f_max_add_trc_headers_count",{f_max_add_trc_headers_count,   seismic_data_type::INT} },
+    { "f_time_basis",               {f_time_basis,                  seismic_data_type::INT} },
+    { "f_stream_traces_count",      {f_stream_traces_count,         seismic_data_type::UINT64} },
+    { "f_first_trace_offset",       {f_first_trace_offset,          seismic_data_type::UINT64} }
+    };
+
+    f_map_need_update = false;
 }
 
 #ifdef PYTHON

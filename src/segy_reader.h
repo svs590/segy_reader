@@ -23,42 +23,34 @@ namespace py = pybind11;
 #endif
 
 
+struct segy_reader_config {
+    std::wstring filename;
+    header_map_type header_map_type = header_map_type::STANDARD;
+    bool ebcdic_header              = true;
+    bool swap_endian                = false;
+};
+
 class segy_reader : public seismic_data_provider {
+    segy_reader_config f_config;
+
 	int f_samples_count = NOT_INDEX;
 	int f_traces_count = NOT_INDEX;
 	void *obj;
-	bool processed = false;
-	bool headers_in_memory = false;
+	bool processed;
+	bool headers_in_memory;
 
 	std::shared_ptr<segy_bin_header> f_bin_header;
 	std::string f_text_header;
 	std::vector<std::shared_ptr<seismic_trace_header>> headers;
 	std::shared_ptr<seismic_geometry_info> geometry;
 
-	bool f_ebcdic_header = true;
 	bfs::ifstream f_istream;
 	
 public:
-	segy_reader(const void *obj);
-	segy_reader(const segy_reader &obj);
-	~segy_reader();
-	segy_reader& operator=(const void *obj);
-	segy_reader(
-		std::wstring filename_in,
-		int nTracesBuffer,
-		header_map_type segyHeaderMap,
-		bool reverseByteOrderData_in,
-		bool reverseByteOrderHdr_in,
-		bool autoscale_hdrs_in
-	);
-	segy_reader(
-		std::wstring filename_in,
-		header_map_type segyHeaderMap,
-		bool reverseByteOrderData_in,
-		bool reverseByteOrderHdr_in,
-		bool autoscale_hdrs_in
-	);
-	segy_reader(std::wstring filename_in, header_map_type segyHeaderMap);
+    ~segy_reader();
+	segy_reader(const segy_reader_config &config);
+    segy_reader_config get_config() { return f_config; }
+    void set_config(const segy_reader_config &config);
 
 	virtual void close();
 	virtual int traces_count();
@@ -101,6 +93,7 @@ public:
 private:
 	void open_file();
 	void close_file();
+    void init(bool reopen);
 
 	void get_traces(
 		const std::vector<int> &trcs, 

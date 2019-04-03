@@ -3,7 +3,7 @@
 
 #include <string>
 #include <memory>
-#include <map>
+#include <unordered_map>
 #include <tuple>
 
 #include "data_types.h"
@@ -19,23 +19,14 @@ namespace py = pybind11;
 
 enum class header_map_type {
 	CUSTOM,
-	STANDARD,
-	OBC,
-	SEND,
-	ARMSS,
-	PSEGY,
-	NODE_OLD,
-	NODE,
-	SU,
-	SU_ONLY,
-	SU_BOTH
+	STANDARD
 };
 
 class seismic_header_map : public obj_base {
 protected:
 	header_map_type map_type;
 public:
-	virtual void add_field(
+	virtual void set_field(
 		std::string name,
 		int byte_loc,
 		int byte_size,
@@ -43,21 +34,18 @@ public:
 		std::string desc
 	) = 0;
 
-	virtual void									set_field(std::shared_ptr<seismic_traceheader_field> header) = 0;
-	virtual void									remove(int index) = 0;
-	virtual void									remove(const std::string &name) = 0;
-	virtual void									clear() = 0;
-	virtual int										index_of(const std::string &name) const = 0;
-	virtual int										contains(const std::string &name) const = 0;
-	virtual std::shared_ptr<seismic_traceheader_field>	get_field(int index) const = 0;
-	virtual std::shared_ptr<seismic_traceheader_field>	get_field(const std::string &name) const = 0;
-	virtual int										count() const = 0;
-	virtual header_map_type							type() const = 0;
+	virtual void                                    remove(const std::string &name) = 0;
+	virtual void                                    clear() = 0;
+	virtual bool                                    contains(const std::string &name) const = 0;
+	virtual std::tuple<int, int, seismic_data_type, std::string>
+                                                    get_field(const std::string &name) const = 0;
+	virtual size_t                                  count() const = 0;
+	virtual header_map_type                         type() const = 0;
 
 	// Словарь вида {name : (byte_position, byte_size, data_type, description)}
-	virtual std::map<std::string, std::tuple<int, int, seismic_data_type, std::string>> to_map() const = 0;
+	virtual std::unordered_map<std::string, std::tuple<int, int, seismic_data_type, std::string>> to_map() const = 0;
 	virtual void set(
-		const std::map<std::string, std::tuple<int, int, seismic_data_type, std::string>> &m) = 0;
+		const std::unordered_map<std::string, std::tuple<int, int, seismic_data_type, std::string>> &m) = 0;
 };
 
 #ifdef PYTHON

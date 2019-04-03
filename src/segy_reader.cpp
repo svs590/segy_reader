@@ -139,7 +139,7 @@ shared_ptr<seismic_trace> segy_reader::get_trace(int index) {
 
 shared_ptr<seismic_header_map> segy_reader::header_map() {
 	return shared_ptr<seismic_header_map>(
-		new segy_header_map(nullptr)
+		new segy_header_map()
 		);
 }
 

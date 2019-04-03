@@ -16,7 +16,7 @@ namespace py = pybind11;
 
 class seismic_abstract_header {
 public:
-	virtual std::pair<std::string, seismic_variant_value> get(const std::string &name) = 0;
+	virtual seismic_variant_value get(const std::string &name) = 0;
 	virtual std::map<std::string, seismic_variant_value> to_map() = 0;
 };
 

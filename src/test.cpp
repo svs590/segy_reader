@@ -53,14 +53,32 @@ int main() {
             break;
         }
     }
-
-	/*
+    cout << endl;
+	
 	auto new_map = shared_ptr<segy_header_map>(
-		new segy_header_map(header_map_type::STANDARD)
+		    new segy_header_map(header_map_type::STANDARD)
 		);
+    auto map_dict = new_map->to_map();
+    for (auto field : map_dict) {
+        cout << field.first << '\t';
+        cout << get<0>(field.second) << '\t';
+        cout << get<1>(field.second) << '\t';
+        cout << (int)get<2>(field.second) << endl;
+    }
+    cout << endl;
+
 	new_map->clear();
+    map_dict = new_map->to_map();
+    for (auto field : map_dict) {
+        cout << field.first << '\t';
+        cout << get<0>(field.second) << '\t';
+        cout << get<1>(field.second) << '\t';
+        cout << (int)get<2>(field.second) << endl;
+    }
+
 	reader->set_header_map(new_map);
 
+    /*
 	auto trace0 = reader->get_trace(0);
 	auto header0 = trace0->get_header();
 

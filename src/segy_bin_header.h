@@ -17,7 +17,7 @@ namespace py = pybind11;
 
 class segy_bin_header : public seismic_abstract_header {
     bool f_map_need_update;
-    std::map<std::string, seismic_variant_value> fields;
+    std::map<std::string, seismic_variant_value> f_fields;
 public:
 	segy_bin_header();
 	segy_bin_header(const std::vector<byte_t> &raw_data, endian_swap swap_endian);
@@ -96,7 +96,7 @@ public:
 	void set_endian(endian_swap val)			{ f_map_need_update = true; f_endian_swap = val; }
 
 
-    virtual std::pair<std::string, seismic_variant_value> get(const std::string &name);
+    virtual seismic_variant_value get(const std::string &name);
     virtual std::map<std::string, seismic_variant_value> to_map();
 
 private:

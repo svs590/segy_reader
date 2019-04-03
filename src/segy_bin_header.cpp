@@ -103,24 +103,24 @@ void segy_bin_header::set_zero() {
 	initialize(raw_data, endian_swap::none);
 }
 
-pair<string, seismic_variant_value> segy_bin_header::get(const string &name) {
+seismic_variant_value segy_bin_header::get(const string &name) {
     if (f_map_need_update)
         init_map();
-    auto it = fields.find(name);
-    if (it != fields.cend())
-        return *(it);
+    auto it = f_fields.find(name);
+    if (it != f_fields.cend())
+        return it->second;
     else
-        return {};
+        throw new invalid_argument("segy_bin_header: get: invalid field name");
 }
 
 map<string, seismic_variant_value> segy_bin_header::to_map() {
     if (f_map_need_update)
         init_map();
-	return fields;
+	return f_fields;
 }
 
 void segy_bin_header::init_map() {
-    fields = {
+    f_fields = {
     { "f_job_id",                   {f_job_id,                      seismic_data_type::INT} },
     { "f_line_num",                 {f_line_num,                    seismic_data_type::INT} },
     { "f_reel_num",                 {f_reel_num,                    seismic_data_type::INT} },

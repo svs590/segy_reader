@@ -21,7 +21,7 @@ public:
 	virtual int						index_of(const std::string &name) const = 0;
 	virtual seismic_data_type		type(int index) const = 0;
 
-	virtual std::pair<std::any, seismic_data_type> get(int index) const = 0;
+	virtual std::pair<std::any, seismic_data_type> get(const std::string &name) const = 0;
 	virtual void set_field(int index, std::pair<std::any, seismic_data_type>) = 0;
 
 	//Not implemented

@@ -4,7 +4,7 @@
 
 #include "data_types.h"
 
-enum class endian_swap { none, reverse, pair };
+enum class endian_order { big, little, mid_big, mid_little };
 
 /**
  * Convert from EBCDIC code to C char
@@ -20,43 +20,30 @@ std::string char_to_ecdic(const std::string &str);
 /**
  * Integer conversion with or without swap endian
  */
+template <endian_order From>
 short			byte_to_short(byte_t const* ptr);
-short			byte_to_short_swap(byte_t const* ptr);
-short			byte_to_short_swap_pair(byte_t const* ptr);
-short			byte_to_short(byte_t const* ptr, endian_swap swap);
 
+template <endian_order From>
 unsigned short	byte_to_ushort(byte_t const* ptr);
-unsigned short	byte_to_ushort_swap(byte_t const* ptr);
-unsigned short	byte_to_ushort_swap_pair(byte_t const* ptr);
-unsigned short	byte_to_ushort(byte_t const* ptr, endian_swap swap);
 
+template <endian_order From>
 uint64_t		byte_to_uint64(byte_t const* ptr);
-uint64_t		byte_to_uint64_swap(byte_t const* ptr);
-uint64_t		byte_to_uint64_swap_pair(byte_t const* ptr);
-uint64_t		byte_to_uint64(byte_t const* ptr, endian_swap swap);
 
+template <endian_order From>
 int64_t			byte_to_int64(byte_t const* ptr);
-int64_t			byte_to_int64_swap(byte_t const* ptr);
-int64_t			byte_to_int64_swap_pair(byte_t const* ptr);
-int64_t			byte_to_int64(byte_t const* ptr, endian_swap swap);
 
-int				byte_to_int_swap(byte_t const* ptr);
-int				byte_to_int_swap_pair(byte_t const* ptr);
+template <endian_order From>
 int				byte_to_int(byte_t const* ptr);
-int				byte_to_int(byte_t const* ptr, endian_swap swap);
+
 
 /**
  * Float conversion with or without swap endian
  */
+template <endian_order From>
 float			byte_to_float(byte_t const* ptr);
-float			byte_to_float_swap(byte_t const* ptr);
-float			byte_to_float_swap_pair(byte_t const* ptr);
-float			byte_to_float(byte_t const* ptr, endian_swap swap);
 
+template <endian_order From>
 double			byte_to_double( byte_t const* ptr );
-double			byte_to_double_swap( byte_t const* ptr );
-double			byte_to_double_swap_pair(byte_t const* ptr);
-double			byte_to_double(byte_t const* ptr, endian_swap swap);
 
 
 /**

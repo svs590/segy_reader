@@ -24,6 +24,8 @@ int main() {
 	auto reader = shared_ptr<seismic_data_provider>(
 		new segy_reader(config)
 		);
+    
+    cout << "Traces count: " << reader->traces_count() << endl;
 
 	cout << reader->text_header() << endl;
 
@@ -77,6 +79,9 @@ int main() {
     }
 
 	reader->set_header_map(new_map);
+
+    auto trc_header = dynamic_pointer_cast<segy_trace_header>(reader->trace_header(0));
+    cout << trc_header->iline() << '\t' << trc_header->crossline() << endl;
 
     /*
 	auto trace0 = reader->get_trace(0);

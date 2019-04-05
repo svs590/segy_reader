@@ -131,3 +131,33 @@ long long get_available_memory() {
 
 }
 
+void seekg_relative(int64_t rel_pos, bfs::ifstream &stream) {
+    // Complex algorithm to be able to make step that is larger than 2Gb : Make several smaller steps instead
+
+    int maxInt = std::numeric_limits<int>::max() - 1;   // -1 to be on the safe side, also for negative byte positions
+    if (rel_pos < 0) maxInt *= -1;
+
+    csInt64_t numSteps = rel_pos / (int64_t)maxInt + 1LL;
+    int bytePosResidual = (int)(rel_pos % (int64_t)maxInt);
+
+    for (csInt64_t istep = 0; istep < numSteps - 1; ++istep) {
+        stream.clear(); // Clear all flags
+        stream.seekg(maxInt, std::ios_base::cur);
+        if (stream.fail()) return;
+    }
+
+    stream.seekg(bytePosResidual, std::ios_base::cur);
+}
+
+bool is_little_endian() {
+    union {
+        unsigned char  cc[2];
+        unsigned short int si;
+    } aa;
+    aa.si = 258;
+
+    // Intel: aa.cc[0]=2  // LittleEndian
+    // SPARC: aa.cc[0]=1  // BigEndian
+
+    return(aa.cc[0] == 2);
+}

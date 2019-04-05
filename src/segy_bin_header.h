@@ -13,14 +13,14 @@ namespace py = pybind11;
 
 #include "seismic_abstract_header.h"
 #include "data_conversion.h"
-#include "segy_defines.h"
+#include "segy_file.h"
 
 class segy_bin_header : public seismic_abstract_header {
     bool f_map_need_update;
     std::map<std::string, seismic_variant_value> f_fields;
 public:
 	segy_bin_header();
-	segy_bin_header(const std::vector<byte_t> &raw_data, endian_swap swap_endian);
+	segy_bin_header(const std::vector<byte_t> &raw_data, endian_order swap_endian);
 	~segy_bin_header();
 
 	int job_id()								{ return f_job_id; }
@@ -52,12 +52,12 @@ public:
 	int polarity_code()							{ return f_polarity_code; }
 	bool is_segy_2()							{ return f_is_segy_2; }
 	bool is_same_for_file()						{ return f_is_same_for_file; }
-	int extended_headers_count()				{ return f_extended_headers_count; }
+	int extended_text_headers_count()			{ return f_extended_text_headers_count; }
 	int max_add_trc_headers_count()				{ return f_max_add_trc_headers_count; }
 	int time_basis()							{ return f_time_basis; }
 	int64_t stream_traces_count()				{ return f_stream_traces_count; }
 	int64_t first_trace_offset()				{ return f_first_trace_offset; }
-	endian_swap endian()						{ return f_endian_swap; }
+	endian_order endian()						{ return f_swap_endian; }
 
 	void set_job_id(int val)					{ f_map_need_update = true; f_job_id = val; }
 	void set_line_num(int val)					{ f_map_need_update = true; f_line_num = val; }
@@ -88,19 +88,19 @@ public:
 	void set_polarity_code(int val)				{ f_map_need_update = true; f_polarity_code = val; }
 	void set_segy_2(bool val)					{ f_map_need_update = true; f_is_segy_2 = val; }
 	void set_same_for_file(bool val)			{ f_map_need_update = true; f_is_same_for_file = val; }
-	void extended_headers_count(int val)		{ f_map_need_update = true; f_extended_headers_count = val; }
-	void max_add_trc_headers_count(int val)		{ f_map_need_update = true; f_max_add_trc_headers_count = val; }
-	void time_basis(int val)					{ f_map_need_update = true; f_time_basis = val; }
-	void stream_traces_count(int64_t val)		{ f_map_need_update = true; f_stream_traces_count = val; }
-	void first_trace_offset(int64_t val)		{ f_map_need_update = true; f_first_trace_offset = val; }
-	void set_endian(endian_swap val)			{ f_map_need_update = true; f_endian_swap = val; }
+	void set_extended_text_headers_count(int val){ f_map_need_update = true; f_extended_text_headers_count = val; }
+	void set_max_add_trc_headers_count(int val)	{ f_map_need_update = true; f_max_add_trc_headers_count = val; }
+	void set_time_basis(int val)				{ f_map_need_update = true; f_time_basis = val; }
+	void set_stream_traces_count(int64_t val)	{ f_map_need_update = true; f_stream_traces_count = val; }
+	void set_first_trace_offset(int64_t val)	{ f_map_need_update = true; f_first_trace_offset = val; }
+	void set_endian(endian_order val)			{ f_map_need_update = true; f_swap_endian = val; }
 
 
     virtual seismic_variant_value get(const std::string &name);
     virtual std::map<std::string, seismic_variant_value> to_map();
 
 private:
-	void initialize(const std::vector<byte_t> &raw_data, endian_swap swap_endian);
+	void initialize(const std::vector<byte_t> &raw_data, endian_order swap_endian);
     void init_map();
 	void set_zero();
 
@@ -141,15 +141,15 @@ private:
 	int f_extended_samples_count_orig;	// 4 bytes
 	int f_extended_ensemble_fold;		// 4 bytes
 
-	endian_swap f_endian_swap;			// 4 bytes, 67305985 do not swap, 33620995 do swap
+	endian_order f_swap_endian;			// 4 bytes, 67305985 do not swap, 33620995 do swap
 
 	bool f_is_segy_2;					// 1 byte
 	int f_is_same_for_file;				// 2 bytes
-	int f_extended_headers_count;		// 2 bytes, -1 - variable count
+	int f_extended_text_headers_count;		// 2 bytes, -1 - variable count
 	int f_max_add_trc_headers_count;	// 4 bytes
 	int f_time_basis;					// 2 bytes
 	uint64_t f_stream_traces_count;		// 8 bytes
-	uint64_t f_first_trace_offset;		// 8 bytes, if nonzero overrides f_extended_headers_count
+	uint64_t f_first_trace_offset;		// 8 bytes, if nonzero overrides f_extended_text_headers_count
 	
 };
 

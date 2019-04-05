@@ -12,7 +12,7 @@
 #include "segy_header_map.h"
 #include "utils.h"
 #include "data_conversion.h"
-#include "segy_defines.h"
+#include "segy_file.h"
 
 using namespace std;
 using namespace cseis_geolib;
@@ -36,6 +36,48 @@ void segy_reader::init(bool reopen) {
 
     processed = false;
     headers_in_memory = false;
+
+    f_filesize = bfs::file_size(f_config.filename);
+    f_samples_count = f_bin_header->samples_count();
+
+    int ethc                    = f_bin_header->extended_text_headers_count();
+    int max_trc_addheaders      = f_bin_header->max_add_trc_headers_count();
+    size_t text_headers_size    = segy_file::text_header_size * (1 + ethc);
+    size_t bin_header_size      = segy_file::bin_header_size;
+    size_t max_trc_header_size  = segy_file::trace_header_size * (1 + max_trc_addheaders);
+    size_t data_format_size     = segy_data_format_size(f_bin_header->data_format());
+    bool is_same                = f_bin_header->is_same_for_file();
+
+    if (f_bin_header->is_segy_2() && f_bin_header->stream_traces_count() != 0)
+        f_traces_count = f_bin_header->stream_traces_count();
+    else {
+        f_approx_traces_count = (int64_t)((f_filesize - text_headers_size - bin_header_size) /
+            (max_trc_header_size + (size_t)f_samples_count * data_format_size));
+
+        size_t approx_filesize = text_headers_size + bin_header_size +
+            max_trc_header_size * f_approx_traces_count +
+            f_samples_count * data_format_size * f_approx_traces_count;
+
+        cout << f_filesize << '\t' << approx_filesize << endl;
+
+        if (!is_same && f_filesize != approx_filesize)
+            cout << "Warning: traces count is approximate, precise count will be "
+            "be received after file preprocessing" << endl;
+    }
+
+    if (f_bin_header->is_segy_2() && f_bin_header->first_trace_offset() != 0)
+        f_first_trc_offset = f_bin_header->first_trace_offset();
+    else
+        f_first_trc_offset = text_headers_size + bin_header_size;
+
+    bool platform_little_endian = is_little_endian();
+    if (f_config.little_endian && platform_little_endian)
+        f_endian = endian_order::none;
+    else 
+        f_endian = endian_order::reverse;
+
+    resize_buffer(1);
+    f_istream.seekg(f_first_trc_offset, ios::beg);
 }
 
 segy_reader::segy_reader(const segy_reader_config &config) {
@@ -54,16 +96,12 @@ void segy_reader::set_config(const segy_reader_config &config) {
 }
 
 void segy_reader::close() {
-
+    close_file();
 }
 
-int segy_reader::sampleByteSize() {
-	return 0;
-}
-
-int segy_reader::traces_count() {
-	if (f_traces_count == NOT_INDEX)
-		f_traces_count = 0;
+int64_t segy_reader::traces_count() {
+    if (f_traces_count == NOT_INDEX)
+        return f_approx_traces_count;
 	return f_traces_count;
 }
 
@@ -73,12 +111,8 @@ int segy_reader::samples_count() {
 	return f_samples_count;
 }
 
-int segy_reader::headersCount() {
-	return 0;
-}
-
-float segy_reader::sample_interval() {
-	return 0;
+double segy_reader::sample_interval() {
+    return f_bin_header->sample_interval();
 }
 
 shared_ptr<seismic_abstract_header> segy_reader::bin_header() {
@@ -95,16 +129,24 @@ shared_ptr<seismic_abstract_header> segy_reader::bin_header() {
 	if (f_istream.fail())
 		throw runtime_error("segy_reader: unexpected error occurred when reading segy binary header");
 
-	f_bin_header.reset(new segy_bin_header(buf, endian_swap::reverse));
+	f_bin_header.reset(new segy_bin_header(buf, endian_order::reverse));
 
 	return f_bin_header;
 }
 
-void segy_reader::moveToTrace(int firstTraceIndex, int numTracesToRead) {
-	
+void segy_reader::move(int trc_index, int buffer) {
+    if (buffer > 0)
+        resize_buffer(buffer);
+    seekg_relative((int64_t)trc_index, f_istream);
+    if (f_istream.fail())
+        throw runtime_error("segy_reader: unexpected error occurred while moving to trace "
+            + to_string(trc_index));
 }
-void segy_reader::moveToTrace(int firstTraceIndex) {
-	
+void segy_reader::move(int trc_index) {
+    seekg_relative((int64_t)trc_index, f_istream);
+    if (f_istream.fail())
+        throw runtime_error("segy_reader: unexpected error occurred while moving to trace "
+            + to_string(trc_index));
 }
 const float *segy_reader::nextTraceRef() {
 	return nullptr;
@@ -122,29 +164,24 @@ Eigen::VectorXf segy_reader::getNextTrace() {
 }
 
 Eigen::VectorXf segy_reader::get_trace_data(int index) {
-	moveToTrace(index, 1);
+	move(index, 1);
 	return getNextTrace();
 }
 
 shared_ptr<seismic_trace> segy_reader::get_trace(int index) {
 	//TODO: Для оптимизации необходимо определять, что лучше: move или read в зависимости от размера прыжка.
-	moveToTrace(index, 1);
+	move(index, 1);
 	return shared_ptr<segy_trace>(
-		new segy_trace(
-			(float*)nullptr,
-			getNextTrace()
-		)
+		nullptr
 		);
 }
 
 shared_ptr<seismic_header_map> segy_reader::header_map() {
-	return shared_ptr<seismic_header_map>(
-		new segy_header_map()
-		);
+    return f_header_map;
 }
 
 void segy_reader::set_header_map(shared_ptr<seismic_header_map> map) {
-	
+    f_header_map = map;
 }
 
 string segy_reader::text_header() {
@@ -167,9 +204,12 @@ string segy_reader::text_header() {
 }
 
 shared_ptr<seismic_trace_header> segy_reader::trace_header(int index) {
-	moveToTrace(index);
-	nextTraceRef();
-	return current_trace_header();
+	move(index);
+    f_istream.read((char*)buffer.data(), 240);
+
+    return shared_ptr<seismic_trace_header>(
+            new segy_trace_header(f_header_map, buffer.data(), f_endian)
+        );
 }
 
 shared_ptr<seismic_trace_header> segy_reader::current_trace_header() {
@@ -212,7 +252,7 @@ void segy_reader::get_traces(
 	line.resize(trcs.size());
 	
 	for (int i = 0; i < trcs.size(); ++i) {
-		moveToTrace(trcs[i], trc_buffer);
+		move(trcs[i], trc_buffer);
 		auto trace = nextTraceRef();
 		auto header = current_trace_header();
 		line[i] = shared_ptr<seismic_trace>(new segy_trace(
@@ -230,7 +270,7 @@ void segy_reader::get_traces(int start_trace, int end_trace,
 	int count = end_trace - start_trace + 1;
 	int buffer_size = end_trace - start_trace + 1;
 	line.resize(count);
-	moveToTrace(start_trace, buffer_size);
+	move(start_trace, buffer_size);
 
 	for (int i = 0; i < count; ++i) {
 		auto trace = nextTraceRef();
@@ -278,7 +318,7 @@ void segy_reader::get_headers(
 	headers.resize(trcs.size());
 	if (!headers_in_memory) {
 		for (int i = 0; i < trcs.size(); ++i) {
-			moveToTrace(trcs[i], trc_buffer);
+			move(trcs[i], trc_buffer);
 			nextTraceRef();
 			auto header = current_trace_header();
 			headers[i] = dynamic_pointer_cast<segy_trace_header>(header);
@@ -299,7 +339,7 @@ void segy_reader::get_headers(
 	int buffer_size = end_trace - start_trace + 1;
 	headers.resize(count);
 	if (!headers_in_memory){
-		moveToTrace(start_trace, buffer_size);
+		move(start_trace, buffer_size);
 		for (int i = 0; i < count; ++i) {
 			nextTraceRef();
 			auto header = current_trace_header();
@@ -372,7 +412,7 @@ void segy_reader::line_processing(
 
 void segy_reader::check_memory_for_headers() {
 	int count = traces_count();
-	int fields_count = headersCount();
+	int fields_count = 85; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	// Грубая оценка памяти, необходимой для хранения всех хэдеров
 	// Запрашиваем 30% ОЗУ под хэдеры
@@ -413,7 +453,7 @@ void segy_reader::preprocessing() {
 
 	check_memory_for_headers();
 
-	moveToTrace(0, 1);
+	move(0, 1);
 	int i = 0;
 	do {
 		nextTraceRef();
@@ -466,6 +506,23 @@ void segy_reader::close_file() {
 		f_istream.close();
 }
 
+void segy_reader::resize_buffer(size_t size) {
+    buffer_size = size;
+
+    size_t max_trc_header_size = segy_file::trace_header_size * (1 + max_trc_addheaders);
+    size_t data_format_size = segy_data_format_size(f_bin_header->data_format());
+
+    int approx_fulltrace_size = max_trc_header_size + f_samples_count * data_format_size;
+    buffer.resize(buffer_size * approx_fulltrace_size);
+}
+
+void segy_reader::determine_endian_order() {
+    auto bin_hdr = dynamic_pointer_cast<segy_bin_header>(bin_header());
+    if (!bin_hdr->is_segy_2()) {
+        
+        if (bin_hdr->data_format() > 0 && )
+    }
+}
 
 #ifdef PYTHON
 void py_segy_reader_init(py::module &m,

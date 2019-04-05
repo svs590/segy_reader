@@ -1,6 +1,7 @@
 #include "data_conversion.h"
 
-
+#include <boost/endian/conversion.hpp>
+using namespace boost::endian;
 
 const char e2a[] = {
   '@','@','@','@','@','@','@','@','@','@','@','@','@','@','@','@','@','@','@','@',
@@ -66,267 +67,254 @@ std::string char_to_ecdic(const std::string &str) {
 	return res;
 }
 
-short byte_to_short(byte_t const* ptr) {
-	return ((short)ptr[1] << 8) + (short)ptr[0];
+template <>
+short byte_to_short<endian_order::big>(byte_t const* ptr) {
+    short val = *reinterpret_cast<short const*>(ptr);
+    return conditional_reverse<order::big, order::native>(val);
 }
 
-short byte_to_short_swap(byte_t const* ptr) {
-	return ((short)ptr[0] << 8) + (short)ptr[1];
+template <>
+short byte_to_short<endian_order::little>(byte_t const* ptr) {
+    short val = *reinterpret_cast<short const*>(ptr);
+    return conditional_reverse<order::little, order::native>(val);
 }
 
-short byte_to_short_swap_pair(byte_t const* ptr) {
-	return ((short)ptr[0] << 8) + (short)ptr[1];
+template <>
+short byte_to_short<endian_order::mid_big>(byte_t const* ptr) {
+    short val = *reinterpret_cast<short const*>(ptr);
+    return conditional_reverse<order::big, order::native>(val);
 }
 
-short byte_to_short(byte_t const* ptr, endian_swap swap) {
-	switch (swap)
-	{
-	case endian_swap::none:
-		return byte_to_short(ptr);
-		break;
-	case endian_swap::reverse:
-		return byte_to_short_swap(ptr);
-		break;
-	case endian_swap::pair:
-		return byte_to_short_swap_pair(ptr);
-		break;
-	default:
-		return 0;
-		break;
-	}
+template <>
+short byte_to_short<endian_order::mid_little>(byte_t const* ptr) {
+    short val = *reinterpret_cast<short const*>(ptr);
+    return conditional_reverse<order::little, order::native>(val);
 }
 
-unsigned short byte_to_ushort(byte_t const* ptr) {
-	return ((unsigned short)ptr[1] << 8) + (unsigned short)ptr[0];
+template <>
+unsigned short byte_to_ushort<endian_order::big>(byte_t const* ptr) {
+    unsigned short val = *reinterpret_cast<unsigned short const*>(ptr);
+    return conditional_reverse<order::big, order::native>(val);
 }
 
-unsigned short byte_to_ushort_swap(byte_t const* ptr) {
-	return ((unsigned short)ptr[0] << 8) + (unsigned short)ptr[1];
+template <>
+unsigned short byte_to_ushort<endian_order::little>(byte_t const* ptr) {
+    unsigned short val = *reinterpret_cast<unsigned short const*>(ptr);
+    return conditional_reverse<order::little, order::native>(val);
 }
 
-unsigned short byte_to_ushort_swap_pair(byte_t const* ptr) {
-	return ((unsigned short)ptr[0] << 8) + (unsigned short)ptr[1];
+template <>
+unsigned short byte_to_ushort<endian_order::mid_big>(byte_t const* ptr) {
+    unsigned short val = *reinterpret_cast<unsigned short const*>(ptr);
+    return conditional_reverse<order::big, order::native>(val);
 }
 
-unsigned short byte_to_ushort(byte_t const* ptr, endian_swap swap) {
-	switch (swap)
-	{
-	case endian_swap::none:
-		return byte_to_ushort(ptr);
-		break;
-	case endian_swap::reverse:
-		return byte_to_ushort_swap(ptr);
-		break;
-	case endian_swap::pair:
-		return byte_to_ushort_swap_pair(ptr);
-		break;
-	default:
-		return 0;
-		break;
-	}
+template <>
+unsigned short byte_to_ushort<endian_order::mid_little>(byte_t const* ptr) {
+    unsigned short val = *reinterpret_cast<unsigned short const*>(ptr);
+    return conditional_reverse<order::little, order::native>(val);
 }
 
-int byte_to_int(byte_t const* ptr) {
-	return
-		((int)ptr[3] << 24) + ((int)ptr[2] << 16) + ((int)ptr[1] << 8) + (int)ptr[0];
+template <>
+int byte_to_int<endian_order::big>(byte_t const* ptr) {
+    int val = *reinterpret_cast<int const*>(ptr);
+    return conditional_reverse<order::big, order::native>(val);
 }
 
-int byte_to_int_swap(byte_t const* ptr) {
-	return
-		((int)ptr[0] << 24) + ((int)ptr[1] << 16) + ((int)ptr[2] << 8) + (int)ptr[3];
+template <>
+int byte_to_int<endian_order::little>(byte_t const* ptr) {
+    int val = *reinterpret_cast<int const*>(ptr);
+    return conditional_reverse<order::little, order::native>(val);
 }
 
-int byte_to_int_swap_pair(byte_t const* ptr) {
-	return
-		((int)ptr[0] << 16) + ((int)ptr[1] << 24) + (int)ptr[2] + ((int)ptr[3] << 8);
+template <>
+int byte_to_int<endian_order::mid_big>(byte_t const* ptr) {
+    byte_t mid_big[4];
+    mid_big[0] = ptr[1];
+    mid_big[1] = ptr[0];
+    mid_big[2] = ptr[3];
+    mid_big[3] = ptr[2];
+    int val = *reinterpret_cast<int const*>(mid_big);
+    return conditional_reverse<order::big, order::native>(val);
 }
 
-int byte_to_int(byte_t const* ptr, endian_swap swap) {
-	switch (swap)
-	{
-	case endian_swap::none:
-		return byte_to_int(ptr);
-		break;
-	case endian_swap::reverse:
-		return byte_to_int_swap(ptr);
-		break;
-	case endian_swap::pair:
-		return byte_to_int_swap_pair(ptr);
-		break;
-	default:
-		return 0;
-		break;
-	}
+template <>
+int byte_to_int<endian_order::mid_little>(byte_t const* ptr) {
+    byte_t mid_big[4];
+    mid_big[0] = ptr[1];
+    mid_big[1] = ptr[0];
+    mid_big[2] = ptr[3];
+    mid_big[3] = ptr[2];
+    int val = *reinterpret_cast<int const*>(mid_big);
+    return conditional_reverse<order::little, order::native>(val);
 }
 
-uint64_t byte_to_uint64(byte_t const* ptr) {
-	return
-		((uint64_t)ptr[7] << 56) + ((uint64_t)ptr[6] << 48) + ((uint64_t)ptr[5] << 40) + ((uint64_t)ptr[4] << 32) +
-		((uint64_t)ptr[3] << 24) + ((uint64_t)ptr[2] << 16) + ((uint64_t)ptr[1] << 8) + (uint64_t)ptr[0];
+template <>
+uint64_t byte_to_uint64<endian_order::big>(byte_t const* ptr) {
+    uint64_t val = *reinterpret_cast<uint64_t const*>(ptr);
+    return conditional_reverse<order::big, order::native>(val);
 }
 
-uint64_t byte_to_uint64_swap(byte_t const* ptr) {
-	return
-		((uint64_t)ptr[0] << 56) + ((uint64_t)ptr[1] << 48) + ((uint64_t)ptr[2] << 40) + ((uint64_t)ptr[3] << 32) +
-		((uint64_t)ptr[4] << 24) + ((uint64_t)ptr[5] << 16) + ((uint64_t)ptr[6] << 8) + (uint64_t)ptr[7];
+template <>
+uint64_t byte_to_uint64<endian_order::little>(byte_t const* ptr) {
+    uint64_t val = *reinterpret_cast<uint64_t const*>(ptr);
+    return conditional_reverse<order::little, order::native>(val);
 }
 
-uint64_t byte_to_uint64_swap_pair(byte_t const* ptr) {
-	return
-		((uint64_t)ptr[1] << 56) + ((uint64_t)ptr[0] << 48) + ((uint64_t)ptr[3] << 40) + ((uint64_t)ptr[2] << 32) +
-		((uint64_t)ptr[5] << 24) + ((uint64_t)ptr[4] << 16) + ((uint64_t)ptr[7] << 8) + (uint64_t)ptr[6];
+template <>
+uint64_t byte_to_uint64<endian_order::mid_big>(byte_t const* ptr) {
+    byte_t mid_big[8];
+    mid_big[0] = ptr[1];
+    mid_big[1] = ptr[0];
+    mid_big[2] = ptr[3];
+    mid_big[3] = ptr[2];
+    mid_big[4] = ptr[5];
+    mid_big[5] = ptr[4];
+    mid_big[6] = ptr[7];
+    mid_big[7] = ptr[6];
+    uint64_t val = *reinterpret_cast<uint64_t const*>(mid_big);
+    return conditional_reverse<order::big, order::native>(val);
 }
 
-uint64_t byte_to_uint64(byte_t const* ptr, endian_swap swap) {
-	switch (swap)
-	{
-	case endian_swap::none:
-		return byte_to_uint64(ptr);
-		break;
-	case endian_swap::reverse:
-		return byte_to_uint64_swap(ptr);
-		break;
-	case endian_swap::pair:
-		return byte_to_uint64_swap_pair(ptr);
-		break;
-	default:
-		return 0;
-		break;
-	}
+template <>
+uint64_t byte_to_uint64<endian_order::mid_little>(byte_t const* ptr) {
+    byte_t mid_big[8];
+    mid_big[0] = ptr[1];
+    mid_big[1] = ptr[0];
+    mid_big[2] = ptr[3];
+    mid_big[3] = ptr[2];
+    mid_big[4] = ptr[5];
+    mid_big[5] = ptr[4];
+    mid_big[6] = ptr[7];
+    mid_big[7] = ptr[6];
+    uint64_t val = *reinterpret_cast<uint64_t const*>(mid_big);
+    return conditional_reverse<order::little, order::native>(val);
 }
 
-int64_t byte_to_int64(byte_t const* ptr) {
-	return
-		((int64_t)ptr[7] << 56) + ((int64_t)ptr[6] << 48) + ((int64_t)ptr[5] << 40) + ((int64_t)ptr[4] << 32) +
-		((int64_t)ptr[3] << 24) + ((int64_t)ptr[2] << 16) + ((int64_t)ptr[1] << 8) + (int64_t)ptr[0];
+template <>
+int64_t byte_to_int64<endian_order::big>(byte_t const* ptr) {
+    int64_t val = *reinterpret_cast<int64_t const*>(ptr);
+    return conditional_reverse<order::big, order::native>(val);
 }
 
-int64_t byte_to_int64_swap(byte_t const* ptr) {
-	return
-		((int64_t)ptr[0] << 56) + ((int64_t)ptr[1] << 48) + ((int64_t)ptr[2] << 40) + ((int64_t)ptr[3] << 32) +
-		((int64_t)ptr[4] << 24) + ((int64_t)ptr[5] << 16) + ((int64_t)ptr[6] << 8) + (int64_t)ptr[7];
+template <>
+int64_t byte_to_int64<endian_order::little>(byte_t const* ptr) {
+    int64_t val = *reinterpret_cast<int64_t const*>(ptr);
+    return conditional_reverse<order::little, order::native>(val);
 }
 
-int64_t byte_to_int64_swap_pair(byte_t const* ptr) {
-	return
-		((int64_t)ptr[1] << 56) + ((int64_t)ptr[0] << 48) + ((int64_t)ptr[3] << 40) + ((int64_t)ptr[2] << 32) +
-		((int64_t)ptr[5] << 24) + ((int64_t)ptr[4] << 16) + ((int64_t)ptr[7] << 8) + (int64_t)ptr[6];
+template <>
+int64_t byte_to_int64<endian_order::mid_big>(byte_t const* ptr) {
+    byte_t mid_big[8];
+    mid_big[0] = ptr[1];
+    mid_big[1] = ptr[0];
+    mid_big[2] = ptr[3];
+    mid_big[3] = ptr[2];
+    mid_big[4] = ptr[5];
+    mid_big[5] = ptr[4];
+    mid_big[6] = ptr[7];
+    mid_big[7] = ptr[6];
+    int64_t val = *reinterpret_cast<int64_t const*>(mid_big);
+    return conditional_reverse<order::big, order::native>(val);
 }
 
-int64_t byte_to_int64(byte_t const* ptr, endian_swap swap) {
-	switch (swap)
-	{
-	case endian_swap::none:
-		return byte_to_int64(ptr);
-		break;
-	case endian_swap::reverse:
-		return byte_to_int64_swap(ptr);
-		break;
-	case endian_swap::pair:
-		return byte_to_int64_swap_pair(ptr);
-		break;
-	default:
-		break;
-	}
+template <>
+int64_t byte_to_int64<endian_order::mid_little>(byte_t const* ptr) {
+    byte_t mid_big[8];
+    mid_big[0] = ptr[1];
+    mid_big[1] = ptr[0];
+    mid_big[2] = ptr[3];
+    mid_big[3] = ptr[2];
+    mid_big[4] = ptr[5];
+    mid_big[5] = ptr[4];
+    mid_big[6] = ptr[7];
+    mid_big[7] = ptr[6];
+    int64_t val = *reinterpret_cast<int64_t const*>(mid_big);
+    return conditional_reverse<order::little, order::native>(val);
 }
 
-float byte_to_float(byte_t const* ptr) {
-	float f;
-	memcpy(&f, ptr, 4);
-	return f;
+template <>
+float byte_to_float<endian_order::big>(byte_t const* ptr) {
+    int val = *reinterpret_cast<int const*>(ptr);
+    val = conditional_reverse<order::big, order::native>(val);
+    return *reinterpret_cast<float const*>(&val);
 }
 
-float byte_to_float_swap(byte_t const* ptr) {
-	char c[4];
-	c[0] = ptr[3];
-	c[1] = ptr[2];
-	c[2] = ptr[1];
-	c[3] = ptr[0];
-	float f;
-	memcpy(&f, c, 4);
-	return f;
+template <>
+float byte_to_float<endian_order::little>(byte_t const* ptr) {
+    int val = *reinterpret_cast<int const*>(ptr);
+    val = conditional_reverse<order::little, order::native>(val);
+    return *reinterpret_cast<float const*>(&val);
 }
 
-float byte_to_float_swap_pair(byte_t const* ptr) {
-	char c[4];
-	c[0] = ptr[2];
-	c[1] = ptr[3];
-	c[2] = ptr[0];
-	c[3] = ptr[1];
-	float f;
-	memcpy(&f, c, 4);
-	return f;
+template <>
+float byte_to_float<endian_order::mid_big>(byte_t const* ptr) {
+    byte_t mid_big[4];
+    mid_big[0] = ptr[1];
+    mid_big[1] = ptr[0];
+    mid_big[2] = ptr[3];
+    mid_big[3] = ptr[2];
+    int val = *reinterpret_cast<int const*>(ptr);
+    val = conditional_reverse<order::big, order::native>(val);
+    return *reinterpret_cast<float const*>(&val);
 }
 
-float byte_to_float(byte_t const* ptr, endian_swap swap) {
-	switch (swap)
-	{
-	case endian_swap::none:
-		return byte_to_float(ptr);
-		break;
-	case endian_swap::reverse:
-		return byte_to_float_swap(ptr);
-		break;
-	case endian_swap::pair:
-		return byte_to_float_swap_pair(ptr);
-		break;
-	default:
-		break;
-	}
+template <>
+float byte_to_float<endian_order::mid_little>(byte_t const* ptr) {
+    byte_t mid_big[4];
+    mid_big[0] = ptr[1];
+    mid_big[1] = ptr[0];
+    mid_big[2] = ptr[3];
+    mid_big[3] = ptr[2];
+    int val = *reinterpret_cast<int const*>(ptr);
+    val = conditional_reverse<order::little, order::native>(val);
+    return *reinterpret_cast<float const*>(&val);
 }
 
-double byte_to_double( byte_t const* ptr ) {
-	double f;
-	memcpy(&f, ptr, 8);
-	return f;
+template <>
+double byte_to_double<endian_order::big>( byte_t const* ptr ) {
+    int64_t val = *reinterpret_cast<int64_t const*>(ptr);
+    val = conditional_reverse<order::big, order::native>(val);
+    return *reinterpret_cast<double const*>(&val);
 }
 
-double byte_to_double_swap( byte_t const* ptr ) {
-	char c[8];
-	c[0] = ptr[7];
-	c[1] = ptr[6];
-	c[2] = ptr[5];
-	c[3] = ptr[4];
-	c[4] = ptr[3];
-	c[5] = ptr[2];
-	c[6] = ptr[1];
-	c[7] = ptr[0];
-	double f;
-	memcpy(&f, c, 8);
-	return f;
+template <>
+double byte_to_double<endian_order::little>(byte_t const* ptr) {
+    int64_t val = *reinterpret_cast<int64_t const*>(ptr);
+    val = conditional_reverse<order::little, order::native>(val);
+    return *reinterpret_cast<double const*>(&val);
 }
 
-double byte_to_double_swap_pair(byte_t const* ptr) {
-	char c[8];
-	c[0] = ptr[6];
-	c[1] = ptr[7];
-	c[2] = ptr[4];
-	c[3] = ptr[5];
-	c[4] = ptr[2];
-	c[5] = ptr[3];
-	c[6] = ptr[0];
-	c[7] = ptr[1];
-	double f;
-	memcpy(&f, c, 8);
-	return f;
+template <>
+double byte_to_double<endian_order::mid_big>(byte_t const* ptr) {
+    byte_t mid_big[8];
+    mid_big[0] = ptr[1];
+    mid_big[1] = ptr[0];
+    mid_big[2] = ptr[3];
+    mid_big[3] = ptr[2];
+    mid_big[4] = ptr[5];
+    mid_big[5] = ptr[4];
+    mid_big[6] = ptr[7];
+    mid_big[7] = ptr[6];
+    int64_t val = *reinterpret_cast<int64_t const*>(ptr);
+    val = conditional_reverse<order::big, order::native>(val);
+    return *reinterpret_cast<double const*>(&val);
 }
 
-double byte_to_double(byte_t const* ptr, endian_swap swap) {
-	switch (swap)
-	{
-	case endian_swap::none:
-		return byte_to_double(ptr);
-		break;
-	case endian_swap::reverse:
-		return byte_to_double_swap(ptr);
-		break;
-	case endian_swap::pair:
-		return byte_to_double_swap_pair(ptr);
-		break;
-	default:
-		return 0;
-		break;
-	}
+template <>
+double byte_to_double<endian_order::mid_little>(byte_t const* ptr) {
+    byte_t mid_big[8];
+    mid_big[0] = ptr[1];
+    mid_big[1] = ptr[0];
+    mid_big[2] = ptr[3];
+    mid_big[3] = ptr[2];
+    mid_big[4] = ptr[5];
+    mid_big[5] = ptr[4];
+    mid_big[6] = ptr[7];
+    mid_big[7] = ptr[6];
+    int64_t val = *reinterpret_cast<int64_t const*>(ptr);
+    val = conditional_reverse<order::little, order::native>(val);
+    return *reinterpret_cast<double const*>(&val);
 }
 
 void short_to_byte_swap(short value, byte_t* outPtr) {

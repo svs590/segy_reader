@@ -130,7 +130,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(BOOST_ROOT)\;..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SEGY_READER_TEST;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -149,7 +149,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(BOOST_ROOT)\;..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SEGY_READER_TEST;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -254,7 +254,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\data_conversion.h" />
     <ClInclude Include="..\src\data_types.h" />
-    <ClInclude Include="..\src\segy_defines.h" />
+    <ClInclude Include="..\src\segy_file.h" />
     <ClInclude Include="..\src\seismic_geometry.h" />
     <ClInclude Include="..\src\obj_base.h" />
     <ClInclude Include="..\src\segy_bin_header.h" />
@@ -277,6 +277,7 @@
     <ClCompile Include="..\src\data_conversion.cpp" />
     <ClCompile Include="..\src\py_mudule.cpp" />
     <ClCompile Include="..\src\segy_bin_header.cpp" />
+    <ClCompile Include="..\src\segy_file.cpp" />
     <ClCompile Include="..\src\segy_header_info.cpp" />
     <ClCompile Include="..\src\segy_header_map.cpp" />
     <ClCompile Include="..\src\segy_reader.cpp" />

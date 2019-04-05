@@ -1,7 +1,6 @@
 #include "segy_trace_header.h"
 #include "utils.h"
 
-#include "geolib_defines.h"
 #include "segy_header_map.h"
 
 using namespace std;
@@ -34,94 +33,212 @@ void native_trace_header_deleter(void *header) {
 }
 
 segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map) {
-	auto segy_map = shared_ptr<segy_header_map>(new segy_header_map(map));
-	obj = shared_ptr<void>(
-		nullptr,
-		//cseis_csNativecsSegyTraceHeader_createInstance(segy_map->obj.get()),
-		native_trace_header_deleter
-	);
-	this->map = segy_map;
-}
-
-segy_trace_header::segy_trace_header(const void *const native_header) {
-	obj = shared_ptr<void>(
-		cseis_csNativecsSegyTraceHeader_copyInstance(native_header),
-		native_trace_header_deleter
-		);
+	this->map = map;
 }
 
 segy_trace_header::segy_trace_header(const segy_trace_header &header) {
-	obj = shared_ptr<void>(
-		cseis_csNativecsSegyTraceHeader_copyInstance(header.obj.get()),
-		native_trace_header_deleter
-		);
-}
-
-segy_trace_header& segy_trace_header::operator=(const void *obj) {
-	this->obj = shared_ptr<void>(const_cast<void*>(obj), native_trace_header_deleter);
-	return *this;
+    map                 = header.map;
+    f_raw_data          = header.f_raw_data;
+    if (header.f_req_field_init) {
+        f_iline             = header.f_iline;
+        f_crossline         = header.f_crossline;
+        f_CDP_X             = header.f_CDP_X;
+        f_CDP_Y             = header.f_CDP_Y;
+        f_CDP               = header.f_CDP;
+        f_Src_X             = header.f_Src_X;
+        f_Src_Y             = header.f_Src_Y;
+        f_samples_count     = header.f_samples_count;
+        f_sample_interval   = header.f_sample_interval;
+    }
+    f_req_field_init        = header.f_req_field_init;
 }
 
 segy_trace_header& segy_trace_header::operator=(const segy_trace_header &obj) {
-	this->obj = obj.obj;
+	map = obj.map;
+    f_raw_data = obj.f_raw_data;
 	return *this;
 }
 
+segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map, 
+    byte_t *raw_data, endian_order swap) {
+
+    this->map = map;
+    f_swap_endian = swap;
+    f_raw_data.resize(segy_file::trace_header_size);
+    copy(raw_data, raw_data + segy_file::trace_header_size, f_raw_data.data());
+    parse_required();
+}
+
+void segy_trace_header::parse_required() {
+    if (f_raw_data.size() != segy_file::trace_header_size)
+        return;
+    
+    auto field = get("Inline");
+    f_iline = any_cast<int>(field.first);
+    field = get("Crossline");
+    f_crossline = any_cast<int>(field.first);
+    f_CDP_X = get("CDP X");
+    f_CDP_Y = get("CDP Y");
+    f_CDP = get("CDP");
+    f_Src_X = get("Src X");
+    f_Src_Y = get("Src Y");
+    field = get("Samples count");
+    f_samples_count = any_cast<short>(field.first);
+    field = get("Sample interval");
+    f_sample_interval = any_cast<short>(field.first);
+
+    f_req_field_init = true;
+}
+
+int segy_trace_header::iline() {
+    if (f_req_field_init)
+        return f_iline;
+    else
+        return NOT_INDEX;
+}
+
+int segy_trace_header::crossline() {
+    if (f_req_field_init)
+        return f_crossline;
+    else
+        return NOT_INDEX;
+}
+
+std::pair<std::any, seismic_data_type>  segy_trace_header::CDP_X() {
+    if (f_req_field_init)
+        return f_CDP_X;
+    else
+        return { NOT_INDEX, seismic_data_type::UNKNOWN };
+}
+
+std::pair<std::any, seismic_data_type>  segy_trace_header::CDP_Y() {
+    if (f_req_field_init)
+        return f_CDP_Y;
+    else
+        return { NOT_INDEX, seismic_data_type::UNKNOWN };
+}
+
+std::pair<std::any, seismic_data_type>  segy_trace_header::CDP() {
+    if (f_req_field_init)
+        return f_CDP;
+    else
+        return { NOT_INDEX, seismic_data_type::UNKNOWN };
+}
+
+std::pair<std::any, seismic_data_type>  segy_trace_header::Src_X() {
+    if (f_req_field_init)
+        return f_Src_X;
+    else
+        return { NOT_INDEX, seismic_data_type::UNKNOWN };
+}
+
+std::pair<std::any, seismic_data_type>  segy_trace_header::Src_Y() {
+    if (f_req_field_init)
+        return f_Src_Y;
+    else
+        return { NOT_INDEX, seismic_data_type::UNKNOWN };
+}
+
+int segy_trace_header::samples_count() {
+    if (f_req_field_init)
+        return f_samples_count;
+    else
+        return NOT_INDEX;
+}
+
+double segy_trace_header::sample_interval() {
+    if (f_req_field_init)
+        return f_sample_interval;
+    else
+        return NOT_INDEX;
+}
+
 int segy_trace_header::count() const {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_trace_header is not initialized in native code");
-	return cseis_csNativecsSegyTraceHeader_numHeaders(obj.get());
+	return 0;
 }
 
 string segy_trace_header::description(int index) const {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_trace_header is not initialized in native code");
-	const char *const descr = cseis_csNativecsSegyTraceHeader_headerDesc(obj.get(), index);
-	return string(descr);
+	return string("");
 }
 
 string segy_trace_header::name(int index) const {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_trace_header is not initialized in native code");
-	const char *const name = cseis_csNativecsSegyTraceHeader_headerName(obj.get(), index);
-	return string(name);
+	return string("");
 }
 
 int segy_trace_header::index_of(const string &name) const {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_trace_header is not initialized in native code");
-	return cseis_csNativecsSegyTraceHeader_headerIndex(obj.get(), name.c_str());
+	return 0;
 }
 
 seismic_data_type segy_trace_header::type(int index) const {
-	if (obj == nullptr)
-		throw runtime_error("Object segy_trace_header is not initialized in native code");
-	cseis_geolib::type_t geolibtype = cseis_csNativecsSegyTraceHeader_headerType(obj.get(), index);
-	return geolib_type_converter::convert<cseis_geolib::type_t, seismic_data_type>(geolibtype);
+	return seismic_data_type::UNKNOWN;
 }
 
-pair<any, seismic_data_type> segy_trace_header::get(int index) const {
-	cseis_geolib::type_t geolibtype = cseis_csNativecsSegyTraceHeader_headerType(obj.get(), index);
-	auto type = geolib_type_converter::convert<cseis_geolib::type_t, seismic_data_type>(geolibtype);
+pair<any, seismic_data_type> segy_trace_header::get(const string &name) const {
+    if (map->contains(name)) {
+        auto field_info = map->get_field(name);
+        int pos = std::get<0>(field_info);
+        int size = std::get<1>(field_info);
+        auto type = std::get<2>(field_info);
+        any res;
 
-	any res;
-	switch (type)
-	{
-	case seismic_data_type::INT:
-		res = cseis_csNativecsSegyTraceHeader_intValue(obj.get(), index);
-		break;
-	case seismic_data_type::FLOAT:
-		res = cseis_csNativecsSegyTraceHeader_floatValue(obj.get(), index);
-		break;
-	case seismic_data_type::DOUBLE:
-		res = cseis_csNativecsSegyTraceHeader_doubleValue(obj.get(), index);
-		break;
-	default:
-		throw runtime_error("segy_trace_header::get: type not implemented");
-		break;
-	}
+        switch (type) {
+        case seismic_data_type::INT:
+            if (size != 4)
+                throw invalid_argument("segy_trace_header: get: invalid "
+                    "byte size for field " + name);
+            res = byte_to_int(&f_raw_data[pos], f_swap_endian);
+            break;
+        case seismic_data_type::SHORT:
+            if (size != 2)
+                throw invalid_argument("segy_trace_header: get: invalid "
+                    "byte size for field " + name);
+            res = byte_to_short(&f_raw_data[pos], f_swap_endian);
+            break;
+        case seismic_data_type::USHORT:
+            if (size != 2)
+                throw invalid_argument("segy_trace_header: get: invalid "
+                    "byte size for field " + name);
+            res = byte_to_ushort(&f_raw_data[pos], f_swap_endian);
+            break;
+        case seismic_data_type::INT64:
+            if (size != 8)
+                throw invalid_argument("segy_trace_header: get: invalid "
+                    "byte size for field " + name);
+            res = byte_to_int64(&f_raw_data[pos], f_swap_endian);
+            break;
+        case seismic_data_type::UINT64:
+            if (size != 8)
+                throw invalid_argument("segy_trace_header: get: invalid "
+                    "byte size for field " + name);
+            res = byte_to_uint64(&f_raw_data[pos], f_swap_endian);
+            break;
+        case seismic_data_type::FLOAT:
+            if (size != 4)
+                throw invalid_argument("segy_trace_header: get: invalid "
+                    "byte size for field " + name);
+            res = byte_to_float(&f_raw_data[pos], f_swap_endian);
+            break;
+        case seismic_data_type::DOUBLE:
+            if (size != 8)
+                throw invalid_argument("segy_trace_header: get: invalid "
+                    "byte size for field " + name);
+            res = byte_to_double(&f_raw_data[pos], f_swap_endian);
+            break;
+        case seismic_data_type::CHAR:
+            if (size != 1)
+                throw invalid_argument("segy_trace_header: get: invalid "
+                    "byte size for field " + name);
+            res = (char)f_raw_data[pos];
+            break;
+        default:
+            throw invalid_argument("segy_trace_header: get: type for field " + name);
+            break;
+        }
 
-	return { res, type };
+        return { res, type };
+    }
+    else
+        return { NOT_INDEX, seismic_data_type::UNKNOWN };
 }
 
 void segy_trace_header::set_field(int index, pair<any, seismic_data_type>) {

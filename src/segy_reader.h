@@ -8,6 +8,8 @@
 #include <boost/filesystem.hpp>
 namespace bfs = boost::filesystem;
 
+#include <Eigen/Dense>
+
 #include "utils.h"
 #include "seismic_data_provider.h"
 #include "seismic_header_map.h"
@@ -27,25 +29,35 @@ struct segy_reader_config {
     std::wstring filename;
     header_map_type header_map_type = header_map_type::STANDARD;
     bool ebcdic_header              = true;
-    bool swap_endian                = false;
+    bool little_endian              = false;
+    bool reverse_byte_pairs         = false;
 };
 
 class segy_reader : public seismic_data_provider {
     segy_reader_config f_config;
 
-	int f_samples_count = NOT_INDEX;
-	int f_traces_count = NOT_INDEX;
+    int f_samples_count             = NOT_INDEX;
+    int64_t f_traces_count          = NOT_INDEX;
+    int64_t f_approx_traces_count   = NOT_INDEX;
+    int max_trc_addheaders          = 0;
 	void *obj;
 	bool processed;
 	bool headers_in_memory;
 
+    std::shared_ptr<seismic_header_map> f_header_map;
 	std::shared_ptr<segy_bin_header> f_bin_header;
 	std::string f_text_header;
 	std::vector<std::shared_ptr<seismic_trace_header>> headers;
 	std::shared_ptr<seismic_geometry_info> geometry;
 
 	bfs::ifstream f_istream;
-	
+    size_t f_filesize;
+    size_t f_first_trc_offset;
+
+    endian_order f_endian;
+    std::vector<byte_t> buffer;
+    size_t buffer_size;
+
 public:
     ~segy_reader();
 	segy_reader(const segy_reader_config &config);
@@ -53,9 +65,9 @@ public:
     void set_config(const segy_reader_config &config);
 
 	virtual void close();
-	virtual int traces_count();
+	virtual int64_t traces_count();
 	virtual int samples_count();
-	virtual float sample_interval();
+	virtual double sample_interval();
 
 	virtual std::string text_header();
 	virtual std::shared_ptr<seismic_abstract_header> bin_header();
@@ -73,14 +85,9 @@ public:
 
 	std::shared_ptr<seismic_trace_header> current_trace_header();
 
-	int sampleByteSize();
-	int headersCount();
-
 	template <typename T>
 	T headerValue(int index);
 
-	void moveToTrace(int firstTraceIndex, int numTracesToRead);
-	void moveToTrace(int firstTraceIndex);
 	const float *nextTraceRef();
 	Eigen::VectorXf getNextTrace();
 
@@ -94,6 +101,11 @@ private:
 	void open_file();
 	void close_file();
     void init(bool reopen);
+    void determine_endian_order();
+    void resize_buffer(size_t size);
+
+    void move(int trc_index, int buffer);
+    void move(int trc_index);
 
 	void get_traces(
 		const std::vector<int> &trcs, 

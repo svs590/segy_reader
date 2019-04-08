@@ -19,7 +19,7 @@ int main() {
 	wstring file = L"F:/FullStack_PSTM.segy";
 
     segy_reader_config config;
-    config.filename = L"F:/FullStack_PSTM.segy";
+    config.filename = L"D:/FullStack_PSTM.segy";
 
 	auto reader = shared_ptr<seismic_data_provider>(
 		new segy_reader(config)
@@ -34,26 +34,18 @@ int main() {
 
     for (auto m_pair : bh_map) {
         cout << m_pair.first << '\t';
-        int ibuf;
-        uint64_t fbuf;
-        double dbuf;
-        switch (m_pair.second.type)
-        {
-        case seismic_data_type::INT:
-            ibuf = std::get<int>(m_pair.second.val);
-            cout << ibuf << endl;
-            break;
-        case seismic_data_type::UINT64:
-            fbuf = std::get<uint64_t>(m_pair.second.val);
-            cout << fbuf << endl;
-            break;
-        case seismic_data_type::DOUBLE:
-            dbuf = std::get<double>(m_pair.second.val);
-            cout << dbuf << endl;
-            break;
-        default:
-            break;
-        }
+        auto variant = m_pair.second;
+        
+        if (holds_alternative<int>(variant))
+            cout << get<int>(variant) << endl;
+        else if (holds_alternative<short>(variant))
+            cout << get<short>(variant) << endl;
+        else if (holds_alternative<unsigned short>(variant))
+            cout << get<unsigned short>(variant) << endl;
+        else if (holds_alternative<float>(variant))
+            cout << get<float>(variant) << endl;
+        else if (holds_alternative<double>(variant))
+            cout << get<double>(variant) << endl;
     }
     cout << endl;
 	
@@ -70,7 +62,7 @@ int main() {
     cout << endl;
 
 	new_map->clear();
-    new_map->set_field("CDP X", 184, 4, seismic_data_type::FLOAT, "");
+    new_map->set_field("CDP X", 184, 4, seismic_data_type::INT, "");
     map_dict = new_map->to_map();
     for (auto field : map_dict) {
         cout << field.first << '\t';
@@ -82,7 +74,7 @@ int main() {
 	reader->set_header_map(new_map);
 
     auto trc_header = dynamic_pointer_cast<segy_trace_header>(reader->trace_header(0));
-    cout << any_cast<float>(trc_header->CDP_X().first) << '\t' << trc_header->crossline() << endl;
+    cout << get<int>(trc_header->CDP_X()) << '\t' << get<int>(trc_header->crossline()) << endl;
 
     /*
 	auto trace0 = reader->get_trace(0);

@@ -94,7 +94,7 @@ public:
 	void set_time_basis(int val)				{ f_map_need_update = true; f_time_basis = val; }
 	void set_stream_traces_count(int64_t val)	{ f_map_need_update = true; f_stream_traces_count = val; }
 	void set_first_trace_offset(int64_t val)	{ f_map_need_update = true; f_first_trace_offset = val; }
-    void set_endian(endian_order val)           { initialize(); f_map_need_update = true; f_endian_order = val; }
+    void set_endian(endian_order val)           { f_map_need_update = true; f_endian_order = val; initialize(); }
 
 
     virtual seismic_variant_value get(const std::string &name);
@@ -143,7 +143,7 @@ private:
 	int f_extended_samples_count_orig;	// 4 bytes
 	int f_extended_ensemble_fold;		// 4 bytes
 
-    endian_order f_endian_order;
+    endian_order f_endian_order         = endian_order::big;
 
 	bool f_is_segy_2;					// 1 byte
 	int f_is_same_for_file;				// 2 bytes

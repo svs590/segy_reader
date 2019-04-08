@@ -47,33 +47,33 @@ public:
 		throw std::runtime_error("Method not implemented"); 
 	}
 
-	virtual std::pair<std::any, seismic_data_type> get(const std::string &name) const;
-	virtual void set_field(int index, std::pair<std::any, seismic_data_type>);
+	virtual seismic_variant_value   get(const std::string &name) const;
+	virtual void                    set(const std::string &name, seismic_variant_value val);
 
 	virtual object_type type_id() { return object_type::SEGY_TRACEHEADER; }
 
-    int                                     iline();
-    int                                     crossline();
-    std::pair<std::any, seismic_data_type>  CDP_X();
-    std::pair<std::any, seismic_data_type>  CDP_Y();
-    std::pair<std::any, seismic_data_type>  CDP();
-    std::pair<std::any, seismic_data_type>  Src_X();
-    std::pair<std::any, seismic_data_type>  Src_Y();
-    int                                     samples_count();
-    double                                  sample_interval();
+    seismic_variant_value                   iline();
+    seismic_variant_value                   crossline();
+    seismic_variant_value                   CDP_X();
+    seismic_variant_value                   CDP_Y();
+    seismic_variant_value                   CDP();
+    seismic_variant_value                   Src_X();
+    seismic_variant_value                   Src_Y();
+    seismic_variant_value                   samples_count();
+    seismic_variant_value                   sample_interval();
 
 private:
     void parse_required();
 
-    int                                     f_iline;
-    int                                     f_crossline;
-    std::pair<std::any, seismic_data_type>  f_CDP_X;
-    std::pair<std::any, seismic_data_type>  f_CDP_Y;
-    std::pair<std::any, seismic_data_type>  f_CDP;
-    std::pair<std::any, seismic_data_type>  f_Src_X;
-    std::pair<std::any, seismic_data_type>  f_Src_Y;
-    int                                     f_samples_count;
-    double                                  f_sample_interval;
+    seismic_variant_value                   f_iline;
+    seismic_variant_value                   f_crossline;
+    seismic_variant_value                   f_CDP_X;
+    seismic_variant_value                   f_CDP_Y;
+    seismic_variant_value                   f_CDP;
+    seismic_variant_value                   f_Src_X;
+    seismic_variant_value                   f_Src_Y;
+    seismic_variant_value                   f_samples_count;
+    seismic_variant_value                   f_sample_interval;
 
 #ifdef PYTHON
 	segy_trace_header(py::dict trace_header) { throw std::runtime_error("Method not implemented"); }

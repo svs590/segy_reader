@@ -21,14 +21,14 @@ public:
 	virtual int						index_of(const std::string &name) const = 0;
 	virtual seismic_data_type		type(int index) const = 0;
 
-	virtual std::pair<std::any, seismic_data_type> get(const std::string &name) const = 0;
-	virtual void set_field(int index, std::pair<std::any, seismic_data_type>) = 0;
+	virtual seismic_variant_value   get(const std::string &name) const = 0;
+	virtual void                    set(const std::string &name, seismic_variant_value val) = 0;
 
 	//Not implemented
 	virtual int						byte_loc(int index) const = 0;
 	virtual int						byte_pos(int index) const = 0;
 
-	std::map<std::string, std::pair<std::any, seismic_data_type>> to_map();
+	std::map<std::string, seismic_variant_value> to_map();
 
 #ifdef PYTHON
 	std::map<std::string, py::object> to_dict();

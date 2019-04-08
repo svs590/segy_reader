@@ -18,6 +18,9 @@ segy_bin_header::segy_bin_header() {
 }
 
 segy_bin_header::segy_bin_header(const vector<byte_t> &raw_data) {
+    if (raw_data.size() != segy_file::bin_header_size)
+        throw runtime_error("segy_bin_header: binary file header has invalid size");
+
     this->raw_data = raw_data;
     determine_endian();
 	initialize();
@@ -52,9 +55,6 @@ void segy_bin_header::determine_endian() {
 }
 
 void segy_bin_header::initialize() {
-	if (raw_data.size() != segy_file::bin_header_size)
-		throw runtime_error("segy_bin_header: binary file header has invalid size");
-
 	f_is_segy_2 = (unsigned char)raw_data[300] != 0 ? true : false;
 
 	f_job_id                        = byte_to_int(&raw_data[0], f_endian_order);
@@ -141,41 +141,41 @@ map<string, seismic_variant_value> segy_bin_header::to_map() {
 
 void segy_bin_header::init_map() {
     f_fields = {
-    { "f_job_id",                   {f_job_id,                      seismic_data_type::INT} },
-    { "f_line_num",                 {f_line_num,                    seismic_data_type::INT} },
-    { "f_reel_num",                 {f_reel_num,                    seismic_data_type::INT} },
-    { "f_traces_count",             {f_traces_count,                seismic_data_type::INT} },
-    { "f_aux_traces_count",         {f_aux_traces_count,            seismic_data_type::INT} },
-    { "f_sample_interval",          {f_sample_interval,             seismic_data_type::DOUBLE} },
-    { "f_sample_interval_orig",     {f_sample_interval_orig,        seismic_data_type::DOUBLE} },
-    { "f_samples_count",            {f_samples_count,               seismic_data_type::INT} },
-    { "f_samples_count_orig",       {f_samples_count_orig,          seismic_data_type::INT} },
-    { "f_data_format",              {(int)f_data_format,            seismic_data_type::INT} },
-    { "f_ensemble_fold",            {f_ensemble_fold,               seismic_data_type::INT} },
-    { "f_sorting_code",             {f_sorting_code,                seismic_data_type::INT} },
-    { "f_vert_sum_code",            {f_vert_sum_code,               seismic_data_type::INT} },
-    { "f_sweep_fr_start",           {f_sweep_fr_start,              seismic_data_type::INT} },
-    { "f_sweep_fr_end",             {f_sweep_fr_end,                seismic_data_type::INT} },
-    { "f_sweep_len",                {f_sweep_len,                   seismic_data_type::INT} },
-    { "f_sweep_type",               {f_sweep_type,                  seismic_data_type::INT} },
-    { "f_sweep_chanel_trcs_count",  {f_sweep_chanel_trcs_count,     seismic_data_type::INT} },
-    { "f_sweep_trc_taper_len_start",{f_sweep_trc_taper_len_start,   seismic_data_type::INT} },
-    { "f_sweep_trc_taper_len_end",  {f_sweep_trc_taper_len_end,     seismic_data_type::INT} },
-    { "f_taper_type",               {f_taper_type,                  seismic_data_type::INT} },
-    { "f_correlated_traces",        {f_correlated_traces,           seismic_data_type::INT} },
-    { "f_gain_recovered",           {f_gain_recovered,              seismic_data_type::INT} },
-    { "f_amplitude_rec_method",     {f_amplitude_rec_method,        seismic_data_type::INT} },
-    { "f_measurement_system",       {f_measurement_system,          seismic_data_type::INT} },
-    { "f_signal_polarity",          {f_signal_polarity,             seismic_data_type::INT} },
-    { "f_polarity_code",            {f_polarity_code,               seismic_data_type::INT} },
-    { "f_endian_swap",              {(int)f_endian_order,           seismic_data_type::INT} },
-    { "f_is_segy_2",                {(int)f_is_segy_2,              seismic_data_type::INT} },
-    { "f_is_same_for_file",         {f_is_same_for_file,            seismic_data_type::INT} },
-    { "f_extended_headers_count",   {f_extended_text_headers_count, seismic_data_type::INT} },
-    { "f_max_add_trc_headers_count",{f_max_add_trc_headers_count,   seismic_data_type::INT} },
-    { "f_time_basis",               {f_time_basis,                  seismic_data_type::INT} },
-    { "f_stream_traces_count",      {f_stream_traces_count,         seismic_data_type::UINT64} },
-    { "f_first_trace_offset",       {f_first_trace_offset,          seismic_data_type::UINT64} }
+    { "f_job_id",                    f_job_id,                   },
+    { "f_line_num",                  f_line_num,                 },
+    { "f_reel_num",                  f_reel_num,                 },
+    { "f_traces_count",              f_traces_count,             },
+    { "f_aux_traces_count",          f_aux_traces_count,         },
+    { "f_sample_interval",           f_sample_interval,          },
+    { "f_sample_interval_orig",      f_sample_interval_orig,     },
+    { "f_samples_count",             f_samples_count,            },
+    { "f_samples_count_orig",        f_samples_count_orig,       },
+    { "f_data_format",               (int)f_data_format,         },
+    { "f_ensemble_fold",             f_ensemble_fold,            },
+    { "f_sorting_code",              f_sorting_code,             },
+    { "f_vert_sum_code",             f_vert_sum_code,            },
+    { "f_sweep_fr_start",            f_sweep_fr_start,           },
+    { "f_sweep_fr_end",              f_sweep_fr_end,             },
+    { "f_sweep_len",                 f_sweep_len,                },
+    { "f_sweep_type",                f_sweep_type,               },
+    { "f_sweep_chanel_trcs_count",   f_sweep_chanel_trcs_count,  },
+    { "f_sweep_trc_taper_len_start", f_sweep_trc_taper_len_start,},
+    { "f_sweep_trc_taper_len_end",   f_sweep_trc_taper_len_end,  },
+    { "f_taper_type",                f_taper_type,               },
+    { "f_correlated_traces",         f_correlated_traces,        },
+    { "f_gain_recovered",            f_gain_recovered,           },
+    { "f_amplitude_rec_method",      f_amplitude_rec_method,     },
+    { "f_measurement_system",        f_measurement_system,       },
+    { "f_signal_polarity",           f_signal_polarity,          },
+    { "f_polarity_code",             f_polarity_code,            },
+    { "f_endian_swap",               (int)f_endian_order,        },
+    { "f_is_segy_2",                 (int)f_is_segy_2,           },
+    { "f_is_same_for_file",          f_is_same_for_file,         },
+    { "f_extended_headers_count",    f_extended_text_headers_count},
+    { "f_max_add_trc_headers_count", f_max_add_trc_headers_count,},
+    { "f_time_basis",                f_time_basis,               },
+    { "f_stream_traces_count",       f_stream_traces_count,      },
+    { "f_first_trace_offset",        f_first_trace_offset,       }
     };
 
     f_map_need_update = false;

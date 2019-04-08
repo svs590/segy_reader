@@ -2,6 +2,7 @@
 #define __DATA_TYPES
 
 #include <variant>
+#include <string>
 
 #ifdef PYTHON
 #include <pybind11/stl.h>
@@ -35,10 +36,18 @@ enum class object_type {
 	SEGY_BIN_HEADER
 };
 
-struct seismic_variant_value {
-    std::variant<int, uint64_t, double> val;
-    seismic_data_type type;
-};
+using seismic_variant_value = 
+std::variant<
+    short,
+    unsigned short,
+    int,
+    int64_t,
+    uint64_t,
+    float,
+    double,
+    char,
+    std::string
+>;
 
 
 #ifdef PYTHON

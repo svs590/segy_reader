@@ -55,9 +55,30 @@ double          byte_to_double(byte_t const* ptr, endian_order order);
 /**
  * Inverse integer conversion with or without swap endian
  */
-void			short_to_byte_swap(short value, byte_t* outPtr);
+template <endian_order From>
 void			short_to_byte(short value, byte_t* outPtr);
+void			short_to_byte(short value, byte_t* outPtr, endian_order order);
+
+template <endian_order From>
+void			ushort_to_byte(unsigned short value, byte_t* outPtr);
+void			ushort_to_byte(unsigned short value, byte_t* outPtr, endian_order order);
+
+template <endian_order From>
 void			int_to_byte(int value, byte_t* outPtr);
-void			int_to_byte_swap(int value, byte_t* outPtr);
-void			float_to_byte_swap(float value, byte_t* outPtr);
+void			int_to_byte(int value, byte_t* outPtr, endian_order order);
+
+template <endian_order From>
+void			int64_to_byte(int64_t value, byte_t* outPtr);
+void			int64_to_byte(int64_t value, byte_t* outPtr, endian_order order);
+
+template <endian_order From>
+void			uint64_to_byte(uint64_t value, byte_t* outPtr);
+void			uint64_to_byte(uint64_t value, byte_t* outPtr, endian_order order);
+
+template <endian_order From>
+void			double_to_byte(double value, byte_t* outPtr);
+void			double_to_byte(double value, byte_t* outPtr, endian_order order);
+
+template <endian_order From>
 void			float_to_byte(float value, byte_t* outPtr);
+void			float_to_byte(float value, byte_t* outPtr, endian_order order);

@@ -510,14 +510,6 @@ void segy_reader::resize_buffer(size_t size) {
     buffer.resize(buffer_size * approx_fulltrace_size);
 }
 
-void segy_reader::determine_endian_order() {
-    //auto bin_hdr = dynamic_pointer_cast<segy_bin_header>(bin_header());
-    //if (!bin_hdr->is_segy_2()) {
-    //    
-    //    if (bin_hdr->data_format() > 0 && )
-    //}
-}
-
 #ifdef PYTHON
 void py_segy_reader_init(py::module &m,
 	py::class_<segy_reader, shared_ptr<segy_reader>> &py_segy_reader) {

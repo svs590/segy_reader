@@ -317,36 +317,241 @@ double byte_to_double<endian_order::mid_little>(byte_t const* ptr) {
     return *reinterpret_cast<double const*>(&val);
 }
 
-void short_to_byte_swap(short value, byte_t* outPtr) {
-	outPtr[1] = value & 0xff;
-	outPtr[0] = (value & 0xff00) >> 8;
+template <>
+void short_to_byte<endian_order::big>(short value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    memcpy(outPtr, ptr, sizeof(short));
 }
 
-void short_to_byte(short value, byte_t* outPtr) {
-	outPtr[0] = value & 0xff;
-	outPtr[1] = (value & 0xff00) >> 8;
+template <>
+void short_to_byte<endian_order::little>(short value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::little>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    memcpy(outPtr, ptr, sizeof(short));
 }
 
-void int_to_byte(int value, byte_t* outPtr) {
-	outPtr[0] = value & 0xff;
-	outPtr[1] = (value & 0xff00) >> 8;
-	outPtr[2] = (value & 0xff0000) >> 16;
-	outPtr[3] = (value & 0xff000000) >> 24;
+
+template <>
+void ushort_to_byte<endian_order::big>(unsigned short value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    memcpy(outPtr, ptr, sizeof(unsigned short));
 }
 
-void int_to_byte_swap(int value, byte_t* outPtr) {
-	outPtr[3] = value & 0xff;
-	outPtr[2] = (value & 0xff00) >> 8;
-	outPtr[1] = (value & 0xff0000) >> 16;
-	outPtr[0] = (value & 0xff000000) >> 24;
+template <>
+void ushort_to_byte<endian_order::little>(unsigned short value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::little>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    memcpy(outPtr, ptr, sizeof(unsigned short));
 }
 
-void float_to_byte_swap(float value, byte_t* outPtr) {
-	// ???
+template <>
+void int_to_byte<endian_order::big>(int value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    memcpy(outPtr, ptr, sizeof(int));
 }
 
-void float_to_byte(float value, byte_t* outPtr) {
-	// ???
+template <>
+void int_to_byte<endian_order::little>(int value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::little>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    memcpy(outPtr, ptr, sizeof(int));
+}
+
+template <>
+void int_to_byte<endian_order::mid_big>(int value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    outPtr[0] = ptr[1];
+    outPtr[1] = ptr[0];
+    outPtr[2] = ptr[3];
+    outPtr[3] = ptr[2];
+}
+
+template <>
+void int_to_byte<endian_order::mid_little>(int value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::little>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    outPtr[0] = ptr[1];
+    outPtr[1] = ptr[0];
+    outPtr[2] = ptr[3];
+    outPtr[3] = ptr[2];
+}
+
+template <>
+void float_to_byte<endian_order::big>(float value, byte_t* outPtr) {
+    int val = *reinterpret_cast<int const*>(&value);
+    val = conditional_reverse<order::native, order::big>(val);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&val);
+    memcpy(outPtr, ptr, sizeof(int));
+}
+
+template <>
+void float_to_byte<endian_order::little>(float value, byte_t* outPtr) {
+    int val = *reinterpret_cast<int const*>(&value);
+    val = conditional_reverse<order::native, order::little>(val);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&val);
+    memcpy(outPtr, ptr, sizeof(int));
+}
+
+template <>
+void float_to_byte<endian_order::mid_big>(float value, byte_t* outPtr) {
+    int val = *reinterpret_cast<int const*>(&value);
+    val = conditional_reverse<order::native, order::big>(val);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&val);
+    outPtr[0] = ptr[1];
+    outPtr[1] = ptr[0];
+    outPtr[2] = ptr[3];
+    outPtr[3] = ptr[2];
+}
+
+template <>
+void float_to_byte<endian_order::mid_little>(float value, byte_t* outPtr) {
+    int val = *reinterpret_cast<int const*>(&value);
+    val = conditional_reverse<order::native, order::little>(val);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&val);
+    outPtr[0] = ptr[1];
+    outPtr[1] = ptr[0];
+    outPtr[2] = ptr[3];
+    outPtr[3] = ptr[2];
+}
+
+template <>
+void int64_to_byte<endian_order::big>(int64_t value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    memcpy(outPtr, ptr, sizeof(int64_t));
+}
+
+template <>
+void int64_to_byte<endian_order::little>(int64_t value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    memcpy(outPtr, ptr, sizeof(int64_t));
+}
+
+template <>
+void int64_to_byte<endian_order::mid_big>(int64_t value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    
+    outPtr[0] = ptr[1];
+    outPtr[1] = ptr[0];
+    outPtr[2] = ptr[3];
+    outPtr[3] = ptr[2];
+    outPtr[4] = ptr[5];
+    outPtr[5] = ptr[4];
+    outPtr[6] = ptr[7];
+    outPtr[7] = ptr[6];
+}
+
+template <>
+void int64_to_byte<endian_order::mid_little>(int64_t value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+
+    outPtr[0] = ptr[1];
+    outPtr[1] = ptr[0];
+    outPtr[2] = ptr[3];
+    outPtr[3] = ptr[2];
+    outPtr[4] = ptr[5];
+    outPtr[5] = ptr[4];
+    outPtr[6] = ptr[7];
+    outPtr[7] = ptr[6];
+}
+
+template <>
+void uint64_to_byte<endian_order::big>(uint64_t value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    memcpy(outPtr, ptr, sizeof(uint64_t));
+}
+
+template <>
+void uint64_to_byte<endian_order::little>(uint64_t value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    memcpy(outPtr, ptr, sizeof(uint64_t));
+}
+
+template <>
+void uint64_to_byte<endian_order::mid_big>(uint64_t value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+
+    outPtr[0] = ptr[1];
+    outPtr[1] = ptr[0];
+    outPtr[2] = ptr[3];
+    outPtr[3] = ptr[2];
+    outPtr[4] = ptr[5];
+    outPtr[5] = ptr[4];
+    outPtr[6] = ptr[7];
+    outPtr[7] = ptr[6];
+}
+
+template <>
+void uint64_to_byte<endian_order::mid_little>(uint64_t value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+
+    outPtr[0] = ptr[1];
+    outPtr[1] = ptr[0];
+    outPtr[2] = ptr[3];
+    outPtr[3] = ptr[2];
+    outPtr[4] = ptr[5];
+    outPtr[5] = ptr[4];
+    outPtr[6] = ptr[7];
+    outPtr[7] = ptr[6];
+}
+
+template <>
+void double_to_byte<endian_order::big>(double value, byte_t* outPtr) {
+    int64_t val = *reinterpret_cast<int64_t const*>(&value);
+    val = conditional_reverse<order::native, order::big>(val);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&val);
+    memcpy(outPtr, ptr, sizeof(int64_t));
+}
+
+template <>
+void double_to_byte<endian_order::little>(double value, byte_t* outPtr) {
+    int64_t val = *reinterpret_cast<int64_t const*>(&value);
+    val = conditional_reverse<order::native, order::little>(val);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&val);
+    memcpy(outPtr, ptr, sizeof(int64_t));
+}
+
+template <>
+void double_to_byte<endian_order::mid_big>(double value, byte_t* outPtr) {
+    int64_t val = *reinterpret_cast<int64_t const*>(&value);
+    val = conditional_reverse<order::native, order::big>(val);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&val);
+    
+    outPtr[0] = ptr[1];
+    outPtr[1] = ptr[0];
+    outPtr[2] = ptr[3];
+    outPtr[3] = ptr[2];
+    outPtr[4] = ptr[5];
+    outPtr[5] = ptr[4];
+    outPtr[6] = ptr[7];
+    outPtr[7] = ptr[6];
+}
+
+template <>
+void double_to_byte<endian_order::mid_little>(double value, byte_t* outPtr) {
+    int64_t val = *reinterpret_cast<int64_t const*>(&value);
+    val = conditional_reverse<order::native, order::little>(val);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&val);
+
+    outPtr[0] = ptr[1];
+    outPtr[1] = ptr[0];
+    outPtr[2] = ptr[3];
+    outPtr[3] = ptr[2];
+    outPtr[4] = ptr[5];
+    outPtr[5] = ptr[4];
+    outPtr[6] = ptr[7];
+    outPtr[7] = ptr[6];
 }
 
 short byte_to_short(byte_t const* ptr, endian_order order) {
@@ -483,6 +688,146 @@ double byte_to_double(byte_t const* ptr, endian_order order) {
         break;
     case endian_order::mid_little:
         return byte_to_double<endian_order::mid_little>(ptr);
+        break;
+    default:
+        break;
+    }
+}
+
+void short_to_byte(short value, byte_t* outPtr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return short_to_byte<endian_order::big>(value, outPtr);
+        break;
+    case endian_order::little:
+        return short_to_byte<endian_order::little>(value, outPtr);
+        break;
+    case endian_order::mid_big:
+        return short_to_byte<endian_order::big>(value, outPtr);
+        break;
+    case endian_order::mid_little:
+        return short_to_byte<endian_order::little>(value, outPtr);
+        break;
+    default:
+        break;
+    }
+}
+
+void ushort_to_byte(unsigned short value, byte_t* outPtr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return ushort_to_byte<endian_order::big>(value, outPtr);
+        break;
+    case endian_order::little:
+        return ushort_to_byte<endian_order::little>(value, outPtr);
+        break;
+    case endian_order::mid_big:
+        return ushort_to_byte<endian_order::big>(value, outPtr);
+        break;
+    case endian_order::mid_little:
+        return ushort_to_byte<endian_order::little>(value, outPtr);
+        break;
+    default:
+        break;
+    }
+}
+
+void int_to_byte(int value, byte_t* outPtr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return int_to_byte<endian_order::big>(value, outPtr);
+        break;
+    case endian_order::little:
+        return int_to_byte<endian_order::little>(value, outPtr);
+        break;
+    case endian_order::mid_big:
+        return int_to_byte<endian_order::mid_big>(value, outPtr);
+        break;
+    case endian_order::mid_little:
+        return int_to_byte<endian_order::mid_little>(value, outPtr);
+        break;
+    default:
+        break;
+    }
+}
+
+void float_to_byte(float value, byte_t* outPtr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return float_to_byte<endian_order::big>(value, outPtr);
+        break;
+    case endian_order::little:
+        return float_to_byte<endian_order::little>(value, outPtr);
+        break;
+    case endian_order::mid_big:
+        return float_to_byte<endian_order::mid_big>(value, outPtr);
+        break;
+    case endian_order::mid_little:
+        return float_to_byte<endian_order::mid_little>(value, outPtr);
+        break;
+    default:
+        break;
+    }
+}
+
+void int64_to_byte(int64_t value, byte_t* outPtr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return int64_to_byte<endian_order::big>(value, outPtr);
+        break;
+    case endian_order::little:
+        return int64_to_byte<endian_order::little>(value, outPtr);
+        break;
+    case endian_order::mid_big:
+        return int64_to_byte<endian_order::mid_big>(value, outPtr);
+        break;
+    case endian_order::mid_little:
+        return int64_to_byte<endian_order::mid_little>(value, outPtr);
+        break;
+    default:
+        break;
+    }
+}
+
+void uint64_to_byte(uint64_t value, byte_t* outPtr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return uint64_to_byte<endian_order::big>(value, outPtr);
+        break;
+    case endian_order::little:
+        return uint64_to_byte<endian_order::little>(value, outPtr);
+        break;
+    case endian_order::mid_big:
+        return uint64_to_byte<endian_order::mid_big>(value, outPtr);
+        break;
+    case endian_order::mid_little:
+        return uint64_to_byte<endian_order::mid_little>(value, outPtr);
+        break;
+    default:
+        break;
+    }
+}
+
+void double_to_byte(double value, byte_t* outPtr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return double_to_byte<endian_order::big>(value, outPtr);
+        break;
+    case endian_order::little:
+        return double_to_byte<endian_order::little>(value, outPtr);
+        break;
+    case endian_order::mid_big:
+        return double_to_byte<endian_order::mid_big>(value, outPtr);
+        break;
+    case endian_order::mid_little:
+        return double_to_byte<endian_order::mid_little>(value, outPtr);
         break;
     default:
         break;

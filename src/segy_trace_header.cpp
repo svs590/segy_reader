@@ -1,17 +1,19 @@
+#include <map>
+#include <string>
+
 #include "segy_trace_header.h"
 #include "utils.h"
-
 #include "segy_header_map.h"
 
 using namespace std;
 
 
 segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map) {
-	this->map = map;
+	this->f_map = map;
 }
 
 segy_trace_header::segy_trace_header(const segy_trace_header &header) {
-    map                     = header.map;
+    f_map                   = header.f_map;
     f_raw_data              = header.f_raw_data;
 
     if (header.f_req_field_init) {
@@ -30,7 +32,7 @@ segy_trace_header::segy_trace_header(const segy_trace_header &header) {
 }
 
 segy_trace_header& segy_trace_header::operator=(const segy_trace_header &obj) {
-	map = obj.map;
+    f_map = obj.f_map;
     f_raw_data = obj.f_raw_data;
 	return *this;
 }
@@ -38,7 +40,7 @@ segy_trace_header& segy_trace_header::operator=(const segy_trace_header &obj) {
 segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map, 
     byte_t *raw_data, endian_order order) {
 
-    this->map = map;
+    this->f_map = map;
     f_endian_order = order;
     f_raw_data.resize(segy_file::trace_header_size);
     copy(raw_data, raw_data + segy_file::trace_header_size, f_raw_data.data());
@@ -129,25 +131,23 @@ int segy_trace_header::count() const {
 	return 0;
 }
 
-string segy_trace_header::description(int index) const {
-	return string("");
+int segy_trace_header::contains(const string &name) const {
+	return (int)f_map->contains(name);
 }
 
-string segy_trace_header::name(int index) const {
-	return string("");
-}
-
-int segy_trace_header::index_of(const string &name) const {
-	return 0;
-}
-
-seismic_data_type segy_trace_header::type(int index) const {
-	return seismic_data_type::UNKNOWN;
+seismic_data_type segy_trace_header::type(const string &name) const {
+    if (f_map->contains(name)) {
+        auto field_info = f_map->get_field(name);
+        return std::get<2>(field_info);
+    }
+    else
+        throw invalid_argument("segy_trace_header: type: header map which tied to this"
+            "header does not contains field " + name);
 }
 
 seismic_variant_value segy_trace_header::get(const string &name) const {
-    if (map->contains(name)) {
-        auto field_info = map->get_field(name);
+    if (f_map->contains(name)) {
+        auto field_info = f_map->get_field(name);
         int pos = std::get<0>(field_info);
         int size = std::get<1>(field_info);
         auto type = std::get<2>(field_info);
@@ -214,8 +214,8 @@ seismic_variant_value segy_trace_header::get(const string &name) const {
 }
 
 void segy_trace_header::set(const string &name, seismic_variant_value val) {
-    if (map->contains(name)) {
-        auto field_info = map->get_field(name);
+    if (f_map->contains(name)) {
+        auto field_info = f_map->get_field(name);
         int pos = std::get<0>(field_info);
         int size = std::get<1>(field_info);
         auto type = std::get<2>(field_info);
@@ -300,6 +300,20 @@ void segy_trace_header::set(const string &name, seismic_variant_value val) {
     }
     else
         return;
+}
+
+map<string, seismic_variant_value> segy_trace_header::to_map() {
+    map<string, seismic_variant_value> res;
+    for (int i = 0; i < f_map->count(); ++i) {
+        auto field_info = f_map->get_field(i);
+        string name = field_info.first;
+        res[name] = get(name);
+    }
+    return res;
+}
+
+void segy_trace_header::set(const std::map<std::string, seismic_variant_value> &map) {
+    throw exception("segy_trace_header: set: method not implemented");
 }
 
 #ifdef PYTHON

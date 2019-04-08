@@ -21,8 +21,8 @@ namespace py = pybind11;
 
 
 class segy_trace_header : public seismic_trace_header {
-	std::shared_ptr<seismic_header_map> map;
-    endian_order f_endian_order = endian_order::little;
+	std::shared_ptr<seismic_header_map> f_map;
+    endian_order f_endian_order = endian_order::big;
     std::vector<byte_t> f_raw_data;
     bool f_req_field_init = false;
 public:
@@ -34,23 +34,16 @@ public:
 	segy_trace_header& operator=(const segy_trace_header &obj);
 
 	virtual int						count() const;
-	virtual std::string				description(int index) const;
-	virtual std::string				name(int index) const;
-	virtual int						index_of(const std::string &name) const;
-	virtual seismic_data_type		type(int index) const;
-
-	//Not implemented
-	virtual int						byte_loc(int index) const {
-		throw std::runtime_error("Method not implemented"); 
-	}
-	virtual int						byte_pos(int index) const {
-		throw std::runtime_error("Method not implemented"); 
-	}
+	virtual int						contains(const std::string &name) const;
+	virtual seismic_data_type		type(const std::string &name) const;
 
 	virtual seismic_variant_value   get(const std::string &name) const;
 	virtual void                    set(const std::string &name, seismic_variant_value val);
 
 	virtual object_type type_id() { return object_type::SEGY_TRACEHEADER; }
+
+    virtual std::map<std::string, seismic_variant_value> to_map();
+    virtual void set(const std::map<std::string, seismic_variant_value> &map);
 
     seismic_variant_value                   iline();
     seismic_variant_value                   crossline();

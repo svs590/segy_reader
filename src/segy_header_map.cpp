@@ -11,7 +11,7 @@ using namespace cseis_geolib;
 /*
     Required fields
 */
-const unordered_map<string, tuple<int, int, seismic_data_type, string>>
+const segy_header_map::map_storage
 segy_header_map::map_standard_req = {
     { "Inline", {188, 4, seismic_data_type::INT,
         "For 3-D poststack data, this field should be used for the in-line number"} },
@@ -23,7 +23,7 @@ segy_header_map::map_standard_req = {
     { "CDP Y", {184, 4, seismic_data_type::INT,
         "Y coordinate of ensemble (CDP) position of this trace "
         "(scalar in Standard TraceHeader bytes 71–72 applies)"} },
-    { "Ensemble no", {20, 4, seismic_data_type::INT,
+    { "CDP", {20, 4, seismic_data_type::INT,
         "CDP, CMP, CRP, etc"} },
     { "Src X", {72, 4, seismic_data_type::INT,
         "Source coordinate – X"} },
@@ -38,7 +38,7 @@ segy_header_map::map_standard_req = {
 /*
     Other fields
 */
-const unordered_map<string, tuple<int, int, seismic_data_type, string>>
+const segy_header_map::map_storage
 segy_header_map::map_standard = {
     { "Trc seq line", {0, 4, seismic_data_type::INT,
         "Trace sequence number within line — Numbers continue to "
@@ -258,7 +258,7 @@ segy_header_map::segy_header_map(header_map_type type) {
     case header_map_type::STANDARD:
         f_map = map_standard_req;
         for (auto p : map_standard)
-            f_map[p.first] = p.second;
+            f_map.push_back({ p.first, p.second });
         break;
     default:
         break;
@@ -286,15 +286,16 @@ void segy_header_map::set_field(
     seismic_data_type type,
     string desc
 ) {
-    f_map[name] = { byte_loc, byte_size, type, desc };
+    int index = contains(name);
+    if (index != NOT_INDEX)
+        f_map[index].second = { byte_loc, byte_size, type, desc };
 }
 
 void segy_header_map::remove(const string &name) {
-    auto it = f_map.find(name);
-    if (it != f_map.end()) {
-        auto req_it = map_standard_req.find(name);
-        if (req_it == map_standard_req.end())
-            f_map.erase(it);
+    int index = contains(name);
+    if (index != NOT_INDEX) {
+        if (contains(name, map_standard_req) == NOT_INDEX)
+            f_map.erase(f_map.begin() + index);
     }
 }
 
@@ -303,20 +304,29 @@ void segy_header_map::clear() {
     f_type = header_map_type::CUSTOM;
 }
 
-bool segy_header_map::contains(const string &name) const {
-    auto it = f_map.find(name);
-    return it != f_map.end();
+int segy_header_map::contains(const string &name) const {
+    return contains(name, f_map);
 }
 
-tuple<int, int, seismic_data_type, string>
-segy_header_map::get_field(const string &name) const {
-    auto it = f_map.find(name);
-    if (it != f_map.end())
-        return it->second;
+seismic_header_map::header_field_info segy_header_map::get_field(const string &name) const {
+    int index = contains(name);
+    if (index != NOT_INDEX)
+        return f_map[index].second;
     else
         throw invalid_argument(
             "segy_header_map: get_field: header map doesn't "
             "contains this field. Use segy_header_map:contains"
+        );
+}
+
+pair<string, seismic_header_map::header_field_info>
+segy_header_map::get_field(int index) const {
+    if (index >= 0 && index < f_map.size())
+        return f_map[index];
+    else
+        throw invalid_argument(
+            "segy_header_map: get_field: header map doesn't "
+            "contains field with index " + to_string(index)
         );
 }
 
@@ -328,17 +338,26 @@ header_map_type segy_header_map::type() const {
     return f_type;
 }
 
-unordered_map<string, tuple<int, int, seismic_data_type, string>> 
-segy_header_map::to_map() const {
+seismic_header_map::map_storage segy_header_map::to_map() const {
     return f_map;
 }
 
-void segy_header_map::set(
-    const unordered_map<std::string, tuple<int, int, seismic_data_type, string>> &m) {
-
+void segy_header_map::set(const seismic_header_map::map_storage &m) {
     clear();
-    for (auto p : m)
-        f_map[p.first] = p.second;
+    for (int i = 0; i < m.size(); ++i) {
+        int index = contains(m[i].first);
+        if (index != NOT_INDEX)
+            f_map[index].second = m[i].second;
+        else
+            f_map.push_back({ m[i] });
+    }
+}
+
+int segy_header_map::contains(const string &name, const segy_header_map::map_storage &map) const {
+    for (int i = 0; i < f_map.size(); ++i)
+        if (map[i].first == name)
+            return i;
+    return NOT_INDEX;
 }
 
 #ifdef PYTHON

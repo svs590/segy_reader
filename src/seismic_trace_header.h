@@ -16,19 +16,14 @@
 class seismic_trace_header : public obj_base {
 public:
 	virtual int						count() const = 0;
-	virtual std::string				description(int index) const = 0;
-	virtual std::string				name(int index) const = 0;
-	virtual int						index_of(const std::string &name) const = 0;
-	virtual seismic_data_type		type(int index) const = 0;
+	virtual int						contains(const std::string &name) const = 0;
+	virtual seismic_data_type		type(const std::string &name) const = 0;
 
 	virtual seismic_variant_value   get(const std::string &name) const = 0;
 	virtual void                    set(const std::string &name, seismic_variant_value val) = 0;
 
-	//Not implemented
-	virtual int						byte_loc(int index) const = 0;
-	virtual int						byte_pos(int index) const = 0;
-
-	std::map<std::string, seismic_variant_value> to_map();
+    virtual std::map<std::string, seismic_variant_value> to_map() = 0;
+    virtual void set(const std::map<std::string, seismic_variant_value> &map) = 0;
 
 #ifdef PYTHON
 	std::map<std::string, py::object> to_dict();

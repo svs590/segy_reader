@@ -26,6 +26,9 @@ class seismic_header_map : public obj_base {
 protected:
 	header_map_type map_type;
 public:
+    using header_field_info = std::tuple<int, int, seismic_data_type, std::string>;
+    using map_storage = std::vector<std::pair<std::string, header_field_info>>;
+
 	virtual void set_field(
 		std::string name,
 		int byte_loc,
@@ -36,16 +39,16 @@ public:
 
 	virtual void                                    remove(const std::string &name) = 0;
 	virtual void                                    clear() = 0;
-	virtual bool                                    contains(const std::string &name) const = 0;
-	virtual std::tuple<int, int, seismic_data_type, std::string>
-                                                    get_field(const std::string &name) const = 0;
+	virtual int                                     contains(const std::string &name) const = 0;
+	virtual header_field_info                       get_field(const std::string &name) const = 0;
+    virtual std::pair<std::string, header_field_info>
+                                                    get_field(int index) const = 0;
 	virtual size_t                                  count() const = 0;
 	virtual header_map_type                         type() const = 0;
 
 	// Словарь вида {name : (byte_position, byte_size, data_type, description)}
-	virtual std::unordered_map<std::string, std::tuple<int, int, seismic_data_type, std::string>> to_map() const = 0;
-	virtual void set(
-		const std::unordered_map<std::string, std::tuple<int, int, seismic_data_type, std::string>> &m) = 0;
+	virtual map_storage                             to_map() const = 0;
+	virtual void                                    set(const map_storage &m) = 0;
 };
 
 #ifdef PYTHON

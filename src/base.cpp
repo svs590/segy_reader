@@ -41,15 +41,6 @@ map<string, py::object> seismic_trace_header::to_dict() {
 		return res;
 }
 
-map<string, pair<any, seismic_data_type>> seismic_trace_header::to_map() {
-	map<string, pair<any, seismic_data_type>> res;
-	for (int i = 0; i < count(); ++i) {
-		string f_name = name(i);
-		res[f_name] = get(i);
-	}
-	return res;
-}
-
 void py_seismic_data_provider_init(py::module &m,
 	py::class_<seismic_data_provider, shared_ptr<seismic_data_provider>> &data_provider) {
 	

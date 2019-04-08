@@ -4,6 +4,7 @@
 #include <string>
 #include <list>
 #include <unordered_map>
+#include <vector>
 
 #include "segy_header_info.h"
 #include "seismic_header_map.h"
@@ -13,13 +14,10 @@
 #include "geolib_defines.h"
 
 class segy_header_map : public seismic_header_map {
-    static const std::unordered_map<std::string,
-        std::tuple<int, int, seismic_data_type, std::string>> map_standard_req;
-    static const std::unordered_map<std::string,
-        std::tuple<int, int, seismic_data_type, std::string>> map_standard;
+    static const map_storage map_standard_req;
+    static const map_storage map_standard;
 
-    std::unordered_map<std::string,
-        std::tuple<int, int, seismic_data_type, std::string>> f_map;
+    map_storage f_map;
 
     header_map_type f_type;
 public:
@@ -39,20 +37,23 @@ public:
 
     virtual void                                    remove(const std::string &name);
     virtual void                                    clear();
-    virtual bool                                    contains(const std::string &name) const;
-    virtual std::tuple<int, int, seismic_data_type, std::string>
-                                                    get_field(const std::string &name) const;
+    virtual int                                     contains(const std::string &name) const;
+    virtual header_field_info                       get_field(const std::string &name) const;
+    virtual std::pair<std::string, header_field_info>                       
+                                                    get_field(int index) const;
     virtual size_t                                  count() const;
     virtual header_map_type                         type() const;
 
-	virtual std::unordered_map<std::string, std::tuple<int, int, seismic_data_type, std::string>> to_map() const;
-	virtual void set(
-		const std::unordered_map<std::string, std::tuple<int, int, seismic_data_type, std::string>> &m);
+	virtual map_storage                             to_map() const;
+	virtual void                                    set(const map_storage &m);
 
 	virtual object_type type_id() { return object_type::SEGY_HEADERMAP; }
 
 	friend class segy_reader;
 	friend class segy_trace_header;
+
+private:
+    int                                             contains(const std::string &name, const segy_header_map::map_storage &map) const;
 };
 
 #ifdef PYTHON

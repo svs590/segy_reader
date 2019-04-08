@@ -70,12 +70,6 @@ void segy_reader::init(bool reopen) {
     else
         f_first_trc_offset = text_headers_size + bin_header_size;
 
-    bool platform_little_endian = is_little_endian();
-    if (f_config.little_endian && platform_little_endian)
-        f_endian = endian_order::none;
-    else 
-        f_endian = endian_order::reverse;
-
     resize_buffer(1);
     f_istream.seekg(f_first_trc_offset, ios::beg);
 }
@@ -129,7 +123,7 @@ shared_ptr<seismic_abstract_header> segy_reader::bin_header() {
 	if (f_istream.fail())
 		throw runtime_error("segy_reader: unexpected error occurred when reading segy binary header");
 
-	f_bin_header.reset(new segy_bin_header(buf, endian_order::reverse));
+	f_bin_header.reset(new segy_bin_header(buf));
 
 	return f_bin_header;
 }
@@ -208,7 +202,7 @@ shared_ptr<seismic_trace_header> segy_reader::trace_header(int index) {
     f_istream.read((char*)buffer.data(), 240);
 
     return shared_ptr<seismic_trace_header>(
-            new segy_trace_header(f_header_map, buffer.data(), f_endian)
+            new segy_trace_header(f_header_map, buffer.data(), f_bin_header->endian())
         );
 }
 
@@ -517,11 +511,11 @@ void segy_reader::resize_buffer(size_t size) {
 }
 
 void segy_reader::determine_endian_order() {
-    auto bin_hdr = dynamic_pointer_cast<segy_bin_header>(bin_header());
-    if (!bin_hdr->is_segy_2()) {
-        
-        if (bin_hdr->data_format() > 0 && )
-    }
+    //auto bin_hdr = dynamic_pointer_cast<segy_bin_header>(bin_header());
+    //if (!bin_hdr->is_segy_2()) {
+    //    
+    //    if (bin_hdr->data_format() > 0 && )
+    //}
 }
 
 #ifdef PYTHON

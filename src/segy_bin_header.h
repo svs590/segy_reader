@@ -18,9 +18,10 @@ namespace py = pybind11;
 class segy_bin_header : public seismic_abstract_header {
     bool f_map_need_update;
     std::map<std::string, seismic_variant_value> f_fields;
+    std::vector<byte_t> raw_data;
 public:
 	segy_bin_header();
-	segy_bin_header(const std::vector<byte_t> &raw_data, endian_order swap_endian);
+	segy_bin_header(const std::vector<byte_t> &raw_data);
 	~segy_bin_header();
 
 	int job_id()								{ return f_job_id; }
@@ -57,7 +58,7 @@ public:
 	int time_basis()							{ return f_time_basis; }
 	int64_t stream_traces_count()				{ return f_stream_traces_count; }
 	int64_t first_trace_offset()				{ return f_first_trace_offset; }
-	endian_order endian()						{ return f_swap_endian; }
+	endian_order endian()						{ return f_endian_order; }
 
 	void set_job_id(int val)					{ f_map_need_update = true; f_job_id = val; }
 	void set_line_num(int val)					{ f_map_need_update = true; f_line_num = val; }
@@ -93,16 +94,17 @@ public:
 	void set_time_basis(int val)				{ f_map_need_update = true; f_time_basis = val; }
 	void set_stream_traces_count(int64_t val)	{ f_map_need_update = true; f_stream_traces_count = val; }
 	void set_first_trace_offset(int64_t val)	{ f_map_need_update = true; f_first_trace_offset = val; }
-	void set_endian(endian_order val)			{ f_map_need_update = true; f_swap_endian = val; }
+    void set_endian(endian_order val)           { initialize(); f_map_need_update = true; f_endian_order = val; }
 
 
     virtual seismic_variant_value get(const std::string &name);
     virtual std::map<std::string, seismic_variant_value> to_map();
 
 private:
-	void initialize(const std::vector<byte_t> &raw_data, endian_order swap_endian);
+	void initialize();
     void init_map();
 	void set_zero();
+    void determine_endian();
 
 	int f_job_id;						// 4 bytes
 	int f_line_num;						// 4 bytes
@@ -141,7 +143,7 @@ private:
 	int f_extended_samples_count_orig;	// 4 bytes
 	int f_extended_ensemble_fold;		// 4 bytes
 
-	endian_order f_swap_endian;			// 4 bytes, 67305985 do not swap, 33620995 do swap
+    endian_order f_endian_order;
 
 	bool f_is_segy_2;					// 1 byte
 	int f_is_same_for_file;				// 2 bytes

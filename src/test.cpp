@@ -16,10 +16,10 @@ using namespace std::chrono;
 
 int main() {
 
-	wstring file = L"D:/FullStack_PSTM.segy";
+	wstring file = L"F:/FullStack_PSTM.segy";
 
     segy_reader_config config;
-    config.filename = L"D:/FullStack_PSTM.segy";
+    config.filename = L"F:/FullStack_PSTM.segy";
 
 	auto reader = shared_ptr<seismic_data_provider>(
 		new segy_reader(config)
@@ -70,6 +70,7 @@ int main() {
     cout << endl;
 
 	new_map->clear();
+    new_map->set_field("CDP X", 184, 4, seismic_data_type::FLOAT, "");
     map_dict = new_map->to_map();
     for (auto field : map_dict) {
         cout << field.first << '\t';
@@ -81,7 +82,7 @@ int main() {
 	reader->set_header_map(new_map);
 
     auto trc_header = dynamic_pointer_cast<segy_trace_header>(reader->trace_header(0));
-    cout << trc_header->iline() << '\t' << trc_header->crossline() << endl;
+    cout << any_cast<float>(trc_header->CDP_X().first) << '\t' << trc_header->crossline() << endl;
 
     /*
 	auto trace0 = reader->get_trace(0);

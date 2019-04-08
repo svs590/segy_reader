@@ -22,28 +22,34 @@ std::string char_to_ecdic(const std::string &str);
  */
 template <endian_order From>
 short			byte_to_short(byte_t const* ptr);
+short			byte_to_short(byte_t const* ptr, endian_order order);
 
 template <endian_order From>
 unsigned short	byte_to_ushort(byte_t const* ptr);
-
-template <endian_order From>
-uint64_t		byte_to_uint64(byte_t const* ptr);
-
-template <endian_order From>
-int64_t			byte_to_int64(byte_t const* ptr);
+unsigned short  byte_to_ushort(byte_t const* ptr, endian_order order);
 
 template <endian_order From>
 int				byte_to_int(byte_t const* ptr);
+int             byte_to_int(byte_t const* ptr, endian_order order);
 
+template <endian_order From>
+int64_t			byte_to_int64(byte_t const* ptr);
+int64_t         byte_to_int64(byte_t const* ptr, endian_order order);
+
+template <endian_order From>
+uint64_t		byte_to_uint64(byte_t const* ptr);
+uint64_t        byte_to_uint64(byte_t const* ptr, endian_order order);
 
 /**
  * Float conversion with or without swap endian
  */
 template <endian_order From>
 float			byte_to_float(byte_t const* ptr);
+float           byte_to_float(byte_t const* ptr, endian_order order);
 
 template <endian_order From>
 double			byte_to_double( byte_t const* ptr );
+double          byte_to_double(byte_t const* ptr, endian_order order);
 
 
 /**

@@ -348,3 +348,143 @@ void float_to_byte_swap(float value, byte_t* outPtr) {
 void float_to_byte(float value, byte_t* outPtr) {
 	// ???
 }
+
+short byte_to_short(byte_t const* ptr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return byte_to_short<endian_order::big>(ptr);
+        break;
+    case endian_order::little:
+        return byte_to_short<endian_order::little>(ptr);
+        break;
+    case endian_order::mid_big:
+        return byte_to_short<endian_order::mid_big>(ptr);
+        break;
+    case endian_order::mid_little:
+        return byte_to_short<endian_order::mid_little>(ptr);
+        break;
+    default:
+        break;
+    }
+}
+
+unsigned short byte_to_ushort(byte_t const* ptr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return byte_to_ushort<endian_order::big>(ptr);
+        break;
+    case endian_order::little:
+        return byte_to_ushort<endian_order::little>(ptr);
+        break;
+    case endian_order::mid_big:
+        return byte_to_ushort<endian_order::mid_big>(ptr);
+        break;
+    case endian_order::mid_little:
+        return byte_to_ushort<endian_order::mid_little>(ptr);
+        break;
+    default:
+        break;
+    }
+}
+
+int byte_to_int(byte_t const* ptr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return byte_to_int<endian_order::big>(ptr);
+        break;
+    case endian_order::little:
+        return byte_to_int<endian_order::little>(ptr);
+        break;
+    case endian_order::mid_big:
+        return byte_to_int<endian_order::mid_big>(ptr);
+        break;
+    case endian_order::mid_little:
+        return byte_to_int<endian_order::mid_little>(ptr);
+        break;
+    default:
+        break;
+    }
+}
+
+int64_t byte_to_int64(byte_t const* ptr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return byte_to_int64<endian_order::big>(ptr);
+        break;
+    case endian_order::little:
+        return byte_to_int64<endian_order::little>(ptr);
+        break;
+    case endian_order::mid_big:
+        return byte_to_int64<endian_order::mid_big>(ptr);
+        break;
+    case endian_order::mid_little:
+        return byte_to_int64<endian_order::mid_little>(ptr);
+        break;
+    default:
+        break;
+    }
+}
+
+uint64_t byte_to_uint64(byte_t const* ptr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return byte_to_uint64<endian_order::big>(ptr);
+        break;
+    case endian_order::little:
+        return byte_to_uint64<endian_order::little>(ptr);
+        break;
+    case endian_order::mid_big:
+        return byte_to_uint64<endian_order::mid_big>(ptr);
+        break;
+    case endian_order::mid_little:
+        return byte_to_uint64<endian_order::mid_little>(ptr);
+        break;
+    default:
+        break;
+    }
+}
+
+float byte_to_float(byte_t const* ptr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return byte_to_float<endian_order::big>(ptr);
+        break;
+    case endian_order::little:
+        return byte_to_float<endian_order::little>(ptr);
+        break;
+    case endian_order::mid_big:
+        return byte_to_float<endian_order::mid_big>(ptr);
+        break;
+    case endian_order::mid_little:
+        return byte_to_float<endian_order::mid_little>(ptr);
+        break;
+    default:
+        break;
+    }
+}
+
+double byte_to_double(byte_t const* ptr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return byte_to_double<endian_order::big>(ptr);
+        break;
+    case endian_order::little:
+        return byte_to_double<endian_order::little>(ptr);
+        break;
+    case endian_order::mid_big:
+        return byte_to_double<endian_order::mid_big>(ptr);
+        break;
+    case endian_order::mid_little:
+        return byte_to_double<endian_order::mid_little>(ptr);
+        break;
+    default:
+        break;
+    }
+}

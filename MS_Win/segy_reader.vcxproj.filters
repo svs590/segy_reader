@@ -87,8 +87,8 @@
     <ClInclude Include="..\src\data_conversion.h">
       <Filter>Файлы заголовков\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\segy_defines.h">
-      <Filter>Файлы заголовков\segy</Filter>
+    <ClInclude Include="..\src\segy_file.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -124,6 +124,9 @@
     </ClCompile>
     <ClCompile Include="..\src\data_conversion.cpp">
       <Filter>Исходные файлы\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\segy_file.cpp">
+      <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

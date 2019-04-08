@@ -22,7 +22,7 @@ namespace py = pybind11;
 
 class segy_trace_header : public seismic_trace_header {
 	std::shared_ptr<seismic_header_map> map;
-    endian_order f_swap_endian = endian_order::none;
+    endian_order f_endian_order = endian_order::little;
     std::vector<byte_t> f_raw_data;
     bool f_req_field_init = false;
 public:

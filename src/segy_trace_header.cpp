@@ -4,33 +4,7 @@
 #include "segy_header_map.h"
 
 using namespace std;
-using namespace cseis_geolib;
 
-//DLLIMPORT void*			cseis_csNativecsSegyTraceHeader_createInstance(void *hdrMap);
-DLLIMPORT void*			cseis_csNativecsSegyTraceHeader_copyInstance(const void *obj);
-DLLIMPORT void			cseis_csNativecsSegyTraceHeader_deleteInstance(const void *obj);
-DLLIMPORT int			cseis_csNativecsSegyTraceHeader_numHeaders(const void *obj);
-DLLIMPORT char const*	cseis_csNativecsSegyTraceHeader_headerDesc(const void *obj, int hdrIndex);
-DLLIMPORT char const*	cseis_csNativecsSegyTraceHeader_headerName(const void *obj, int hdrIndex);
-DLLIMPORT int			cseis_csNativecsSegyTraceHeader_headerIndex(const void *obj, const char *name);
-DLLIMPORT type_t		cseis_csNativecsSegyTraceHeader_headerType(const void *obj, int hdrIndex);
-DLLIMPORT int			cseis_csNativecsSegyTraceHeader_intValue(const void *obj, int hdrIndex);
-DLLIMPORT float			cseis_csNativecsSegyTraceHeader_floatValue(const void *obj, int hdrIndex);
-DLLIMPORT double		cseis_csNativecsSegyTraceHeader_doubleValue(const void *obj, int hdrIndex);
-DLLIMPORT char const*	cseis_csNativecsSegyTraceHeader_stringValue(const void *obj, int hdrIndex);
-
-// Not implemented
-DLLIMPORT int			cseis_csNativecsSegyTraceHeader_byteLoc(const void *obj, int hdrIndex);
-DLLIMPORT int			cseis_csNativecsSegyTraceHeader_bytePos(const void *obj, int hdrIndex);
-DLLIMPORT void			cseis_csNativecsSegyTraceHeader_setIntValue(int hdrIndex, int value);
-DLLIMPORT void			cseis_csNativecsSegyTraceHeader_setFloatValue(int hdrIndex, float value);
-DLLIMPORT void			cseis_csNativecsSegyTraceHeader_setDoubleValue(int hdrIndex, double value);
-DLLIMPORT void			cseis_csNativecsSegyTraceHeader_setStringValue(int hdrIndex, string const& value);
-
-
-void native_trace_header_deleter(void *header) {
-	cseis_csNativecsSegyTraceHeader_deleteInstance(header);
-}
 
 segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map) {
 	this->map = map;
@@ -60,10 +34,10 @@ segy_trace_header& segy_trace_header::operator=(const segy_trace_header &obj) {
 }
 
 segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map, 
-    byte_t *raw_data, endian_order swap) {
+    byte_t *raw_data, endian_order order) {
 
     this->map = map;
-    f_swap_endian = swap;
+    f_endian_order = order;
     f_raw_data.resize(segy_file::trace_header_size);
     copy(raw_data, raw_data + segy_file::trace_header_size, f_raw_data.data());
     parse_required();
@@ -186,43 +160,43 @@ pair<any, seismic_data_type> segy_trace_header::get(const string &name) const {
             if (size != 4)
                 throw invalid_argument("segy_trace_header: get: invalid "
                     "byte size for field " + name);
-            res = byte_to_int(&f_raw_data[pos], f_swap_endian);
+            res = byte_to_int(&f_raw_data[pos], f_endian_order);
             break;
         case seismic_data_type::SHORT:
             if (size != 2)
                 throw invalid_argument("segy_trace_header: get: invalid "
                     "byte size for field " + name);
-            res = byte_to_short(&f_raw_data[pos], f_swap_endian);
+            res = byte_to_short(&f_raw_data[pos], f_endian_order);
             break;
         case seismic_data_type::USHORT:
             if (size != 2)
                 throw invalid_argument("segy_trace_header: get: invalid "
                     "byte size for field " + name);
-            res = byte_to_ushort(&f_raw_data[pos], f_swap_endian);
+            res = byte_to_ushort(&f_raw_data[pos], f_endian_order);
             break;
         case seismic_data_type::INT64:
             if (size != 8)
                 throw invalid_argument("segy_trace_header: get: invalid "
                     "byte size for field " + name);
-            res = byte_to_int64(&f_raw_data[pos], f_swap_endian);
+            res = byte_to_int64(&f_raw_data[pos], f_endian_order);
             break;
         case seismic_data_type::UINT64:
             if (size != 8)
                 throw invalid_argument("segy_trace_header: get: invalid "
                     "byte size for field " + name);
-            res = byte_to_uint64(&f_raw_data[pos], f_swap_endian);
+            res = byte_to_uint64(&f_raw_data[pos], f_endian_order);
             break;
         case seismic_data_type::FLOAT:
             if (size != 4)
                 throw invalid_argument("segy_trace_header: get: invalid "
                     "byte size for field " + name);
-            res = byte_to_float(&f_raw_data[pos], f_swap_endian);
+            res = byte_to_float(&f_raw_data[pos], f_endian_order);
             break;
         case seismic_data_type::DOUBLE:
             if (size != 8)
                 throw invalid_argument("segy_trace_header: get: invalid "
                     "byte size for field " + name);
-            res = byte_to_double(&f_raw_data[pos], f_swap_endian);
+            res = byte_to_double(&f_raw_data[pos], f_endian_order);
             break;
         case seismic_data_type::CHAR:
             if (size != 1)
@@ -231,7 +205,7 @@ pair<any, seismic_data_type> segy_trace_header::get(const string &name) const {
             res = (char)f_raw_data[pos];
             break;
         default:
-            throw invalid_argument("segy_trace_header: get: type for field " + name);
+            throw invalid_argument("segy_trace_header: get: invalid type for field " + name);
             break;
         }
 

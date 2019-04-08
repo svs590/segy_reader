@@ -54,7 +54,6 @@ class segy_reader : public seismic_data_provider {
     size_t f_filesize;
     size_t f_first_trc_offset;
 
-    endian_order f_endian;
     std::vector<byte_t> buffer;
     size_t buffer_size;
 

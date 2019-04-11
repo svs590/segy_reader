@@ -833,3 +833,95 @@ void double_to_byte(double value, byte_t* outPtr, endian_order order) {
         break;
     }
 }
+
+template <>
+void segy_data_to_native<segy_data_format::float32_ibm>(byte_t *buffer, int buffer_size) {
+    register unsigned fraction;
+    register int exponent;
+    register int signum;
+
+    for (int i = 0; i < buffer_size; i += 4) {
+        memcpy(&fraction, &buffer[i], 4);
+
+        signum = fraction >> 31;
+        fraction <<= 1;
+        exponent = fraction >> 25;
+        fraction <<= 7;
+
+        if (fraction == 0) {
+            exponent = 0;
+        }
+        else {
+            exponent = (exponent << 2) - 130;
+
+            while (fraction < 0x80000000) {
+                --exponent;
+                fraction <<= 1;
+            }
+
+            if (exponent <= 0) {
+                if (exponent < -24) {
+                    fraction = 0;
+                }
+                else {
+                    fraction >>= -exponent;
+                }
+                exponent = 0;
+            }
+            else if (exponent >= 255) {
+                fraction = 0;
+                exponent = 255;
+            }
+            else {
+                fraction <<= 1;
+            }
+        }
+
+        fraction = (fraction >> 9) | (exponent << 23) | (signum << 31);
+        memcpy(&buffer[i], &fraction, 4);
+    }
+
+}
+
+
+
+
+
+
+
+
+template <>
+void native_to_segy_data<segy_data_format::float32_ibm>(byte_t *buffer, int buffer_size) {
+    register unsigned fraction;
+    register int exponent;
+    register int signum;
+
+    for (int i = 0; i < buffer_size; i += 4) {
+        memcpy(&fraction, &buffer[i], 4);
+        signum = fraction >> 31;
+        fraction <<= 1;
+        exponent = fraction >> 24;
+        fraction <<= 8;
+
+        if (exponent > 0 && exponent != 255) {
+            fraction = (fraction >> 1) | 0x80000000;
+            exponent += 130;
+            fraction >>= -exponent & 3;
+            exponent = (exponent + 3) >> 2;
+
+            while (fraction < 0x10000000) {
+                --exponent;
+                fraction <<= 4;
+            }
+        }
+        else { // fraction == 0 || fraction == 255
+            if (exponent == 255) {
+                fraction = 0xffffff00;
+                exponent = 0x7f;
+            }
+        }
+
+        fraction = (fraction >> 8) | (exponent << 24) | (signum << 31);
+        memcpy(&buffer[i], &fraction, 4);
+    }
+}

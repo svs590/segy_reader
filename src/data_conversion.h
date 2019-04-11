@@ -3,6 +3,7 @@
 #include <string>
 
 #include "data_types.h"
+#include "segy_file.h"
 
 enum class endian_order { big, little, mid_big, mid_little };
 
@@ -82,3 +83,10 @@ void			double_to_byte(double value, byte_t* outPtr, endian_order order);
 template <endian_order From>
 void			float_to_byte(float value, byte_t* outPtr);
 void			float_to_byte(float value, byte_t* outPtr, endian_order order);
+
+template <segy_data_format From>
+void            segy_data_to_native(byte_t *buffer, int buffer_size);
+
+
+template <segy_data_format To>
+void            native_to_segy_data(byte_t *buffer, int buffer_size);

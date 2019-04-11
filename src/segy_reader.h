@@ -15,6 +15,8 @@ namespace bfs = boost::filesystem;
 #include "seismic_header_map.h"
 #include "seismic_geometry.h"
 #include "segy_bin_header.h"
+#include "segy_trace_header.h"
+#include "segy_trace.h"
 
 #ifdef PYTHON
 #include <pybind11/stl.h>
@@ -24,6 +26,28 @@ namespace bfs = boost::filesystem;
 namespace py = pybind11;
 #endif
 
+class smart_trc_buffer {
+    std::vector<std::shared_ptr<segy_trace_header>> f_headers_buffer;
+    
+    std::vector<byte_t>                             f_raw_buffer;
+    std::vector<size_t>                             f_trc_offsets;
+    size_t                                          f_capacity;
+    size_t                                          f_absolute_trc_beg;
+    size_t                                          f_absolute_trc_cur;
+    size_t                                          f_buffer_trc_cur;
+
+public:
+    smart_trc_buffer();
+    void                                            load(std::vector<byte_t> raw_buffer);
+    
+    void                                            set_capacity(size_t cap, short samples_count, segy_data_format format);
+    size_t                                          capacity(size_t cap);
+    size_t                                          size();
+    bool                                            is_trc_loaded(size_t absolute_index);
+    bool                                            is_header_loaded(size_t absolute_index);
+    std::shared_ptr<segy_trace_header>              get_header(size_t absolute_index);
+    std::shared_ptr<segy_trace>                     get_trace(size_t absolute_index);
+};
 
 struct segy_reader_config {
     std::wstring filename;
@@ -97,6 +121,8 @@ public:
 	virtual object_type type_id() { return object_type::SEGY_READER; }
 
 private:
+
+
 	void open_file();
 	void close_file();
     void init(bool reopen);

@@ -13,9 +13,60 @@
 #include "utils.h"
 #include "data_conversion.h"
 #include "segy_file.h"
+#include <bitset>
+
+#include <Eigen/Dense>
 
 using namespace std;
 using namespace cseis_geolib;
+
+void smart_trc_buffer::set_capacity(size_t cap, short samples_count, segy_data_format format) {
+    f_capacity = cap;
+    f_raw_buffer.resize(cap * (
+        segy_file::trace_header_size + samples_count * segy_data_format_size(format))
+    );
+    f_headers_buffer.resize(cap);
+}
+
+size_t smart_trc_buffer::capacity(size_t cap) {
+    return f_capacity;
+}
+
+size_t smart_trc_buffer::size() {
+    return 0;
+}
+
+bool smart_trc_buffer::is_trc_loaded(size_t absolute_index) {
+    return (absolute_index >= f_absolute_trc_beg
+            && absolute_index <= f_absolute_trc_beg + f_capacity);
+}
+
+bool smart_trc_buffer::is_header_loaded(size_t absolute_index) {
+    return is_trc_loaded(absolute_index);
+}
+
+shared_ptr<segy_trace_header> smart_trc_buffer::get_header(size_t absolute_index) {
+    if (is_header_loaded(absolute_index))
+        return f_headers_buffer[absolute_index - f_absolute_trc_beg];
+    else
+        throw invalid_argument("smart_trc_buffer: get_header: trace_header is not stored in buffer");
+}
+
+shared_ptr<segy_trace> smart_trc_buffer::get_trace(size_t absolute_index) {
+    if (is_trc_loaded(absolute_index)) {
+        size_t offset = f_trc_offsets[absolute_index - f_absolute_trc_beg];
+
+        return shared_ptr<segy_trace>(
+            new segy_trace(
+                    f_headers_buffer[absolute_index - f_absolute_trc_beg],
+                    &f_raw_buffer[offset];
+                )
+            );
+    }
+    else
+        throw invalid_argument("smart_trc_buffer: get_trace: trace_header is not stored in buffer");
+}
+
 
 void segy_reader::init(bool reopen) {
     headers.clear();
@@ -137,7 +188,13 @@ void segy_reader::move(int trc_index, int buffer) {
             + to_string(trc_index));
 }
 void segy_reader::move(int trc_index) {
-    seekg_relative((int64_t)trc_index, f_istream);
+    int64_t relative_pos = f_first_trc_offset
+        + trc_index * (
+            segy_file::trace_header_size 
+            + f_samples_count * segy_data_format_size(f_bin_header->data_format())
+        );
+    f_istream.seekg(relative_pos, ios::beg);
+    //seekg_relative(relative_pos, f_istream);
     if (f_istream.fail())
         throw runtime_error("segy_reader: unexpected error occurred while moving to trace "
             + to_string(trc_index));
@@ -163,11 +220,36 @@ Eigen::VectorXf segy_reader::get_trace_data(int index) {
 }
 
 shared_ptr<seismic_trace> segy_reader::get_trace(int index) {
-	//TODO: Для оптимизации необходимо определять, что лучше: move или read в зависимости от размера прыжка.
-	move(index, 1);
+    move(index);
+
+    int bytes_count = segy_file::trace_header_size 
+        + f_samples_count * segy_data_format_size(f_bin_header->data_format());
+
+    f_istream.read((char*)buffer.data(), bytes_count);
+
+    auto header = shared_ptr<segy_trace_header>(
+            new segy_trace_header(f_header_map, buffer.data(), f_bin_header->endian())
+        );
+    char *raw_data = reinterpret_cast<char*>(&buffer[segy_file::trace_header_size]);
+    Eigen::VectorXf data(f_samples_count);
+    for (int i = 0; i < f_samples_count; ++i) {
+        std::string binary = bitset<8>(raw_data[i]).to_string(); //to binary
+        //std::cout << binary << "\n";
+
+        //bool sng = signbit((float)raw_data[i]);
+        //if (sng)
+        //    data[i] = static_cast<float>(-(~raw_data[i]));
+        //else
+            data[i] = static_cast<float>(raw_data[i]);
+    }
+
+
 	return shared_ptr<segy_trace>(
-		nullptr
-		);
+        new segy_trace(
+            header,
+            data
+        )
+	);
 }
 
 shared_ptr<seismic_header_map> segy_reader::header_map() {

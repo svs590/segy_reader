@@ -19,7 +19,7 @@ int main() {
 	wstring file = L"F:/FullStack_PSTM.segy";
 
     segy_reader_config config;
-    config.filename = L"D:/Сейсмика/!DATA!/seismic/07.segy";
+    config.filename = L"D:/FullStack_PSTM.segy";
 
 	auto reader = shared_ptr<seismic_data_provider>(
 		new segy_reader(config)
@@ -76,7 +76,7 @@ int main() {
     //auto trc_header = dynamic_pointer_cast<segy_trace_header>(reader->trace_header(0));
     //cout << get<int>(trc_header->CDP_X()) << '\t' << get<int>(trc_header->crossline()) << endl << get<short>(trc_header->samples_count()) << endl;
 
-    auto trace = reader->get_trace(1);
+    auto trace = reader->get_trace(5000);
     auto trc_data = trace->get_data();
     //cout << trc_data << endl;
     cout << trc_data.rows() << ' ' << trc_data.minCoeff() << ' ' << trc_data.maxCoeff() << endl;

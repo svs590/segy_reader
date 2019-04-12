@@ -883,8 +883,10 @@ void segy_data_to_native<segy_data_format::float32_ibm>(byte_t *buffer, int buff
 
 }
 
+template <>
+void segy_data_to_native<segy_data_format::float32>(byte_t *buffer, int buffer_size) {
 
-
+}
 
 
 

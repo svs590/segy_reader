@@ -20,6 +20,14 @@
 using namespace std;
 using namespace cseis_geolib;
 
+smart_trc_buffer::smart_trc_buffer(shared_ptr<seismic_header_map> map, endian_order order,
+    shared_ptr<segy_bin_header> bin_header) {
+
+    f_header_map = map;
+    f_order = order;
+    f_bin_header = bin_header;
+}
+
 void smart_trc_buffer::set_capacity(size_t cap, short samples_count, segy_data_format format) {
     f_capacity = cap;
     f_raw_buffer.resize(cap * (
@@ -28,17 +36,59 @@ void smart_trc_buffer::set_capacity(size_t cap, short samples_count, segy_data_f
     f_headers_buffer.resize(cap);
 }
 
+void smart_trc_buffer::load(const vector<byte_t> &raw_buffer, size_t absolute_index_start_trc) {
+    if (raw_buffer.size() > f_raw_buffer.size())
+        throw invalid_argument("smart_trc_buffer: load: readed buffer is greater than required");
+
+    //f_raw_buffer.resize(
+    copy(raw_buffer.cbegin(), raw_buffer.cend(), f_raw_buffer.begin());
+
+    f_headers_buffer.clear();
+    f_trc_offsets.clear();
+    f_size = 0;
+    f_absolute_trc_beg = absolute_index_start_trc;
+    f_absolute_trc_cur = f_absolute_trc_beg;
+    f_buffer_trc_cur = 0;
+
+    size_t samples_count;
+    size_t offset = 0;
+
+    while (offset < f_raw_buffer.size()) {
+        f_trc_offsets.push_back(segy_file::trace_header_size + offset);
+
+        byte_t *raw_header = &f_raw_buffer[offset];
+        auto header = shared_ptr<segy_trace_header>(new segy_trace_header(f_header_map, raw_header, f_order));
+        f_headers_buffer.push_back(header);
+
+        VARIANT_CAST(size_t, samples_count, header->samples_count());
+
+        offset += segy_file::trace_header_size 
+            + samples_count * segy_data_format_size(f_bin_header->data_format());
+
+        f_size++;
+    }
+
+    // Проверяем, лежит ли полностью последняя трасса в буфере, если нет, то выкидываем ее
+    size_t last_offset = f_trc_offsets.back();
+    size_t trc_size = samples_count * segy_data_format_size(f_bin_header->data_format());
+    if (last_offset + trc_size > f_raw_buffer.size()) {
+        f_headers_buffer.erase(f_headers_buffer.end()--);
+        f_trc_offsets.erase(f_trc_offsets.end()--);
+        f_size--;
+    }
+}
+
 size_t smart_trc_buffer::capacity(size_t cap) {
     return f_capacity;
 }
 
 size_t smart_trc_buffer::size() {
-    return 0;
+    return f_size;
 }
 
 bool smart_trc_buffer::is_trc_loaded(size_t absolute_index) {
     return (absolute_index >= f_absolute_trc_beg
-            && absolute_index <= f_absolute_trc_beg + f_capacity);
+            && absolute_index < f_absolute_trc_beg + f_size);
 }
 
 bool smart_trc_buffer::is_header_loaded(size_t absolute_index) {
@@ -59,7 +109,8 @@ shared_ptr<segy_trace> smart_trc_buffer::get_trace(size_t absolute_index) {
         return shared_ptr<segy_trace>(
             new segy_trace(
                     f_headers_buffer[absolute_index - f_absolute_trc_beg],
-                    &f_raw_buffer[offset];
+                    get<short>(f_headers_buffer[absolute_index - f_absolute_trc_beg]->samples_count()),
+                    (float*)&f_raw_buffer[offset]
                 )
             );
     }
@@ -121,7 +172,9 @@ void segy_reader::init(bool reopen) {
     else
         f_first_trc_offset = text_headers_size + bin_header_size;
 
+    smart_buffer = smart_trc_buffer(f_header_map, f_bin_header->endian(), f_bin_header);
     resize_buffer(1);
+
     f_istream.seekg(f_first_trc_offset, ios::beg);
 }
 
@@ -220,6 +273,11 @@ Eigen::VectorXf segy_reader::get_trace_data(int index) {
 }
 
 shared_ptr<seismic_trace> segy_reader::get_trace(int index) {
+
+    if (smart_buffer.is_trc_loaded(index)) {
+        return smart_buffer.get_trace(index);
+    }
+
     move(index);
 
     int bytes_count = segy_file::trace_header_size 
@@ -227,29 +285,32 @@ shared_ptr<seismic_trace> segy_reader::get_trace(int index) {
 
     f_istream.read((char*)buffer.data(), bytes_count);
 
-    auto header = shared_ptr<segy_trace_header>(
-            new segy_trace_header(f_header_map, buffer.data(), f_bin_header->endian())
-        );
-    char *raw_data = reinterpret_cast<char*>(&buffer[segy_file::trace_header_size]);
-    Eigen::VectorXf data(f_samples_count);
-    for (int i = 0; i < f_samples_count; ++i) {
-        std::string binary = bitset<8>(raw_data[i]).to_string(); //to binary
-        //std::cout << binary << "\n";
+    smart_buffer.load(buffer, index);
+    return get_trace(index);
 
-        //bool sng = signbit((float)raw_data[i]);
-        //if (sng)
-        //    data[i] = static_cast<float>(-(~raw_data[i]));
-        //else
-            data[i] = static_cast<float>(raw_data[i]);
-    }
+    //auto header = shared_ptr<segy_trace_header>(
+    //        new segy_trace_header(f_header_map, buffer.data(), f_bin_header->endian())
+    //    );
+    //char *raw_data = reinterpret_cast<char*>(&buffer[segy_file::trace_header_size]);
+    //Eigen::VectorXf data(f_samples_count);
+    //for (int i = 0; i < f_samples_count; ++i) {
+    //    std::string binary = bitset<8>(raw_data[i]).to_string(); //to binary
+    //    //std::cout << binary << "\n";
+    //
+    //    //bool sng = signbit((float)raw_data[i]);
+    //    //if (sng)
+    //    //    data[i] = static_cast<float>(-(~raw_data[i]));
+    //    //else
+    //        data[i] = static_cast<float>(raw_data[i]);
+    //}
 
 
-	return shared_ptr<segy_trace>(
-        new segy_trace(
-            header,
-            data
-        )
-	);
+	//return shared_ptr<segy_trace>(
+    //    new segy_trace(
+    //        header,
+    //        data
+    //    )
+	//);
 }
 
 shared_ptr<seismic_header_map> segy_reader::header_map() {
@@ -258,6 +319,7 @@ shared_ptr<seismic_header_map> segy_reader::header_map() {
 
 void segy_reader::set_header_map(shared_ptr<seismic_header_map> map) {
     f_header_map = map;
+    smart_buffer.f_header_map = map;
 }
 
 string segy_reader::text_header() {
@@ -590,6 +652,7 @@ void segy_reader::resize_buffer(size_t size) {
 
     int approx_fulltrace_size = max_trc_header_size + f_samples_count * data_format_size;
     buffer.resize(buffer_size * approx_fulltrace_size);
+    smart_buffer.set_capacity(size, f_samples_count, f_bin_header->data_format());
 }
 
 #ifdef PYTHON

@@ -27,6 +27,10 @@ namespace py = pybind11;
 #endif
 
 class smart_trc_buffer {
+    std::shared_ptr<seismic_header_map>             f_header_map;
+    endian_order                                    f_order;
+    std::shared_ptr<segy_bin_header>                f_bin_header;
+
     std::vector<std::shared_ptr<segy_trace_header>> f_headers_buffer;
     
     std::vector<byte_t>                             f_raw_buffer;
@@ -35,10 +39,13 @@ class smart_trc_buffer {
     size_t                                          f_absolute_trc_beg;
     size_t                                          f_absolute_trc_cur;
     size_t                                          f_buffer_trc_cur;
+    size_t                                          f_size;
 
 public:
-    smart_trc_buffer();
-    void                                            load(std::vector<byte_t> raw_buffer);
+    smart_trc_buffer() {}
+    smart_trc_buffer(std::shared_ptr<seismic_header_map> map, endian_order order, std::shared_ptr<segy_bin_header> bin_header);
+
+    void                                            load(const std::vector<byte_t> &raw_buffer, size_t absolute_index_start_trc);
     
     void                                            set_capacity(size_t cap, short samples_count, segy_data_format format);
     size_t                                          capacity(size_t cap);
@@ -47,6 +54,8 @@ public:
     bool                                            is_header_loaded(size_t absolute_index);
     std::shared_ptr<segy_trace_header>              get_header(size_t absolute_index);
     std::shared_ptr<segy_trace>                     get_trace(size_t absolute_index);
+
+    friend class segy_reader;
 };
 
 struct segy_reader_config {
@@ -80,6 +89,7 @@ class segy_reader : public seismic_data_provider {
 
     std::vector<byte_t> buffer;
     size_t buffer_size;
+    smart_trc_buffer smart_buffer;
 
 public:
     ~segy_reader();
@@ -126,7 +136,6 @@ private:
 	void open_file();
 	void close_file();
     void init(bool reopen);
-    void determine_endian_order();
     void resize_buffer(size_t size);
 
     void move(int trc_index, int buffer);

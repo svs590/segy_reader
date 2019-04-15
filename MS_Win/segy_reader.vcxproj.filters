@@ -90,6 +90,9 @@
     <ClInclude Include="..\src\segy_file.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\segy_smart_trc_buffer.h">
+      <Filter>Файлы заголовков\segy</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\test.cpp">
@@ -127,6 +130,9 @@
     </ClCompile>
     <ClCompile Include="..\src\segy_file.cpp">
       <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\segy_smart_trc_buffer.cpp">
+      <Filter>Исходные файлы\segy</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

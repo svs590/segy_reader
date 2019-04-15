@@ -62,7 +62,10 @@ int main() {
     cout << endl;
 
 	new_map->clear();
-    new_map->set_field("CDP X", 184, 4, seismic_data_type::INT, "");
+    new_map->set_field("Inline", 4, 4, seismic_data_type::INT, "");
+    new_map->set_field("Crossline", 20, 4, seismic_data_type::INT, "");
+    new_map->set_field("CDP X", 72, 4, seismic_data_type::INT, "");
+    new_map->set_field("CDP Y", 76, 4, seismic_data_type::INT, "");
     map_dict = new_map->to_map();
     for (auto field : map_dict) {
         cout << field.first << '\t';
@@ -76,7 +79,10 @@ int main() {
     //auto trc_header = dynamic_pointer_cast<segy_trace_header>(reader->trace_header(0));
     //cout << get<int>(trc_header->CDP_X()) << '\t' << get<int>(trc_header->crossline()) << endl << get<short>(trc_header->samples_count()) << endl;
 
-    auto trace = reader->get_trace(5000);
+    auto trace = reader->get_trace(6051);
+    trace = reader->get_trace(6052);
+    trace = reader->get_trace(6055);
+    trace = reader->get_trace(6081);
     auto trc_data = trace->get_data();
     //cout << trc_data << endl;
     cout << trc_data.rows() << ' ' << trc_data.minCoeff() << ' ' << trc_data.maxCoeff() << endl;
@@ -93,6 +99,7 @@ int main() {
 
 	int n = reader->samples_count();
 
+    */
 	cout << "Preprocessing..." << endl;
 	auto start = system_clock::now();
 	reader->preprocessing();
@@ -100,6 +107,7 @@ int main() {
 	cout << "Done" << endl;
 	cout << "Preprocessing time: " << duration_cast<milliseconds>(end - start).count() << endl;
 
+    /*
 	auto segyreader = dynamic_pointer_cast<segy_reader>(reader);
 
 	auto iline_headers = segyreader->get_headers(segyreader->get_geometry()->get_lines()[1200]);
@@ -114,10 +122,10 @@ int main() {
 
 	auto iline = segyreader->get_traces(segyreader->get_geometry()->get_lines()[0]);
 	ofstream ilinefile("iline.dat");
-	for (int i = 0; i < iline.size(); ++i) {
+	for (int i = 0; i < iline.loaded_trc_count(); ++i) {
 		int x = i;
 		auto data = iline[i]->get_data();
-		for (int j = 0; j < data.size(); ++j) {
+		for (int j = 0; j < data.loaded_trc_count(); ++j) {
 			int y = n - j;
 			ilinefile << x << '\t' << y << '\t' << data[j] << endl;
 		}
@@ -153,7 +161,7 @@ int main() {
 
 	ofstream fout("trace.dat");
 	auto trace_data = t->get_data();
-	for (int i = 0; i < trace_data.size(); ++i)
+	for (int i = 0; i < trace_data.loaded_trc_count(); ++i)
 		fout << trace_data[i] << endl;
 	fout.close();
 	*/

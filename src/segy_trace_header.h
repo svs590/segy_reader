@@ -44,6 +44,7 @@ public:
 
     virtual std::map<std::string, seismic_variant_value> to_map();
     virtual void set(const std::map<std::string, seismic_variant_value> &map);
+    virtual bool is_valid();
 
     seismic_variant_value                   iline();
     seismic_variant_value                   crossline();

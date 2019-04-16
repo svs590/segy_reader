@@ -25,6 +25,8 @@ class smart_trc_buffer {
     size_t                                          f_absolute_trc_beg;
     size_t                                          f_size              = 0;
 
+    bool                                            f_fail;
+    size_t                                          f_underload;
 public:
     smart_trc_buffer() {}
     smart_trc_buffer(std::shared_ptr<seismic_header_map> header_map, std::shared_ptr<segy_bin_header> bin_header);
@@ -43,7 +45,19 @@ public:
     std::shared_ptr<segy_trace_header>              get_header(size_t absolute_index);
     std::shared_ptr<segy_trace>                     get_trace(size_t absolute_index);
 
+    size_t                                          start_trace() { return f_absolute_trc_beg; }
+    size_t                                          end_trace() { return f_absolute_trc_beg + f_size - 1; }
+
+    // Returns true if there is underloaded trace. 
+    // Underload method returns bytes need to read to parse trace completely
+    bool                                            fail() { return f_fail; }
+    size_t                                          underload() { return f_underload; }
+    void                                            parse_underloaded(const std::vector<byte_t> &raw_underload);
+
     void                                            set_optimal_capacity();
 
     byte_t                                          *raw();
+
+private:
+    void _parse(size_t start_offset);
 };

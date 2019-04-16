@@ -135,14 +135,14 @@ shared_ptr<seismic_abstract_header> segy_reader::bin_header() {
 }
 
 void segy_reader::move(int trc_index) {
-
+    cout << trc_index << endl;
     if (smart_buffer.is_header_loaded(trc_index))
         return;
 
     int64_t relative_pos = f_first_trc_offset
-        + trc_index * (
-            segy_file::trace_header_size 
-            + f_samples_count * segy_data_format_size(f_bin_header->data_format())
+        + (int64_t)trc_index * (
+            (int64_t)segy_file::trace_header_size
+            + (int64_t)f_samples_count * (int64_t)segy_data_format_size(f_bin_header->data_format())
         );
     f_istream.seekg(relative_pos, ios::beg);
 
@@ -156,12 +156,7 @@ shared_ptr<seismic_trace> segy_reader::get_trace(int index) {
         return smart_buffer.get_trace(index);
     }
 
-    move(index);
-
-    int bytes_count = smart_buffer.raw_size();
-    f_istream.read((char*)smart_buffer.raw(), bytes_count);
-    smart_buffer.parse(index);
-
+    store_traces_to_buffer(index);
     return get_trace(index);
 
     //auto header = shared_ptr<segy_trace_header>(
@@ -193,11 +188,7 @@ shared_ptr<seismic_trace_header> segy_reader::trace_header(int index) {
     if (smart_buffer.is_trc_loaded(index)) {
         return smart_buffer.get_header(index);
     }
-
-    int bytes_count = smart_buffer.raw_size();
-    f_istream.read((char*)smart_buffer.raw(), bytes_count);
-    smart_buffer.parse(index);
-
+    store_traces_to_buffer(index);
     return trace_header(index);
 }
 
@@ -418,14 +409,13 @@ void segy_reader::preprocessing() {
 	map<int, seismic_line_info> xline;
 
 	auto header_map_p = dynamic_pointer_cast<segy_header_map>(header_map());
-	int row_index = header_map_p->contains("Inline");
-	int col_index = header_map_p->contains("Crossline");
 	int x_index = header_map_p->contains("CDP X");
 	int y_index = header_map_p->contains("CDP Y");
 	if (x_index != NOT_INDEX)
 		x_coord_present = true;
 	if (y_index != NOT_INDEX)
 		y_coord_present = true;
+
 	int count = traces_count();
 
 	check_memory_for_headers();
@@ -433,18 +423,17 @@ void segy_reader::preprocessing() {
 
 	int i = 0;
 	do {
-        auto trc = get_trace(i);
-        auto header = trc->get_header();
+        auto header = dynamic_pointer_cast<segy_trace_header>(trace_header(i));
 
 		if (headers_in_memory)
-			headers.push_back(trc->get_header());
-
-        VARIANT_CAST(int, il, header->get("Inline"));
-        VARIANT_CAST(int, xl, header->get("Crossline"));
+			headers.push_back(header);
+        
+        VARIANT_CAST(int, il, header->iline());
+        VARIANT_CAST(int, xl, header->crossline());
         if (x_coord_present)
-            VARIANT_CAST(int, x, header->get("CDP X"));
+            VARIANT_CAST(int, x, header->CDP_X());
         if (y_coord_present)
-            VARIANT_CAST(int, y, header->get("CDP Y"));
+            VARIANT_CAST(int, y, header->CDP_Y());
 
 		line_processing(iline, 
 			seismic_line_info::seismic_line_type::iline, "Iline", il, i, { x, y });
@@ -452,6 +441,8 @@ void segy_reader::preprocessing() {
 			seismic_line_info::seismic_line_type::xline, "Xline", xl, i, { x, y });
 		++i;
 	} while (i < count);
+
+    f_traces_count = i;
 
 	transform(
 		iline.begin(),
@@ -489,6 +480,30 @@ void segy_reader::resize_buffer(size_t size) {
 
     int approx_fulltrace_size = max_trc_header_size + f_samples_count * data_format_size;
     smart_buffer.set_trc_capacity(size);
+}
+
+void segy_reader::store_traces_to_buffer(int index) {
+    // if buffer stores previous trace, there is no need to use move
+    if (!(index - 1 == smart_buffer.end_trace()))
+        move(index);
+
+    // if buffer stores underloaded trace with index 'index'
+    // read underloaded bytes and parse
+    else if (smart_buffer.fail()) {
+        size_t underloaded_bytes = smart_buffer.underload();
+        vector<byte_t> tmp(underloaded_bytes);
+        f_istream.read((char*)tmp.data(), underloaded_bytes);
+        smart_buffer.parse_underloaded(tmp);
+        return;
+    }
+    
+    size_t bytes_count = smart_buffer.raw_size();
+    size_t pos = (size_t)f_istream.tellg();
+    if (pos + bytes_count > f_filesize)
+        bytes_count = f_filesize - pos;
+    memset(smart_buffer.raw(), 0, smart_buffer.raw_size());
+    f_istream.read((char*)smart_buffer.raw(), bytes_count);
+    smart_buffer.parse(index);
 }
 
 #ifdef PYTHON

@@ -94,6 +94,7 @@ private:
 	void close_file();
     void init(bool reopen);
     void resize_buffer(size_t size);
+    void store_traces_to_buffer(int index);
 
     void move(int trc_index);
 

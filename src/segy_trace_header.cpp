@@ -4,6 +4,7 @@
 #include "segy_trace_header.h"
 #include "utils.h"
 #include "segy_header_map.h"
+#include "data_types.h"
 
 using namespace std;
 
@@ -146,7 +147,7 @@ seismic_data_type segy_trace_header::type(const string &name) const {
 }
 
 seismic_variant_value segy_trace_header::get(const string &name) const {
-    if (f_map->contains(name)) {
+    if (f_map->contains(name) != NOT_INDEX) {
         auto field_info = f_map->get_field(name);
         int pos = std::get<0>(field_info);
         int size = std::get<1>(field_info);
@@ -314,6 +315,18 @@ map<string, seismic_variant_value> segy_trace_header::to_map() {
 
 void segy_trace_header::set(const std::map<std::string, seismic_variant_value> &map) {
     throw exception("segy_trace_header: set: method not implemented");
+}
+
+bool segy_trace_header::is_valid() {
+    if (!f_req_field_init)
+        return false;
+
+    int tmp;
+    VARIANT_CAST(int, tmp, samples_count());
+    if (tmp <= 0)
+        return false;
+
+    return true;
 }
 
 #ifdef PYTHON

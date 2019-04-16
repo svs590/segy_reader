@@ -24,6 +24,7 @@ public:
 
     virtual std::map<std::string, seismic_variant_value> to_map() = 0;
     virtual void set(const std::map<std::string, seismic_variant_value> &map) = 0;
+    virtual bool is_valid() = 0;
 
 #ifdef PYTHON
 	std::map<std::string, py::object> to_dict();

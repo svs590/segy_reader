@@ -97,7 +97,7 @@ int main() {
 	auto trace0 = reader->get_trace(0);
 	auto header0 = trace0->get_header();
 
-	int n = reader->samples_count();
+	
 
     */
 	cout << "Preprocessing..." << endl;
@@ -119,19 +119,22 @@ int main() {
 	}
 	end = system_clock::now();
 	cout << "100 Line time: " << duration_cast<milliseconds>(end - start).count() << endl;
+    */
 
-	auto iline = segyreader->get_traces(segyreader->get_geometry()->get_lines()[0]);
+    int n = reader->samples_count();
+	auto iline = reader->get_traces(reader->get_geometry()->get_lines()[0]);
 	ofstream ilinefile("iline.dat");
-	for (int i = 0; i < iline.loaded_trc_count(); ++i) {
+	for (int i = 0; i < iline.size(); ++i) {
 		int x = i;
 		auto data = iline[i]->get_data();
-		for (int j = 0; j < data.loaded_trc_count(); ++j) {
+		for (int j = 0; j < data.rows(); ++j) {
 			int y = n - j;
-			ilinefile << x << '\t' << y << '\t' << data[j] << endl;
+			ilinefile << x << '\t' << y << '\t' << data(j) << endl;
 		}
 	}
 	ilinefile.close();
 	
+    /*
 	auto t = reader->get_trace(100000);
 	auto th = t->get_header();
 	for (int i = 0; i < th->count(); ++i) {

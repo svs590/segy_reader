@@ -3,6 +3,7 @@
 
 #include <variant>
 #include <string>
+#include <cstdint>
 
 #ifdef PYTHON
 #include <pybind11/stl.h>
@@ -27,22 +28,22 @@ std::variant<
 
 #define VARIANT_CAST(type_out, value_out, variant_value)                        \
 {                                                                               \
-    if (holds_alternative<int>(variant_value))                                        \
-        value_out = static_cast<type_out>(get<int>(variant_value));             \
+    if (holds_alternative<int>(variant_value))                                  \
+        value_out = static_cast<type_out>(std::get<int>(variant_value));        \
     else if (holds_alternative<int64_t>(variant_value))                         \
-        value_out = static_cast<type_out>(get<int64_t>(variant_value));         \
+        value_out = static_cast<type_out>(std::get<int64_t>(variant_value));    \
     else if (holds_alternative<uint64_t>(variant_value))                        \
-        value_out = static_cast<type_out>(get<uint64_t>(variant_value));        \
+        value_out = static_cast<type_out>(std::get<uint64_t>(variant_value));   \
     else if (holds_alternative<short>(variant_value))                           \
-        value_out = static_cast<type_out>(get<short>(variant_value));           \
+        value_out = static_cast<type_out>(std::get<short>(variant_value));      \
     else if (holds_alternative<unsigned short>(variant_value))                  \
-        value_out = static_cast<type_out>(get<unsigned short>(variant_value));  \
+        value_out = static_cast<type_out>(std::get<unsigned short>(variant_value));\
     else if (holds_alternative<float>(variant_value))                           \
-        value_out = static_cast<type_out>(get<float>(variant_value));           \
+        value_out = static_cast<type_out>(std::get<float>(variant_value));      \
     else if (holds_alternative<double>(variant_value))                          \
-        value_out = static_cast<type_out>(get<double>(variant_value));          \
+        value_out = static_cast<type_out>(std::get<double>(variant_value));     \
     else if (holds_alternative<char>(variant_value))                            \
-        value_out = static_cast<type_out>(get<char>(variant_value));            \
+        value_out = static_cast<type_out>(std::get<char>(variant_value));       \
 }
 
 enum class seismic_data_type {

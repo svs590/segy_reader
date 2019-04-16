@@ -17,7 +17,7 @@ void smart_trc_buffer::reset(shared_ptr<seismic_header_map> header_map, shared_p
 void smart_trc_buffer::set_trc_capacity(size_t cap) {
     f_capacity = cap;
     f_raw_buffer.resize(cap * (
-        segy_file::trace_header_size + f_bin_header->samples_count() * segy_data_format_size(f_bin_header->data_format()))
+        segy_file::trace_header_size + (f_bin_header->samples_count() - 100) * segy_data_format_size(f_bin_header->data_format()))
     );
     f_headers_buffer.resize(cap);
 }
@@ -37,22 +37,50 @@ void smart_trc_buffer::load(const vector<byte_t> &raw_buffer, size_t absolute_in
     parse(absolute_index_start_trc);
 }
 
+void smart_trc_buffer::parse_underloaded(const vector<byte_t> &raw_underload) {
+    if (!fail())
+        return;
+    f_fail = false;
+    f_underload = 0;
+
+    size_t old_size = f_raw_buffer.size();
+    f_raw_buffer.resize(old_size + raw_underload.size());
+    copy(raw_underload.cbegin(), raw_underload.cend(), f_raw_buffer.begin() + old_size);
+
+    size_t last_trc_offset = f_trc_offsets.back();
+    size_t last_trc_samples;
+    VARIANT_CAST(size_t, last_trc_samples, f_headers_buffer.back()->samples_count());
+    size_t last_trc_size = last_trc_samples * segy_data_format_size(f_bin_header->data_format());
+
+    _parse(last_trc_offset + last_trc_size);
+}
+
 void smart_trc_buffer::parse(size_t absolute_index_start_trc) {
+    f_fail = false;
+    f_underload = 0;
     f_headers_buffer.clear();
     f_trc_offsets.clear();
     f_size = 0;
     f_absolute_trc_beg = absolute_index_start_trc;
 
+    _parse(0);
+}
+
+void smart_trc_buffer::_parse(size_t start_offset) {
     size_t samples_count;
-    size_t offset = 0;
+    size_t offset = start_offset;
 
     while (offset < f_raw_buffer.size()) {
         f_trc_offsets.push_back(segy_file::trace_header_size + offset);
 
         byte_t *raw_header = &f_raw_buffer[offset];
         auto header = shared_ptr<segy_trace_header>(
-                new segy_trace_header(f_header_map, raw_header, f_bin_header->endian())
+            new segy_trace_header(f_header_map, raw_header, f_bin_header->endian())
             );
+
+        if (!header->is_valid())
+            break;
+
         f_headers_buffer.push_back(header);
 
         VARIANT_CAST(size_t, samples_count, header->samples_count());
@@ -63,13 +91,16 @@ void smart_trc_buffer::parse(size_t absolute_index_start_trc) {
         f_size++;
     }
 
-    // Check if the last trace completely stored in buffer. If not, delete this trace
+    // Check if the last trace completely stored in buffer. If not, delete this trace and
+    // set fail/underload
     size_t last_offset = f_trc_offsets.back();
     size_t trc_size = samples_count * segy_data_format_size(f_bin_header->data_format());
     if (last_offset + trc_size > f_raw_buffer.size()) {
-        f_headers_buffer.erase(f_headers_buffer.end()--);
-        f_trc_offsets.erase(f_trc_offsets.end()--);
+        f_headers_buffer.erase(--f_headers_buffer.end());
+        f_trc_offsets.erase(--f_trc_offsets.end()--);
         f_size--;
+        f_fail = true;
+        f_underload = last_offset + trc_size - f_raw_buffer.size();
     }
 }
 
@@ -121,13 +152,15 @@ shared_ptr<segy_trace> smart_trc_buffer::get_trace(size_t absolute_index) {
             a[i] = byte_to_float(&this_trc_data[4 * i], f_bin_header->endian());
         }
 
-        return shared_ptr<segy_trace>(
+        auto res = shared_ptr<segy_trace>(
             new segy_trace(
                 f_headers_buffer[absolute_index - f_absolute_trc_beg],
                 get<short>(f_headers_buffer[absolute_index - f_absolute_trc_beg]->samples_count()),
                 a
             )
         );
+        delete[] a;
+        return res;
     }
     else
         throw invalid_argument("smart_trc_buffer: get_trace: trace_header is not stored in buffer");

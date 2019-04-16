@@ -17,7 +17,7 @@ void smart_trc_buffer::reset(shared_ptr<seismic_header_map> header_map, shared_p
 void smart_trc_buffer::set_trc_capacity(size_t cap) {
     f_capacity = cap;
     f_raw_buffer.resize(cap * (
-        segy_file::trace_header_size + (f_bin_header->samples_count() - 100) * segy_data_format_size(f_bin_header->data_format()))
+        segy_file::trace_header_size + f_bin_header->samples_count() * segy_data_format_size(f_bin_header->data_format()))
     );
     f_headers_buffer.resize(cap);
 }

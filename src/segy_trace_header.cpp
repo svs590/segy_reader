@@ -43,7 +43,6 @@ segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map,
 
     this->f_map = map;
     f_endian_order = order;
-    f_raw_data.resize(segy_file::trace_header_size);
     copy(raw_data, raw_data + segy_file::trace_header_size, f_raw_data.data());
     parse_required();
 }

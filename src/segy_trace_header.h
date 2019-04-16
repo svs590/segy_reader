@@ -4,6 +4,7 @@
 #include <exception>
 #include <memory>
 #include <map>
+#include <array>
 
 #include "data_types.h"
 #include "data_conversion.h"
@@ -23,7 +24,7 @@ namespace py = pybind11;
 class segy_trace_header : public seismic_trace_header {
 	std::shared_ptr<seismic_header_map> f_map;
     endian_order f_endian_order = endian_order::big;
-    std::vector<byte_t> f_raw_data;
+    std::array<byte_t, segy_file::trace_header_size> f_raw_data;
     bool f_req_field_init = false;
 public:
 	segy_trace_header(std::shared_ptr<seismic_header_map> map);

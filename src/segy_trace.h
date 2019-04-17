@@ -1,5 +1,4 @@
-#ifndef __SEGY_TRACE
-#define __SEGY_TRACE
+#pragma once
 
 #include <string>
 #include <exception>
@@ -7,8 +6,6 @@
 #include <vector>
 
 #include <Eigen/Dense>
-
-#include "geolib_defines.h"
 
 #include "segy_trace_header.h"
 #include "seismic_trace.h"
@@ -57,5 +54,3 @@ public:
 private:
     void parse(const byte_t *data, int num_samples, segy_data_format format, endian_order order);
 };
-
-#endif

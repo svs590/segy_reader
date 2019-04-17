@@ -6,12 +6,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "segy_header_info.h"
 #include "seismic_header_map.h"
 #include "segy_reader.h"
 #include "segy_trace_header.h"
-
-#include "geolib_defines.h"
 
 class segy_header_map : public seismic_header_map {
     static const map_storage map_standard_req;

@@ -1,11 +1,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-
-#include "geolib_defines.h"
-#include "csSegyHeader.h"
-#include "csSegyTraceHeader.h"
-#include "csFlexHeader.h"
+#include <iostream>
 
 #include "segy_reader.h"
 #include "segy_bin_header.h"
@@ -18,7 +14,6 @@
 #include <Eigen/Dense>
 
 using namespace std;
-using namespace cseis_geolib;
 
 
 void segy_reader::init(bool reopen) {
@@ -61,8 +56,6 @@ void segy_reader::init(bool reopen) {
         size_t approx_filesize = text_headers_size + bin_header_size +
             max_trc_header_size * f_approx_traces_count +
             f_samples_count * data_format_size * f_approx_traces_count;
-
-        cout << f_filesize << '\t' << approx_filesize << endl;
 
         if (!is_same && f_filesize != approx_filesize)
             cout << "Warning: traces count is approximate, precise count will be "
@@ -135,7 +128,6 @@ shared_ptr<seismic_abstract_header> segy_reader::bin_header() {
 }
 
 void segy_reader::move(int trc_index) {
-    cout << trc_index << endl;
     if (smart_buffer.is_header_loaded(trc_index))
         return;
 
@@ -158,30 +150,6 @@ shared_ptr<seismic_trace> segy_reader::get_trace(int index) {
 
     store_traces_to_buffer(index);
     return get_trace(index);
-
-    //auto header = shared_ptr<segy_trace_header>(
-    //        new segy_trace_header(f_header_map, buffer.data(), f_bin_header->endian())
-    //    );
-    //char *raw_data = reinterpret_cast<char*>(&buffer[segy_file::trace_header_size]);
-    //Eigen::VectorXf data(f_samples_count);
-    //for (int i = 0; i < f_samples_count; ++i) {
-    //    std::string binary = bitset<8>(raw_data[i]).to_string(); //to binary
-    //    //std::cout << binary << "\n";
-    //
-    //    //bool sng = signbit((float)raw_data[i]);
-    //    //if (sng)
-    //    //    data[i] = static_cast<float>(-(~raw_data[i]));
-    //    //else
-    //        data[i] = static_cast<float>(raw_data[i]);
-    //}
-
-
-	//return shared_ptr<segy_trace>(
-    //    new segy_trace(
-    //        header,
-    //        data
-    //    )
-	//);
 }
 
 shared_ptr<seismic_trace_header> segy_reader::trace_header(int index) {
@@ -205,10 +173,10 @@ string segy_reader::text_header() {
 	if (!f_text_header.empty())
 		return f_text_header;
 
-	char *buf = new char[csSegyHeader::SIZE_CHARHDR];
+	char *buf = new char[segy_file::text_header_size];
 
 	f_istream.seekg(0);
-	f_istream.read(buf, csSegyHeader::SIZE_CHARHDR);
+	f_istream.read(buf, segy_file::text_header_size);
 	if (f_istream.fail()) 
 		throw runtime_error("segy_reader: unexpected error occurred when reading segy text header");
 	
@@ -380,16 +348,13 @@ void segy_reader::line_processing(
 
 void segy_reader::check_memory_for_headers() {
 	int count = traces_count();
-	int fields_count = 85; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	int fields_count = f_header_map->count();
 
 	// Грубая оценка памяти, необходимой для хранения всех хэдеров
 	// Запрашиваем 30% ОЗУ под хэдеры
 	uint64_t need_mem = count * (
-		(size_t)sizeof(csSegyTraceHeader)					// Нативный класс
-		+ (size_t)(sizeof(csFlexHeader) * fields_count)		// Размер вектора в csSegyTraceHeader
-		+ (size_t)(sizeof(double) * fields_count)			// Добавочный размер csFlexHeader с установленым значением
-		+ (size_t)sizeof(segy_trace_header)
-		+ (size_t)csSegyHeader::SIZE_TRCHDR					// Не нужно, наверное
+		(size_t)sizeof(segy_trace_header)
+		+ (size_t)(sizeof(double) * fields_count)
 		);
 	uint64_t mem_avail = get_available_memory();
 	if (0.3 * mem_avail >= need_mem)

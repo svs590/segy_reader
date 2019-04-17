@@ -3,6 +3,7 @@
 
 using namespace std;
 
+
 smart_trc_buffer::smart_trc_buffer(shared_ptr<seismic_header_map> header_map, shared_ptr<segy_bin_header> bin_header) {
     reset(header_map, bin_header);
     set_trc_capacity(1);
@@ -161,4 +162,3 @@ shared_ptr<segy_trace> smart_trc_buffer::get_trace(size_t absolute_index) {
     else
         throw invalid_argument("smart_trc_buffer: get_trace: trace_header is not stored in buffer");
 }
-

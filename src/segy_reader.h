@@ -1,5 +1,4 @@
-#ifndef __SEGY_READER
-#define __SEGY_READER
+#pragma once
 
 #include <vector>
 #include <string>
@@ -134,6 +133,4 @@ private:
 #ifdef PYTHON
 void py_segy_reader_init(py::module &m,
 	py::class_<segy_reader, std::shared_ptr<segy_reader>> &py_segy_reader);
-#endif
-
 #endif

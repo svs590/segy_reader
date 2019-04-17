@@ -1,5 +1,4 @@
-#ifndef __DATA_TYPES
-#define __DATA_TYPES
+#pragma once
 
 #include <variant>
 #include <string>
@@ -89,6 +88,4 @@ enum class object_type {
 
 #ifdef PYTHON
 void py_seismic_data_types_init(py::module &m);
-#endif
-
 #endif

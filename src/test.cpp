@@ -1,5 +1,6 @@
 #ifdef SEGY_READER_TEST
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -9,7 +10,6 @@
 #include "segy_reader.h"
 #include "segy_bin_header.h"
 #include "segy_header_map.h"
-#include "segy_header_info.h"
 
 using namespace std;
 using namespace std::chrono;

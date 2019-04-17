@@ -60,9 +60,6 @@
     <ClInclude Include="..\src\segy_bin_header.h">
       <Filter>Файлы заголовков\segy</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\segy_header_info.h">
-      <Filter>Файлы заголовков\segy</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\segy_header_map.h">
       <Filter>Файлы заголовков\segy</Filter>
     </ClInclude>
@@ -105,9 +102,6 @@
       <Filter>Исходные файлы\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\segy_bin_header.cpp">
-      <Filter>Исходные файлы\segy</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\segy_header_info.cpp">
       <Filter>Исходные файлы\segy</Filter>
     </ClCompile>
     <ClCompile Include="..\src\segy_header_map.cpp">

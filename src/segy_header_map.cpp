@@ -1,12 +1,11 @@
 #include <string>
 
 #include "segy_header_map.h"
-#include "segy_header_info.h"
 #include "data_types.h"
 #include "utils.h"
 
 using namespace std;
-using namespace cseis_geolib;
+
 
 /*
     Required fields

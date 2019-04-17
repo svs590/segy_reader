@@ -3,6 +3,7 @@
 
 using namespace std;
 
+
 #define DATA_TO_NATIVE_CASE_LINE(data_type, samples_count, order)   \
 f_data = segy_data_to_native<data_type>(                            \
     data,                                                           \

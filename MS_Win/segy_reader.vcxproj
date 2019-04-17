@@ -148,14 +148,14 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(BOOST_ROOT)\;..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT)\;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SEGY_READER_TEST;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>csCAPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(BOOST_ROOT)\lib64;..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(BOOST_ROOT)\lib64</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "..\lib\OpenSeaSeis\bin\*.dll" "..\bin" /K /D /H /Y</Command>
@@ -214,15 +214,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(BOOST_ROOT);$(PYTHON_PATH)include;..\lib\pybind11\include;..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);$(PYTHON_PATH)include;..\lib\pybind11\include;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PYTHON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>csCAPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(BOOST_ROOT)lib64;$(PYTHON_PATH)libs;..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(BOOST_ROOT)lib64;$(PYTHON_PATH)libs</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "..\lib\OpenSeaSeis\bin\*.dll" "..\bin" /K /D /H /Y</Command>
@@ -236,7 +236,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(BOOST_ROOT);..\lib\OpenSeaSeis\src\cs\segy;..\lib\OpenSeaSeis\src\cs\geolib;..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);..\src;..\lib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SEGY_READER_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -244,8 +244,8 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>csCAPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(BOOST_ROOT)\lib64;..\lib\OpenSeaSeis\bin</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(BOOST_ROOT)\lib64</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "..\lib\OpenSeaSeis\bin\*.dll" "..\bin" /K /D /H /Y</Command>
@@ -259,7 +259,6 @@
     <ClInclude Include="..\src\seismic_geometry.h" />
     <ClInclude Include="..\src\obj_base.h" />
     <ClInclude Include="..\src\segy_bin_header.h" />
-    <ClInclude Include="..\src\segy_header_info.h" />
     <ClInclude Include="..\src\segy_header_map.h" />
     <ClInclude Include="..\src\segy_reader.h" />
     <ClInclude Include="..\src\segy_trace.h" />
@@ -279,7 +278,6 @@
     <ClCompile Include="..\src\py_mudule.cpp" />
     <ClCompile Include="..\src\segy_bin_header.cpp" />
     <ClCompile Include="..\src\segy_file.cpp" />
-    <ClCompile Include="..\src\segy_header_info.cpp" />
     <ClCompile Include="..\src\segy_header_map.cpp" />
     <ClCompile Include="..\src\segy_reader.cpp" />
     <ClCompile Include="..\src\segy_smart_trc_buffer.cpp" />

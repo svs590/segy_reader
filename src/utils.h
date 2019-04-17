@@ -1,5 +1,4 @@
-#ifndef __UTILS
-#define __UTILS
+#pragma once
 
 #include <string>
 #include <map>
@@ -27,5 +26,3 @@ long long get_available_memory();
 void seekg_relative(int64_t rel_pos, bfs::ifstream &stream);
 
 bool is_little_endian();
-
-#endif

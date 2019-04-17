@@ -1,5 +1,4 @@
-#ifndef __SEGY_BIN_HEADER
-#define __SEGY_BIN_HEADER
+#pragma once
 
 #include <map>
 #include <string>
@@ -147,7 +146,7 @@ private:
 
 	bool f_is_segy_2;					// 1 byte
 	int f_is_same_for_file;				// 2 bytes
-	int f_extended_text_headers_count;		// 2 bytes, -1 - variable count
+	int f_extended_text_headers_count;	// 2 bytes, -1 - variable count
 	int f_max_add_trc_headers_count;	// 4 bytes
 	int f_time_basis;					// 2 bytes
 	uint64_t f_stream_traces_count;		// 8 bytes
@@ -158,6 +157,4 @@ private:
 #ifdef PYTHON
 void py_segy_bin_header_init(py::module &m,
 	py::class_<segy_bin_header, std::shared_ptr<segy_bin_header>> &py_segy_bin_header);
-#endif
-
 #endif

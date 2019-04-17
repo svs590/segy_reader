@@ -19,15 +19,13 @@ namespace py = pybind11;
 
 class seismic_trace : public obj_base {
 protected:
-	std::shared_ptr<seismic_trace_header> header;
-	Eigen::VectorXf data;
-	int num_samples;
+	std::shared_ptr<seismic_trace_header> f_header;
 
 public:
 	virtual std::shared_ptr<seismic_trace_header> get_header() = 0;
 	virtual void set_header(std::shared_ptr<seismic_trace_header> header) = 0;
-	virtual Eigen::VectorXf &get_data() = 0;
-	virtual void set_data(const Eigen::VectorXf &data) = 0;
+	virtual seismic_variant_vector &get_data() = 0;
+	virtual void set_data(const seismic_variant_vector &data) = 0;
 };
 
 #ifdef PYTHON

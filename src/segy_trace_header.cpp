@@ -321,7 +321,7 @@ bool segy_trace_header::is_valid() {
         return false;
 
     int tmp;
-    VARIANT_CAST(int, tmp, samples_count());
+    VARIANT_VALUE_CAST(int, tmp, samples_count());
     if (tmp <= 0)
         return false;
 

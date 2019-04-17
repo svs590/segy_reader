@@ -19,7 +19,7 @@ int main() {
 	wstring file = L"F:/FullStack_PSTM.segy";
 
     segy_reader_config config;
-    config.filename = L"D:/FullStack_PSTM.segy";
+    config.filename = L"D:/Сейсмика/!DATA!/seismic/07.segy";
 
 	auto reader = shared_ptr<seismic_data_provider>(
 		new segy_reader(config)
@@ -79,11 +79,11 @@ int main() {
     //auto trc_header = dynamic_pointer_cast<segy_trace_header>(reader->trace_header(0));
     //cout << get<int>(trc_header->CDP_X()) << '\t' << get<int>(trc_header->crossline()) << endl << get<short>(trc_header->samples_count()) << endl;
 
-    auto trace = reader->get_trace(6051);
-    trace = reader->get_trace(6052);
-    trace = reader->get_trace(6055);
-    trace = reader->get_trace(6081);
-    auto trc_data = trace->get_data();
+    auto trace = reader->get_trace(300);
+    trace = reader->get_trace(300);
+    trace = reader->get_trace(300);
+    trace = reader->get_trace(300);
+    auto trc_data = get<Eigen::Matrix<short, -1, 1>>(trace->get_data());
     //cout << trc_data << endl;
     cout << trc_data.rows() << ' ' << trc_data.minCoeff() << ' ' << trc_data.maxCoeff() << endl;
 
@@ -126,7 +126,7 @@ int main() {
 	ofstream ilinefile("iline.dat");
 	for (int i = 0; i < iline.size(); ++i) {
 		int x = i;
-		auto data = iline[i]->get_data();
+		auto data = get<Eigen::Matrix<short, -1, 1>>(iline[i]->get_data());
 		for (int j = 0; j < data.rows(); ++j) {
 			int y = n - j;
 			ilinefile << x << '\t' << y << '\t' << data(j) << endl;

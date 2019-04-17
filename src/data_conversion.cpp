@@ -1,5 +1,7 @@
 #include "data_conversion.h"
 
+#include <Eigen/Dense>
+
 #include <boost/endian/conversion.hpp>
 using namespace boost::endian;
 
@@ -146,6 +148,40 @@ int byte_to_int<endian_order::mid_little>(byte_t const* ptr) {
     mid_big[2] = ptr[3];
     mid_big[3] = ptr[2];
     int val = *reinterpret_cast<int const*>(mid_big);
+    return conditional_reverse<order::little, order::native>(val);
+}
+
+template <>
+uint32_t byte_to_uint<endian_order::big>(byte_t const* ptr) {
+    uint32_t val = *reinterpret_cast<uint32_t const*>(ptr);
+    return conditional_reverse<order::big, order::native>(val);
+}
+
+template <>
+uint32_t byte_to_uint<endian_order::little>(byte_t const* ptr) {
+    uint32_t val = *reinterpret_cast<uint32_t const*>(ptr);
+    return conditional_reverse<order::little, order::native>(val);
+}
+
+template <>
+uint32_t byte_to_uint<endian_order::mid_big>(byte_t const* ptr) {
+    byte_t mid_big[4];
+    mid_big[0] = ptr[1];
+    mid_big[1] = ptr[0];
+    mid_big[2] = ptr[3];
+    mid_big[3] = ptr[2];
+    uint32_t val = *reinterpret_cast<uint32_t const*>(mid_big);
+    return conditional_reverse<order::big, order::native>(val);
+}
+
+template <>
+uint32_t byte_to_uint<endian_order::mid_little>(byte_t const* ptr) {
+    byte_t mid_big[4];
+    mid_big[0] = ptr[1];
+    mid_big[1] = ptr[0];
+    mid_big[2] = ptr[3];
+    mid_big[3] = ptr[2];
+    uint32_t val = *reinterpret_cast<uint32_t const*>(mid_big);
     return conditional_reverse<order::little, order::native>(val);
 }
 
@@ -614,6 +650,26 @@ int byte_to_int(byte_t const* ptr, endian_order order) {
     }
 }
 
+uint32_t byte_to_uint(byte_t const* ptr, endian_order order) {
+    switch (order)
+    {
+    case endian_order::big:
+        return byte_to_uint<endian_order::big>(ptr);
+        break;
+    case endian_order::little:
+        return byte_to_uint<endian_order::little>(ptr);
+        break;
+    case endian_order::mid_big:
+        return byte_to_uint<endian_order::mid_big>(ptr);
+        break;
+    case endian_order::mid_little:
+        return byte_to_uint<endian_order::mid_little>(ptr);
+        break;
+    default:
+        break;
+    }
+}
+
 int64_t byte_to_int64(byte_t const* ptr, endian_order order) {
     switch (order)
     {
@@ -835,10 +891,16 @@ void double_to_byte(double value, byte_t* outPtr, endian_order order) {
 }
 
 template <>
-void segy_data_to_native<segy_data_format::float32_ibm>(byte_t *buffer, int buffer_size) {
-    register unsigned fraction;
-    register int exponent;
-    register int signum;
+seismic_variant_vector segy_data_to_native<segy_data_format::float32_ibm>(
+    const byte_t *buffer, 
+    int buffer_size, 
+    endian_order order) {
+
+    unsigned fraction;
+    int exponent;
+    int signum;
+
+    Eigen::VectorXf res(buffer_size / 4);
 
     for (int i = 0; i < buffer_size; i += 4) {
         memcpy(&fraction, &buffer[i], 4);
@@ -878,52 +940,187 @@ void segy_data_to_native<segy_data_format::float32_ibm>(byte_t *buffer, int buff
         }
 
         fraction = (fraction >> 9) | (exponent << 23) | (signum << 31);
-        memcpy(&buffer[i], &fraction, 4);
+        //memcpy(&buffer[i], &fraction, 4);
+        res[i / 4] = *reinterpret_cast<float*>(&fraction);
     }
 
+    return res;
 }
 
 template <>
-void segy_data_to_native<segy_data_format::float32>(byte_t *buffer, int buffer_size) {
+seismic_variant_vector segy_data_to_native<segy_data_format::float32>(
+    const byte_t *buffer,
+    int buffer_size, 
+    endian_order order) {
 
+    short byte_size = segy_data_format_size(segy_data_format::float32);
+    Eigen::VectorXf res(buffer_size / byte_size);
+    for (int i = 0; i < buffer_size; i += byte_size) {
+        res[i / byte_size] = byte_to_float(&buffer[i], order);
+    }
+    return res;
 }
-
-
-
 
 
 template <>
-void native_to_segy_data<segy_data_format::float32_ibm>(byte_t *buffer, int buffer_size) {
-    register unsigned fraction;
-    register int exponent;
-    register int signum;
+seismic_variant_vector segy_data_to_native<segy_data_format::float64>(
+    const byte_t *buffer,
+    int buffer_size,
+    endian_order order) {
 
-    for (int i = 0; i < buffer_size; i += 4) {
-        memcpy(&fraction, &buffer[i], 4);
-        signum = fraction >> 31;
-        fraction <<= 1;
-        exponent = fraction >> 24;
-        fraction <<= 8;
-
-        if (exponent > 0 && exponent != 255) {
-            fraction = (fraction >> 1) | 0x80000000;
-            exponent += 130;
-            fraction >>= -exponent & 3;
-            exponent = (exponent + 3) >> 2;
-
-            while (fraction < 0x10000000) {
-                --exponent;
-                fraction <<= 4;
-            }
-        }
-        else { // fraction == 0 || fraction == 255
-            if (exponent == 255) {
-                fraction = 0xffffff00;
-                exponent = 0x7f;
-            }
-        }
-
-        fraction = (fraction >> 8) | (exponent << 24) | (signum << 31);
-        memcpy(&buffer[i], &fraction, 4);
+    short byte_size = segy_data_format_size(segy_data_format::float64);
+    Eigen::VectorXd res(buffer_size / byte_size);
+    for (int i = 0; i < buffer_size; i += byte_size) {
+        res[i / byte_size] = byte_to_double(&buffer[i], order);
     }
+    return res;
 }
+
+template <>
+seismic_variant_vector segy_data_to_native<segy_data_format::int64_2complement>(
+    const byte_t *buffer,
+    int buffer_size,
+    endian_order order) {
+
+    short byte_size = segy_data_format_size(segy_data_format::int64_2complement);
+    Eigen::Matrix<int64_t, -1, 1> res(buffer_size / byte_size);
+    for (int i = 0; i < buffer_size; i += byte_size) {
+        res[i / byte_size] = byte_to_int64(&buffer[i], order);
+    }
+    return res;
+}
+
+template <>
+seismic_variant_vector segy_data_to_native<segy_data_format::int32_2complement>(
+    const byte_t *buffer,
+    int buffer_size,
+    endian_order order) {
+
+    short byte_size = segy_data_format_size(segy_data_format::int32_2complement);
+    Eigen::VectorXi res(buffer_size / byte_size);
+    for (int i = 0; i < buffer_size; i += byte_size) {
+        res[i / byte_size] = byte_to_int(&buffer[i], order);
+    }
+    return res;
+}
+
+template <>
+seismic_variant_vector segy_data_to_native<segy_data_format::int16_2complement>(
+    const byte_t *buffer,
+    int buffer_size,
+    endian_order order) {
+
+    short byte_size = segy_data_format_size(segy_data_format::int16_2complement);
+    Eigen::Matrix<short, -1, 1> res(buffer_size / byte_size);
+    for (int i = 0; i < buffer_size; i += byte_size) {
+        res[i / byte_size] = byte_to_short(&buffer[i], order);
+    }
+    return res;
+}
+
+template <>
+seismic_variant_vector segy_data_to_native<segy_data_format::int8_2complement>(
+    const byte_t *buffer,
+    int buffer_size,
+    endian_order order) {
+
+    short byte_size = segy_data_format_size(segy_data_format::int8_2complement);
+    Eigen::Matrix<short, -1, 1> res(buffer_size / byte_size);
+    for (int i = 0; i < buffer_size; i += byte_size) {
+        res[i / byte_size] = (short)*reinterpret_cast<const char*>(&buffer[i]);
+    }
+    return res;
+}
+
+template <>
+seismic_variant_vector segy_data_to_native<segy_data_format::uint64>(
+    const byte_t *buffer,
+    int buffer_size,
+    endian_order order) {
+
+    short byte_size = segy_data_format_size(segy_data_format::uint64);
+    Eigen::Matrix<uint64_t, -1, 1> res(buffer_size / byte_size);
+    for (int i = 0; i < buffer_size; i += byte_size) {
+        res[i / byte_size] = byte_to_uint64(&buffer[i], order);
+    }
+    return res;
+}
+
+template <>
+seismic_variant_vector segy_data_to_native<segy_data_format::uint32>(
+    const byte_t *buffer,
+    int buffer_size,
+    endian_order order) {
+
+    short byte_size = segy_data_format_size(segy_data_format::uint32);
+    Eigen::Matrix<uint32_t, -1, 1> res(buffer_size / byte_size);
+    for (int i = 0; i < buffer_size; i += byte_size) {
+        res[i / byte_size] = byte_to_uint(&buffer[i], order);
+    }
+    return res;
+}
+
+template <>
+seismic_variant_vector segy_data_to_native<segy_data_format::uint16>(
+    const byte_t *buffer,
+    int buffer_size,
+    endian_order order) {
+
+    short byte_size = segy_data_format_size(segy_data_format::uint16);
+    Eigen::Matrix<unsigned short, -1, 1> res(buffer_size / byte_size);
+    for (int i = 0; i < buffer_size; i += byte_size) {
+        res[i / byte_size] = byte_to_ushort(&buffer[i], order);
+    }
+    return res;
+}
+
+template <>
+seismic_variant_vector segy_data_to_native<segy_data_format::uint8>(
+    const byte_t *buffer,
+    int buffer_size,
+    endian_order order) {
+
+    short byte_size = segy_data_format_size(segy_data_format::uint8);
+    Eigen::Matrix<unsigned short, -1, 1> res(buffer_size / byte_size);
+    for (int i = 0; i < buffer_size; i += byte_size) {
+        res[i / byte_size] = (unsigned short)buffer[i];
+    }
+    return res;
+}
+
+
+//template <>
+//void native_to_segy_data<segy_data_format::float32_ibm>(const byte_t *buffer, int buffer_size, endian_order order) {
+//    unsigned fraction;
+//    int exponent;
+//    int signum;
+//
+//    for (int i = 0; i < buffer_size; i += 4) {
+//        memcpy(&fraction, &buffer[i], 4);
+//        signum = fraction >> 31;
+//        fraction <<= 1;
+//        exponent = fraction >> 24;
+//        fraction <<= 8;
+//
+//        if (exponent > 0 && exponent != 255) {
+//            fraction = (fraction >> 1) | 0x80000000;
+//            exponent += 130;
+//            fraction >>= -exponent & 3;
+//            exponent = (exponent + 3) >> 2;
+//
+//            while (fraction < 0x10000000) {
+//                --exponent;
+//                fraction <<= 4;
+//            }
+//        }
+//        else { // fraction == 0 || fraction == 255
+//            if (exponent == 255) {
+//                fraction = 0xffffff00;
+//                exponent = 0x7f;
+//            }
+//        }
+//
+//        fraction = (fraction >> 8) | (exponent << 24) | (signum << 31);
+//        memcpy(&buffer[i], &fraction, 4);
+//    }
+//}

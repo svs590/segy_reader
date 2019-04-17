@@ -34,6 +34,10 @@ int				byte_to_int(byte_t const* ptr);
 int             byte_to_int(byte_t const* ptr, endian_order order);
 
 template <endian_order From>
+uint32_t		byte_to_uint(byte_t const* ptr);
+uint32_t        byte_to_uint(byte_t const* ptr, endian_order order);
+
+template <endian_order From>
 int64_t			byte_to_int64(byte_t const* ptr);
 int64_t         byte_to_int64(byte_t const* ptr, endian_order order);
 
@@ -85,8 +89,8 @@ void			float_to_byte(float value, byte_t* outPtr);
 void			float_to_byte(float value, byte_t* outPtr, endian_order order);
 
 template <segy_data_format From>
-void            segy_data_to_native(byte_t *buffer, int buffer_size);
+seismic_variant_vector  segy_data_to_native(const byte_t *buffer, int buffer_size, endian_order order);
 
 
 template <segy_data_format To>
-void            native_to_segy_data(byte_t *buffer, int buffer_size);
+void                    native_to_segy_data(const byte_t *buffer, int buffer_size, endian_order order);

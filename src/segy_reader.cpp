@@ -428,12 +428,12 @@ void segy_reader::preprocessing() {
 		if (headers_in_memory)
 			headers.push_back(header);
         
-        VARIANT_CAST(int, il, header->iline());
-        VARIANT_CAST(int, xl, header->crossline());
+        VARIANT_VALUE_CAST(int, il, header->iline());
+        VARIANT_VALUE_CAST(int, xl, header->crossline());
         if (x_coord_present)
-            VARIANT_CAST(int, x, header->CDP_X());
+            VARIANT_VALUE_CAST(int, x, header->CDP_X());
         if (y_coord_present)
-            VARIANT_CAST(int, y, header->CDP_Y());
+            VARIANT_VALUE_CAST(int, y, header->CDP_Y());
 
 		line_processing(iline, 
 			seismic_line_info::seismic_line_type::iline, "Iline", il, i, { x, y });

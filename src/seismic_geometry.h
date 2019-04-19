@@ -18,19 +18,19 @@ class seismic_line_info {
 public:
 	enum class seismic_line_type { iline, xline, none };
 protected:
-	std::string											name;
-	std::pair<float, float>								start;
-	std::pair<float, float>								end;
-	int													line_no;
-	seismic_line_type									type;
-	std::vector<int>									traces_indexes;
+	std::string											f_name;
+	std::pair<float, float>								f_start_point;
+	std::pair<float, float>								f_end_point;
+	int													f_line_no;
+	seismic_line_type									f_type;
+	std::vector<int>									f_traces_indexes;
 
-	bool                                                by_bounds = false;
-	std::vector<std::pair<int, int>>                    bounds;
-	int                                                 start_trace = NOT_INDEX;
-	int                                                 end_trace = NOT_INDEX;
-	int                                                 sequential_traces_count = 0;
-    int                                                 traces_count = 0;
+	bool                                                f_by_bounds = false;
+	std::vector<std::pair<int, int>>                    f_bounds;
+	int                                                 f_start_trace = NOT_INDEX;
+	int                                                 f_end_trace = NOT_INDEX;
+	int                                                 f_sequential_traces_count = 0;
+    int                                                 f_traces_count = 0;
 
 public:
 	seismic_line_info() {}
@@ -40,34 +40,34 @@ public:
 		int line_no,
 		seismic_line_type type
 	) {
-		this->name = name;
-		this->start = start;
-		this->end = end;
-		this->line_no;
-		this->type = type;
+		this->f_name = name;
+		this->f_start_point = start;
+		this->f_end_point = end;
+		this->f_line_no;
+		this->f_type = type;
 	}
 
-	std::pair<float, float>		get_start()	{ return start; }
-	std::pair<float, float>		get_end()	{ return end; }
-	std::string					get_name()	{ return name; }
+	std::pair<float, float>		start_point()	{ return f_start_point; }
+	std::pair<float, float>		end_point()	{ return f_end_point; }
+	std::string					name()	{ return f_name; }
 
 	friend class segy_reader;
 
 protected:
 	void add_trace_index(int index) {
-		traces_indexes.push_back(index);
+		f_traces_indexes.push_back(index);
 	}
 };
 
 class seismic_geometry_info {
-	std::vector<seismic_line_info> lines;
+	std::vector<seismic_line_info> f_lines;
 public:
 	seismic_geometry_info() {}
 	seismic_geometry_info(std::vector<seismic_line_info> lines) {
-		this->lines = lines;
+		this->f_lines = lines;
 	}
 
-	std::vector<seismic_line_info> get_lines() { return lines; }
+	std::vector<seismic_line_info> lines() { return f_lines; }
 
 	friend class segy_reader;
 

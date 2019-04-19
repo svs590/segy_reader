@@ -48,7 +48,7 @@ public:
 
 	// Словарь вида {name : (byte_position, byte_size, data_type, description)}
 	virtual map_storage                             to_map() const = 0;
-	virtual void                                    set(const map_storage &m) = 0;
+	virtual void                                    from_map(const map_storage &m) = 0;
 };
 
 #ifdef PYTHON

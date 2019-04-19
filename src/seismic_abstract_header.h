@@ -1,5 +1,4 @@
-#ifndef __SEISMIC_ABSTRACT_HEADER
-#define __SEISMIC_ABSTRACT_HEADER
+#pragma once
 
 #include <string>
 #include <map>
@@ -23,6 +22,4 @@ public:
 #ifdef PYTHON
 void py_segy_abstract_header_init(py::module &m,
 	py::class_<seismic_abstract_header, std::shared_ptr<seismic_abstract_header>> &py_abstract_header);
-#endif
-
 #endif

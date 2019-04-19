@@ -46,8 +46,8 @@ class segy_reader : public seismic_data_provider {
     std::shared_ptr<seismic_header_map>                 f_header_map;
 	std::shared_ptr<segy_bin_header>                    f_bin_header;
 	std::string                                         f_text_header;
-	std::vector<std::shared_ptr<seismic_trace_header>>  headers;
-	std::shared_ptr<seismic_geometry_info>              geometry;
+	std::vector<std::shared_ptr<seismic_trace_header>>  f_headers;
+	std::shared_ptr<seismic_geometry_info>              f_geometry;
 
 	bfs::ifstream f_istream;
     size_t f_filesize;
@@ -58,7 +58,7 @@ class segy_reader : public seismic_data_provider {
 public:
     ~segy_reader();
 	segy_reader(const segy_reader_config &config);
-    segy_reader_config                                  get_config() { return f_config; }
+    segy_reader_config                                  config() { return f_config; }
     void                                                set_config(const segy_reader_config &config);
 
 	virtual void                                        close();
@@ -70,19 +70,19 @@ public:
 	virtual std::shared_ptr<seismic_abstract_header>    bin_header();
 	virtual std::shared_ptr<seismic_header_map>         header_map();
 	virtual void                                        set_header_map(std::shared_ptr<seismic_header_map> map);
-	virtual std::shared_ptr<seismic_trace_header>       trace_header(int index);
-	virtual std::shared_ptr<seismic_trace>              get_trace(int index);
+	virtual std::shared_ptr<seismic_trace_header>       header(int index);
+	virtual std::shared_ptr<seismic_trace>              trace(int index);
 
-	virtual std::shared_ptr<seismic_geometry_info>      get_geometry() { return geometry; }
+	virtual std::shared_ptr<seismic_geometry_info>      geometry() { return f_geometry; }
 
-	virtual std::vector<std::shared_ptr<seismic_trace>> get_traces(seismic_line_info line);
-	virtual std::vector<std::shared_ptr<seismic_trace>>	get_traces(int start, int end);
+	virtual std::vector<std::shared_ptr<seismic_trace>> traces(seismic_line_info line);
+	virtual std::vector<std::shared_ptr<seismic_trace>>	traces(int start, int end);
 
 	virtual 
-    std::vector<std::shared_ptr<seismic_trace_header>>  get_headers(seismic_line_info line);
+    std::vector<std::shared_ptr<seismic_trace_header>>  headers(seismic_line_info line);
 
 	virtual
-    std::vector<std::shared_ptr<seismic_trace_header>>  get_headers(int start, int end);
+    std::vector<std::shared_ptr<seismic_trace_header>>  headers(int start, int end);
 
 	virtual void                                        preprocessing();
 
@@ -97,22 +97,22 @@ private:
 
     void move(int trc_index);
 
-	void get_traces(
+	void traces(
 		const std::vector<int> &trcs, 
 		int trc_buffer, 
 		std::vector<std::shared_ptr<seismic_trace>> &seismic_line_info
 	);
-	void get_traces(
+	void traces(
 		int start_trace,
 		int end_trace, 
 		std::vector<std::shared_ptr<seismic_trace>> &line
 	);
-	void get_headers(
+	void headers(
 		const std::vector<int> &trcs,
 		int trc_buffer,
 		std::vector<std::shared_ptr<seismic_trace_header>> &seismic_line_info
 	);
-	void get_headers(
+	void headers(
 		int start_trace,
 		int end_trace,
 		std::vector<std::shared_ptr<seismic_trace_header>> &seismic_line_info

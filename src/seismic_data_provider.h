@@ -28,18 +28,18 @@ public:
 	virtual std::shared_ptr<seismic_header_map>                 header_map() = 0;
 	virtual void                                                set_header_map(std::shared_ptr<seismic_header_map> map) = 0;
 
-	virtual std::shared_ptr<seismic_trace_header>               trace_header(int index) = 0;
-	virtual std::shared_ptr<seismic_trace>                      get_trace(int index) = 0;
+	virtual std::shared_ptr<seismic_trace_header>               header(int index) = 0;
+	virtual std::shared_ptr<seismic_trace>                      trace(int index) = 0;
 
 	virtual void                                                preprocessing() = 0;
 
-	virtual std::shared_ptr<seismic_geometry_info>              get_geometry() = 0;
+	virtual std::shared_ptr<seismic_geometry_info>              geometry() = 0;
 
-	virtual std::vector<std::shared_ptr<seismic_trace>>         get_traces(seismic_line_info line) = 0;
-	virtual std::vector<std::shared_ptr<seismic_trace>>         get_traces(int start, int end) = 0;
-	virtual std::vector<std::shared_ptr<seismic_trace_header>>  get_headers(seismic_line_info line) = 0;
-	virtual std::vector<std::shared_ptr<seismic_trace_header>>  get_headers(int start, int end) = 0;
-	// get_traces(points) (interpolation)
+	virtual std::vector<std::shared_ptr<seismic_trace>>         traces(seismic_line_info line) = 0;
+	virtual std::vector<std::shared_ptr<seismic_trace>>         traces(int start, int end) = 0;
+	virtual std::vector<std::shared_ptr<seismic_trace_header>>  headers(seismic_line_info line) = 0;
+	virtual std::vector<std::shared_ptr<seismic_trace_header>>  headers(int start, int end) = 0;
+	// traces(points) (interpolation)
 
 	virtual void                                                close() = 0;
 	virtual int64_t                                             traces_count() = 0;

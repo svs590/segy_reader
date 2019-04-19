@@ -42,7 +42,7 @@ public:
     virtual header_map_type                         type() const;
 
 	virtual map_storage                             to_map() const;
-	virtual void                                    set(const map_storage &m);
+	virtual void                                    from_map(const map_storage &m);
 
 	virtual object_type type_id() { return object_type::SEGY_HEADERMAP; }
 

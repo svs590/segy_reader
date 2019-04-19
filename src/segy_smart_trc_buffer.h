@@ -43,7 +43,7 @@ public:
     bool                                            is_trc_loaded(size_t absolute_index);
     bool                                            is_header_loaded(size_t absolute_index);
     std::shared_ptr<segy_trace_header>              get_header(size_t absolute_index);
-    std::shared_ptr<segy_trace>                     get_trace(size_t absolute_index);
+    std::shared_ptr<segy_trace>                     trace(size_t absolute_index);
 
     size_t                                          start_trace() { return f_absolute_trc_beg; }
     size_t                                          end_trace() { return f_absolute_trc_beg + f_size - 1; }

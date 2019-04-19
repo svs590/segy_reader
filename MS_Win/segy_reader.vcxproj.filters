@@ -48,9 +48,6 @@
     <ClInclude Include="..\src\seismic_data_provider.h">
       <Filter>Файлы заголовков\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\seismic_header_field.h">
-      <Filter>Файлы заголовков\base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\seismic_header_map.h">
       <Filter>Файлы заголовков\base</Filter>
     </ClInclude>

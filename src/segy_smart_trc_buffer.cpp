@@ -134,10 +134,10 @@ shared_ptr<segy_trace_header> smart_trc_buffer::get_header(size_t absolute_index
     if (is_header_loaded(absolute_index))
         return f_headers_buffer[absolute_index - f_absolute_trc_beg];
     else
-        throw invalid_argument("smart_trc_buffer: get_header: trace_header is not stored in buffer");
+        throw invalid_argument("smart_trc_buffer: get_header: header is not stored in buffer");
 }
 
-shared_ptr<segy_trace> smart_trc_buffer::get_trace(size_t absolute_index) {
+shared_ptr<segy_trace> smart_trc_buffer::trace(size_t absolute_index) {
     if (is_trc_loaded(absolute_index)) {
         size_t offset = f_trc_offsets[absolute_index - f_absolute_trc_beg];
         size_t samples_count;
@@ -160,5 +160,5 @@ shared_ptr<segy_trace> smart_trc_buffer::get_trace(size_t absolute_index) {
         return res;
     }
     else
-        throw invalid_argument("smart_trc_buffer: get_trace: trace_header is not stored in buffer");
+        throw invalid_argument("smart_trc_buffer: trace: header is not stored in buffer");
 }

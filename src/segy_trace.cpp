@@ -56,7 +56,7 @@ segy_trace::segy_trace(
 
 segy_trace::~segy_trace() { }
 
-shared_ptr<seismic_trace_header> segy_trace::get_header() {
+shared_ptr<seismic_trace_header> segy_trace::header() {
 	return f_header;
 }
 
@@ -64,7 +64,7 @@ void segy_trace::set_header(shared_ptr<seismic_trace_header> header) {
     f_header = header;
 }
 
-seismic_variant_vector &segy_trace::get_data() {
+seismic_variant_vector &segy_trace::data() {
 	return f_data;
 }
 

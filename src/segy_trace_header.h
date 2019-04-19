@@ -71,7 +71,7 @@ private:
     seismic_variant_value                   f_sample_interval;
 
 #ifdef PYTHON
-	segy_trace_header(py::dict trace_header) { throw std::runtime_error("Method not implemented"); }
+	segy_trace_header(py::dict header) { throw std::runtime_error("Method not implemented"); }
 #endif
 };
 

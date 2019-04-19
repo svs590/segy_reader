@@ -27,8 +27,7 @@ public:
     virtual bool is_valid() = 0;
 
 #ifdef PYTHON
-	std::map<std::string, py::object> to_dict();
-	py::object py_get(int index);
+	
 #endif
 };
 

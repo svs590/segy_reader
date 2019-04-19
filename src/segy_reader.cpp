@@ -18,7 +18,7 @@ using namespace std;
 
 
 void segy_reader::init(bool reopen) {
-    headers.clear();
+    f_headers.clear();
 
     if (reopen) {
         if (f_istream.is_open())
@@ -32,7 +32,7 @@ void segy_reader::init(bool reopen) {
     f_bin_header = nullptr;
     bin_header();
 
-    geometry = shared_ptr<seismic_geometry_info>(new seismic_geometry_info);
+    f_geometry = shared_ptr<seismic_geometry_info>(new seismic_geometry_info);
 
     processed = false;
     headers_in_memory = false;
@@ -148,18 +148,18 @@ void segy_reader::move(int trc_index) {
             + to_string(trc_index));
 }
 
-shared_ptr<seismic_trace> segy_reader::get_trace(int index) {
+shared_ptr<seismic_trace> segy_reader::trace(int index) {
     if (smart_buffer.is_trc_loaded(index))
-        return smart_buffer.get_trace(index);
+        return smart_buffer.trace(index);
 
     store_traces_to_buffer(index);
     if (smart_buffer.is_trc_loaded(index))
-        return smart_buffer.get_trace(index);
+        return smart_buffer.trace(index);
     else
         throw bad_trace_index();
 }
 
-shared_ptr<seismic_trace_header> segy_reader::trace_header(int index) {
+shared_ptr<seismic_trace_header> segy_reader::header(int index) {
     if (smart_buffer.is_trc_loaded(index))
         return smart_buffer.get_header(index);
 
@@ -198,33 +198,33 @@ string segy_reader::text_header() {
 	return f_text_header;
 }
 
-vector<shared_ptr<seismic_trace>> segy_reader::get_traces(int start, int end) {
+vector<shared_ptr<seismic_trace>> segy_reader::traces(int start, int end) {
 	vector<shared_ptr<seismic_trace>> res;
-	get_traces(start, end, res);
+	traces(start, end, res);
 	return res;
 }
 
-vector<shared_ptr<seismic_trace>> segy_reader::get_traces(seismic_line_info line_info) {
+vector<shared_ptr<seismic_trace>> segy_reader::traces(seismic_line_info line_info) {
 	preprocessing();
 	samples_count();
 
 	vector<shared_ptr<seismic_trace>> res;
 
-	if (line_info.by_bounds) {
+	if (line_info.f_by_bounds) {
 		vector<shared_ptr<seismic_trace>> buffer;
-		for (int i = 0; i < line_info.bounds.size(); ++i) {
-			get_traces(line_info.bounds[i].first, line_info.bounds[i].second, buffer);
+		for (int i = 0; i < line_info.f_bounds.size(); ++i) {
+			traces(line_info.f_bounds[i].first, line_info.f_bounds[i].second, buffer);
 			res.insert(res.end(), buffer.begin(), buffer.end());
 		}
 	}
 	else {
-		get_traces(line_info.traces_indexes, 1, res);
+		traces(line_info.f_traces_indexes, 1, res);
 	}
 
 	return res;
 }
 
-void segy_reader::get_traces(
+void segy_reader::traces(
 	const vector<int> &trcs, 
 	int trc_buffer, 
 	vector<shared_ptr<seismic_trace>> &line) {
@@ -233,10 +233,10 @@ void segy_reader::get_traces(
 	line.resize(trcs.size());
 	
 	for (int i = 0; i < trcs.size(); ++i) 
-        line[i] = get_trace(trcs[i]);
+        line[i] = trace(trcs[i]);
 }
 
-void segy_reader::get_traces(int start_trace, int end_trace,
+void segy_reader::traces(int start_trace, int end_trace,
 	vector<shared_ptr<seismic_trace>> &line) {
 
 	int count = end_trace - start_trace + 1;
@@ -246,70 +246,70 @@ void segy_reader::get_traces(int start_trace, int end_trace,
 	move(start_trace);
 
 	for (int i = 0; i < count; ++i) 
-        line[i] = get_trace(start_trace + i);
+        line[i] = trace(start_trace + i);
 }
 
-vector<shared_ptr<seismic_trace_header>> segy_reader::get_headers(seismic_line_info line_info) {
+vector<shared_ptr<seismic_trace_header>> segy_reader::headers(seismic_line_info line_info) {
 	preprocessing();
 	samples_count();
 
 	vector<shared_ptr<seismic_trace_header>> res;
 
-	if (line_info.by_bounds) {
+	if (line_info.f_by_bounds) {
 		vector<shared_ptr<seismic_trace_header>> buffer;
-		for (int i = 0; i < line_info.bounds.size(); ++i) {
-			get_headers(line_info.bounds[i].first, line_info.bounds[i].second, buffer);
+		for (int i = 0; i < line_info.f_bounds.size(); ++i) {
+			headers(line_info.f_bounds[i].first, line_info.f_bounds[i].second, buffer);
 			res.insert(res.end(), buffer.begin(), buffer.end());
 		}
 	}
 	else {
-		get_headers(line_info.traces_indexes, 1, res);
+		headers(line_info.f_traces_indexes, 1, res);
 	}
 
 	return res;
 }
 
-vector<shared_ptr<seismic_trace_header>> segy_reader::get_headers(int start, int end) {
+vector<shared_ptr<seismic_trace_header>> segy_reader::headers(int start, int end) {
 	vector<shared_ptr<seismic_trace_header>> res;
-	get_headers(start, end, res);
+	headers(start, end, res);
 	return res;
 }
 
-void segy_reader::get_headers(
+void segy_reader::headers(
 	const vector<int> &trcs,
 	int trc_buffer,
-	vector<shared_ptr<seismic_trace_header>> &headers) {
+	vector<shared_ptr<seismic_trace_header>> &headers_buffer) {
 
     smart_buffer.set_trc_capacity(trc_buffer);
 
-	headers.resize(trcs.size());
+    headers_buffer.resize(trcs.size());
 	if (!headers_in_memory) {
 		for (int i = 0; i < trcs.size(); ++i)
-			headers[i] = trace_header(trcs[i]);
+            headers_buffer[i] = header(trcs[i]);
 	}
 	else {
 		for (int i = 0; i < trcs.size(); ++i)
-			headers.push_back(this->headers[trcs[i]]);
+            headers_buffer.push_back(this->f_headers[trcs[i]]);
 	}
 }
 
-void segy_reader::get_headers(
+void segy_reader::headers(
 	int start_trace,
 	int end_trace,
-	vector<shared_ptr<seismic_trace_header>> &headers) {
+	vector<shared_ptr<seismic_trace_header>> &headers_buffer) {
 
 	int count = end_trace - start_trace + 1;
 	int buffer_size = end_trace - start_trace + 1;
     smart_buffer.set_trc_capacity(buffer_size);
-	headers.resize(count);
+    headers_buffer.resize(count);
 	if (!headers_in_memory){
 		move(start_trace);
 		for (int i = 0; i < count; ++i)
-            headers[i] = trace_header(start_trace + i);
+            headers_buffer[i] = header(start_trace + i);
 	}
-	else if (this->headers.size() > end_trace) {
-		auto start_copying = this->headers.cbegin() + start_trace;
-		copy(start_copying, start_copying + count, headers.begin());
+	else if (this->f_headers.size() > end_trace) {
+		auto start_copying = this->f_headers.cbegin() + start_trace;
+		copy(start_copying, start_copying + count, headers_buffer.begin());
 	}
 }
 
@@ -323,40 +323,40 @@ void segy_reader::line_processing(
 
     auto &this_line = line[line_no];
 
-	if (this_line.start_trace == NOT_INDEX) {
-		this_line.name = name_prefix + " " + to_string(line_no);
-		this_line.start_trace = trace_no;
-		this_line.end_trace = trace_no;
-		this_line.traces_indexes.push_back(trace_no);
-		this_line.start = point;
-		this_line.type = type;
+	if (this_line.f_start_trace == NOT_INDEX) {
+		this_line.f_name = name_prefix + " " + to_string(line_no);
+		this_line.f_start_trace = trace_no;
+		this_line.f_end_trace = trace_no;
+		this_line.f_traces_indexes.push_back(trace_no);
+		this_line.f_start_point = point;
+		this_line.f_type = type;
 	}
 	else {
-		if (this_line.end_trace + 1 == trace_no) {
-            this_line.sequential_traces_count++;
-			if (this_line.sequential_traces_count > 3 && !this_line.by_bounds) {
-				this_line.by_bounds = true;
-				this_line.bounds.push_back({ this_line.start_trace, trace_no });
-				this_line.traces_indexes.clear();
-				this_line.traces_indexes.shrink_to_fit();
+		if (this_line.f_end_trace + 1 == trace_no) {
+            this_line.f_sequential_traces_count++;
+			if (this_line.f_sequential_traces_count > 3 && !this_line.f_by_bounds) {
+				this_line.f_by_bounds = true;
+				this_line.f_bounds.push_back({ this_line.f_start_trace, trace_no });
+				this_line.f_traces_indexes.clear();
+				this_line.f_traces_indexes.shrink_to_fit();
 			}
-			else if (this_line.by_bounds) {
-				auto last_bound = --this_line.bounds.end();
+			else if (this_line.f_by_bounds) {
+				auto last_bound = --this_line.f_bounds.end();
 				last_bound->second = trace_no;
 			}
 			else
-                this_line.traces_indexes.push_back(trace_no);
+                this_line.f_traces_indexes.push_back(trace_no);
 		}
 		else {
-			if (this_line.by_bounds)
-				this_line.bounds.push_back({ trace_no, trace_no });
+			if (this_line.f_by_bounds)
+				this_line.f_bounds.push_back({ trace_no, trace_no });
 			else
-                this_line.traces_indexes.push_back(trace_no);
+                this_line.f_traces_indexes.push_back(trace_no);
 		}
-		this_line.end_trace = trace_no;
-		this_line.end = point;
+		this_line.f_end_trace = trace_no;
+		this_line.f_end_point = point;
 	}
-    this_line.traces_count++;
+    this_line.f_traces_count++;
 }
 
 void segy_reader::check_memory_for_headers() {
@@ -405,7 +405,7 @@ void segy_reader::preprocessing() {
 
 	do {
         try {
-            header = dynamic_pointer_cast<segy_trace_header>(trace_header(i));
+            header = dynamic_pointer_cast<segy_trace_header>(this->header(i));
         }
         catch (bad_trace_index& e) {
             break;
@@ -415,7 +415,7 @@ void segy_reader::preprocessing() {
         }
 
 		if (headers_in_memory)
-			headers.push_back(header);
+			f_headers.push_back(header);
         
         VARIANT_VALUE_CAST(int, il, header->iline());
         VARIANT_VALUE_CAST(int, xl, header->crossline());
@@ -435,12 +435,12 @@ void segy_reader::preprocessing() {
 
     // Delete lines with one trace (probably there is 2D seismic)
     for (auto it = iline.begin(); it != iline.end();)
-        if (it->second.traces_count == 1)
+        if (it->second.f_traces_count == 1)
             it = iline.erase(it);
         else
             it++;
     for (auto it = xline.begin(); it != xline.end();)
-        if (it->second.traces_count == 1)
+        if (it->second.f_traces_count == 1)
             it = xline.erase(it);
         else
             it++;
@@ -448,14 +448,14 @@ void segy_reader::preprocessing() {
 	transform(
 		iline.begin(),
 		iline.end(),
-		back_inserter(geometry->lines),
+		back_inserter(f_geometry->f_lines),
 		[](auto &kv) { return kv.second; }
 	);
 	iline.clear();
 	transform(
 		xline.begin(),
 		xline.end(),
-		back_inserter(geometry->lines),
+		back_inserter(f_geometry->f_lines),
 		[](auto &kv) { return kv.second; }
 	);
 	xline.clear();
@@ -521,16 +521,20 @@ void segy_reader::store_traces_to_buffer(int index) {
 void py_segy_reader_init(py::module &m,
 	py::class_<segy_reader, shared_ptr<segy_reader>> &py_segy_reader) {
 
-	py_segy_reader.def(py::init<string, header_map_type, bool, bool, bool>(),
-		py::arg("filename"), 
-		py::arg("header_map_type"), 
-		py::arg("reverse_byte_order_data"),
-		py::arg("reverse_byte_order_header"), 
-		py::arg("autoscale_headers")
+    py::class_<segy_reader_config> reader_config(m, "reader_config");
+    reader_config.def(py::init<>());
+    reader_config.def_property("filename", 
+        [](segy_reader_config &c) { return c.filename; },
+        [](segy_reader_config &c, std::wstring &filename) { c.filename = filename; }
+    );
+    //reader_config.def_property("ebdict_header", &segy_reader_config::ebcdic_header);
+
+	py_segy_reader.def(py::init<segy_reader_config>(),
+		py::arg("config")
 	);
-	py_segy_reader.def(py::init<string, header_map_type>(),
-		py::arg("filename"), 
-		py::arg("header_map_type")
-	);
+    py_segy_reader.def("config", &segy_reader::config);
+    py_segy_reader.def("set_config", &segy_reader::set_config,
+        py::arg("config")
+    );
 }
 #endif

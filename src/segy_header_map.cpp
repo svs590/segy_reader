@@ -18,16 +18,16 @@ segy_header_map::map_standard_req = {
         "For 3-D poststack data, this field should be used for the cross-line number"} },
     { "CDP X", {180, 4, seismic_data_type::INT,
         "X coordinate of ensemble (CDP) position of this trace "
-        "(scalar in Standard TraceHeader bytes 71–72 applies)"} },
+        "(scalar in Standard TraceHeader bytes 71-72 applies)"} },
     { "CDP Y", {184, 4, seismic_data_type::INT,
         "Y coordinate of ensemble (CDP) position of this trace "
-        "(scalar in Standard TraceHeader bytes 71–72 applies)"} },
+        "(scalar in Standard TraceHeader bytes 71-72 applies)"} },
     { "CDP", {20, 4, seismic_data_type::INT,
         "CDP, CMP, CRP, etc"} },
     { "Src X", {72, 4, seismic_data_type::INT,
-        "Source coordinate – X"} },
+        "Source coordinate - X"} },
     { "Src Y", {76, 4, seismic_data_type::INT,
-        "Source coordinate – X"} },
+        "Source coordinate - X"} },
     { "Samples count", {114, 2, seismic_data_type::SHORT,
         "Number of samples in this trace"} },
     { "Sample interval", {116, 2, seismic_data_type::SHORT,
@@ -40,20 +40,20 @@ segy_header_map::map_standard_req = {
 const segy_header_map::map_storage
 segy_header_map::map_standard = {
     { "Trc seq line", {0, 4, seismic_data_type::INT,
-        "Trace sequence number within line — Numbers continue to "
+        "Trace sequence number within line - Numbers continue to "
         "increase if the sameline continues across multiple SEG-Y files"} },
     { "Trc seq no", {4, 4, seismic_data_type::INT,
-        "Trace sequence number within SEG-Y file — Each file starts "
+        "Trace sequence number within SEG-Y file - Each file starts "
         "with tracesequence one"} },
     { "Orig field no", {8, 4, seismic_data_type::INT,
         "Original field record number"} },
     { "Tcr no", {12, 4, seismic_data_type::INT,
         "Trace number within the original field record"} },
     { "Energy src point", {16, 4, seismic_data_type::INT,
-        "Energy source point number — Used when more than one record "
+        "Energy source point number - Used when more than one record "
         "occurs at thesame effective surface location"} },
     { "Ensemble trc no", {24, 4, seismic_data_type::INT,
-        "Trace number within the ensemble — Each ensemble starts with "
+        "Trace number within the ensemble - Each ensemble starts with "
         "trace numberone"} },
     { "Trc id", {28, 2, seismic_data_type::SHORT,
         "Trace identification code"} },
@@ -69,7 +69,7 @@ segy_header_map::map_standard = {
         "Distance from center of the source point to the center of "
         "the receiver group(negative if opposite to direction in which line is shot)"} },
     { "Rec elevation", {40, 4, seismic_data_type::INT,
-        "Elevation of receiver group.  This is, of course,normally equal to or "
+        "Elevation of receiver group. This is, of course,normally equal to or "
         "lower than the surface elevationat the group location"} },
     { "Src elevation", {44, 4, seismic_data_type::INT,
         "Surface elevation at source location"} },
@@ -86,26 +86,26 @@ segy_header_map::map_standard = {
         "of first source event into thatreceiver)"} },
     { "Scalar elevation", {68, 2, seismic_data_type::SHORT,
         "Scalar to be applied to all elevations and depths specified in "
-        "Standard TraceHeader bytes 41–68 to give the real value"} },
+        "Standard TraceHeader bytes 41-68 to give the real value"} },
     { "Scalar coords", {70, 2, seismic_data_type::SHORT,
-        "Scalar to be applied to all coordinates specified in  Standard "
-        "Trace Header bytes73–88 and to bytes Trace Header 181–188 to give "
+        "Scalar to be applied to all coordinates specified in Standard "
+        "Trace Header bytes73-88 and to bytes Trace Header 181-188 to give "
         "the real value"} },
 
     { "Group Y", {80, 4, seismic_data_type::INT,
-        "Source coordinate – X"} },
+        "Source coordinate - X"} },
     { "Group Y", {84, 4, seismic_data_type::INT,
-        "Source coordinate – X"} },
+        "Source coordinate - X"} },
     { "Coord units", {88, 2, seismic_data_type::USHORT,
         "Coordinate units: 1 = Length; 2 = Seconds of arc; 3 = Decimal degrees; "
         "4 = Degrees, minutes, seconds"} },
 
     { "Weather vel", {90, 2, seismic_data_type::SHORT,
         "Weathering velocity (ft/s or m/s as specified in Binary File Header "
-        "bytes 3255–3256)"} },
+        "bytes 3255-3256)"} },
     { "Subweather vel", {92, 2, seismic_data_type::SHORT,
         "Subweathering velocity. (ft/s or m/s as specified in Binary File Header "
-        "bytes3255–3256)"} },
+        "bytes 3255-3256)"} },
     { "Src uphole time", {94, 2, seismic_data_type::USHORT,
         "Uphole time at source in milliseconds"} },
     { "Group uphole time", {96, 2, seismic_data_type::USHORT,
@@ -117,18 +117,18 @@ segy_header_map::map_standard = {
     { "Total static", {102, 2, seismic_data_type::SHORT,
         "Total static applied in milliseconds (Zero if no static hasbeen applied)"} },
     { "Lag A", {104, 2, seismic_data_type::SHORT,
-        "Lag time A — Time in milliseconds between end of 240-bytetrace identification "
+        "Lag time A - Time in milliseconds between end of 240-bytetrace identification "
         "header and time break."} },
     { "Lag B", {106, 2, seismic_data_type::SHORT,
-        "Lag Time B — Time in milliseconds between time break andthe initiation "
+        "Lag Time B - Time in milliseconds between time break andthe initiation "
         "time of the energy source"} },
     { "Rec delay", {108, 2, seismic_data_type::SHORT,
-        "Delay recording time — Time in milliseconds betweeninitiation time of energy "
+        "Delay recording time - Time in milliseconds betweeninitiation time of energy "
         "source and the time when recordingof data samples begins"} },
     { "Mute start", {110, 2, seismic_data_type::SHORT,
-        "Mute time — Start time in milliseconds"} },
+        "Mute time - Start time in milliseconds"} },
     { "Mute end", {112, 2, seismic_data_type::SHORT,
-        "Mute time — Start time in milliseconds"} },
+        "Mute time - Start time in milliseconds"} },
     { "Gain type", {118, 2, seismic_data_type::USHORT,
         "Gain type of field instruments: 1 = fixed; 2 = binary; 3 = floating point"} },
     { "Gain const", {120, 2, seismic_data_type::SHORT,
@@ -200,7 +200,7 @@ segy_header_map::map_standard = {
     { "Shotpoint scalar", {200, 2, seismic_data_type::SHORT,
         "Scalar to be applied to the shotpoint number"} },
     { "Trace units", {202, 2, seismic_data_type::SHORT,
-        "Trace value measurement unit: –1 = Other; 0 = Unknown; 1 = Pascal (Pa); "
+        "Trace value measurement unit: -1 = Other; 0 = Unknown; 1 = Pascal (Pa); "
         "2 = Volts (v); 3 = Millivolts (mV); 4 = Amperes (A); 5 = Meters (m); "
         "6 = Meters per second (m/s); 7 = Meters per second squared (m/s2); 8 = Newton (N); "
         "9 = Watt (W"} },
@@ -211,20 +211,20 @@ segy_header_map::map_standard = {
         "Transduction Constant power. The multiplicative constant used to convert the DataTrace "
         "samples to the Transduction Units"} },
     { "Trans units", {210, 2, seismic_data_type::SHORT,
-        "Transduction Units — The unit of measurement of the Data Trace samples afterthey "
-        "have been multiplied by the Transduction Constant: –1 = Other; 0 = Unknown; 1 = Pascal (Pa); "
+        "Transduction Units - The unit of measurement of the Data Trace samples afterthey "
+        "have been multiplied by the Transduction Constant: -1 = Other; 0 = Unknown; 1 = Pascal (Pa); "
         "2 = Volts (v); 3 = Millivolts (mV); 4 = Amperes (A); 5 = Meters (m); 6 = Meters per second (m/s); "
         "7 = Meters per second squared (m/s2); 8 = Newton (N); 9 = Watt (W)"} },
     { "Trc id", {212, 2, seismic_data_type::SHORT,
-        "Device/Trace Identifier — The unit number or id number of the device associatedwith the Data Trace"} },
+        "Device/Trace Identifier - The unit number or id number of the device associatedwith the Data Trace"} },
     { "Time scal", {214, 2, seismic_data_type::SHORT,
-        "Scalar to be applied to times specified in Trace Header bytes 95–114 to give "
+        "Scalar to be applied to times specified in Trace Header bytes 95-114 to give "
         "thetrue time value in milliseconds"} },
     { "Scr type/orien", {216, 2, seismic_data_type::SHORT,
-        "Source Type/Orientation — Defines the type and the orientation of the energysource. "
+        "Source Type/Orientation - Defines the type and the orientation of the energysource. "
         "The terms vertical, cross-line and in-line refer to the three axes of anorthogonal "
         "coordinate system. The absolute azimuthal orientation of thecoordinate system axes "
-        "should be defined in the CRS.\n–1 to –n = Other; 0 = Unknown; "
+        "should be defined in the CRS.\n-1 to -n = Other; 0 = Unknown; "
         "1 = Vibratory - Vertical orientation; 2 = Vibratory - Cross-line orientation; "
         "3 = Vibratory - In-line orientation; 4 = Impulsive - Vertical orientation; "
         "5 = Impulsive - Cross-line orientation; 6 = Impulsive - In-line orientation; "
@@ -236,11 +236,11 @@ segy_header_map::map_standard = {
     { "Scr enrg dir", {218, 6, seismic_data_type::UNKNOWN,
         "Source Energy Direction with respect to the source orientation"} },
     { "Scr measure", {224, 6, seismic_data_type::UNKNOWN,
-        "Source Measurement — Describes the source effort used to generate the trace"} },
+        "Source Measurement - Describes the source effort used to generate the trace"} },
     */
 
     { "Src units", {230, 2, seismic_data_type::SHORT,
-        "Source Measurement Unit: –1 = Other; 0 = Unknown; 1 = Joule (J); 2 = Kilowatt (kW); "
+        "Source Measurement Unit: -1 = Other; 0 = Unknown; 1 = Joule (J); 2 = Kilowatt (kW); "
         "3 = Pascal (Pa); 4 = Bar (Bar); 4 = Bar-meter (Bar-m); 5 = Newton (N); 6 = Kilograms (kg)"} },
 
 };
@@ -275,7 +275,7 @@ segy_header_map::segy_header_map(std::shared_ptr<segy_header_map> map) {
 }
 
 segy_header_map::segy_header_map(std::shared_ptr<seismic_header_map> map) {
-    set(map->to_map());
+    from_map(map->to_map());
 }
 
 void segy_header_map::set_field(
@@ -286,8 +286,14 @@ void segy_header_map::set_field(
     string desc
 ) {
     int index = contains(name);
-    if (index != NOT_INDEX)
-        f_map[index].second = { byte_loc, byte_size, type, desc };
+    if (index != NOT_INDEX) {
+        if (desc.empty())
+            f_map[index].second = { byte_loc, byte_size, type, std::get<3>(f_map[index].second) };
+        else
+            f_map[index].second = { byte_loc, byte_size, type, desc };
+    }
+    else
+        f_map.push_back({ name, { byte_loc, byte_size, type, desc } });
 }
 
 void segy_header_map::remove(const string &name) {
@@ -341,7 +347,7 @@ seismic_header_map::map_storage segy_header_map::to_map() const {
     return f_map;
 }
 
-void segy_header_map::set(const seismic_header_map::map_storage &m) {
+void segy_header_map::from_map(const seismic_header_map::map_storage &m) {
     clear();
     for (int i = 0; i < m.size(); ++i) {
         int index = contains(m[i].first);

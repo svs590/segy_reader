@@ -76,14 +76,14 @@ int main() {
 
 	reader->set_header_map(new_map);
 
-    //auto trc_header = dynamic_pointer_cast<segy_trace_header>(reader->trace_header(0));
+    //auto trc_header = dynamic_pointer_cast<segy_trace_header>(reader->header(0));
     //cout << get<int>(trc_header->CDP_X()) << '\t' << get<int>(trc_header->crossline()) << endl << get<short>(trc_header->samples_count()) << endl;
 
-    auto trace = reader->get_trace(300);
-    trace = reader->get_trace(300);
-    trace = reader->get_trace(300);
-    trace = reader->get_trace(300);
-    auto trc_data = get<Eigen::Matrix<float, -1, 1>>(trace->get_data());
+    auto trace = reader->trace(300);
+    trace = reader->trace(300);
+    trace = reader->trace(300);
+    trace = reader->trace(300);
+    auto trc_data = get<Eigen::Matrix<float, -1, 1>>(trace->data());
     //cout << trc_data << endl;
     cout << trc_data.rows() << ' ' << trc_data.minCoeff() << ' ' << trc_data.maxCoeff() << endl;
 
@@ -94,39 +94,39 @@ int main() {
     trcfile.close();
 
     /*
-	auto trace0 = reader->get_trace(0);
-	auto header0 = trace0->get_header();
+	auto trace0 = reader->trace(0);
+	auto header0 = trace0->header();
 
 	
 
     */
 	cout << "Preprocessing..." << endl;
-	auto start = system_clock::now();
+	auto f_start_point = system_clock::now();
 	reader->preprocessing();
-	auto end = system_clock::now();
+	auto f_end_point = system_clock::now();
 	cout << "Done" << endl;
-	cout << "Preprocessing time: " << duration_cast<milliseconds>(end - start).count() << endl;
+	cout << "Preprocessing time: " << duration_cast<milliseconds>(f_end_point - f_start_point).count() << endl;
 
     /*
 	auto segyreader = dynamic_pointer_cast<segy_reader>(reader);
 
-	auto iline_headers = segyreader->get_headers(segyreader->get_geometry()->get_lines()[1200]);
+	auto iline_headers = segyreader->headers(segyreader->geometry()->lines()[1200]);
 
 	start = system_clock::now();
 	for (int i = 0; i < 100; ++i) {
 		cout << i << endl;
-		auto iline = segyreader->get_traces(segyreader->get_geometry()->get_lines()[i]);
+		auto iline = segyreader->traces(segyreader->geometry()->lines()[i]);
 	}
 	end = system_clock::now();
 	cout << "100 Line time: " << duration_cast<milliseconds>(end - start).count() << endl;
     */
 
     int n = reader->samples_count();
-	auto iline = reader->get_traces(reader->get_geometry()->get_lines()[0]);
+	auto iline = reader->traces(reader->geometry()->lines()[0]);
 	//ofstream ilinefile("iline.dat");
 	for (int i = 0; i < iline.size(); ++i) {
 		int x = i;
-		auto &data = get<Eigen::Matrix<float, -1, 1>>(iline[i]->get_data());
+		auto &data = get<Eigen::Matrix<float, -1, 1>>(iline[i]->data());
 		//for (int j = 0; j < data.rows(); ++j) {
 		//	int y = n - j;
 		//	ilinefile << x << '\t' << y << '\t' << data(j) << endl;
@@ -135,8 +135,8 @@ int main() {
 	//ilinefile.close();
 	
     /*
-	auto t = reader->get_trace(100000);
-	auto th = t->get_header();
+	auto t = reader->trace(100000);
+	auto th = t->header();
 	for (int i = 0; i < th->count(); ++i) {
 		cout << th->name(i) << '\t';
 		int ibuf;
@@ -163,7 +163,7 @@ int main() {
 	}
 
 	ofstream fout("trace.dat");
-	auto trace_data = t->get_data();
+	auto trace_data = t->data();
 	for (int i = 0; i < trace_data.loaded_trc_count(); ++i)
 		fout << trace_data[i] << endl;
 	fout.close();

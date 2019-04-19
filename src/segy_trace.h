@@ -44,9 +44,9 @@ public:
     );
 	~segy_trace();
 
-	virtual std::shared_ptr<seismic_trace_header> get_header();
+	virtual std::shared_ptr<seismic_trace_header> header();
 	virtual void set_header(std::shared_ptr<seismic_trace_header> header);
-	virtual seismic_variant_vector &get_data();
+	virtual seismic_variant_vector &data();
 	virtual void set_data(const seismic_variant_vector &data);
 
 	virtual object_type type_id() { return object_type::SEGY_TRACE; }

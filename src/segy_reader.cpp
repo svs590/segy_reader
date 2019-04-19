@@ -2,6 +2,7 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
+#include <bitset>
 
 #include "segy_reader.h"
 #include "segy_bin_header.h"
@@ -9,7 +10,7 @@
 #include "utils.h"
 #include "data_conversion.h"
 #include "segy_file.h"
-#include <bitset>
+#include "seismic_exception.h"
 
 #include <Eigen/Dense>
 
@@ -131,12 +132,16 @@ void segy_reader::move(int trc_index) {
     if (smart_buffer.is_header_loaded(trc_index))
         return;
 
-    int64_t relative_pos = f_first_trc_offset
+    int64_t pos = f_first_trc_offset
         + (int64_t)trc_index * (
             (int64_t)segy_file::trace_header_size
             + (int64_t)f_samples_count * (int64_t)segy_data_format_size(f_bin_header->data_format())
         );
-    f_istream.seekg(relative_pos, ios::beg);
+
+    if (pos > f_filesize)
+        throw bad_trace_index();
+
+    f_istream.seekg(pos, ios::beg);
 
     if (f_istream.fail())
         throw runtime_error("segy_reader: unexpected error occurred while moving to trace "
@@ -144,20 +149,25 @@ void segy_reader::move(int trc_index) {
 }
 
 shared_ptr<seismic_trace> segy_reader::get_trace(int index) {
-    if (smart_buffer.is_trc_loaded(index)) {
+    if (smart_buffer.is_trc_loaded(index))
         return smart_buffer.get_trace(index);
-    }
 
     store_traces_to_buffer(index);
-    return get_trace(index);
+    if (smart_buffer.is_trc_loaded(index))
+        return smart_buffer.get_trace(index);
+    else
+        throw bad_trace_index();
 }
 
 shared_ptr<seismic_trace_header> segy_reader::trace_header(int index) {
-    if (smart_buffer.is_trc_loaded(index)) {
+    if (smart_buffer.is_trc_loaded(index))
         return smart_buffer.get_header(index);
-    }
+
     store_traces_to_buffer(index);
-    return trace_header(index);
+    if (smart_buffer.is_trc_loaded(index))
+        return smart_buffer.get_header(index);
+    else 
+        throw bad_trace_index();
 }
 
 shared_ptr<seismic_header_map> segy_reader::header_map() {
@@ -173,17 +183,17 @@ string segy_reader::text_header() {
 	if (!f_text_header.empty())
 		return f_text_header;
 
-	char *buf = new char[segy_file::text_header_size];
+	vector<char> buf(segy_file::text_header_size);
 
 	f_istream.seekg(0);
-	f_istream.read(buf, segy_file::text_header_size);
+	f_istream.read(buf.data(), segy_file::text_header_size);
 	if (f_istream.fail()) 
 		throw runtime_error("segy_reader: unexpected error occurred when reading segy text header");
 	
 	if (f_config.ebcdic_header)
-		f_text_header = ebcdic_to_char(buf);
+		f_text_header = ebcdic_to_char(buf.data());
 	else
-		f_text_header = string(buf);
+		f_text_header = string(buf.data());
 	
 	return f_text_header;
 }
@@ -311,39 +321,42 @@ void segy_reader::line_processing(
 	int trace_no,
 	pair<float, float> point) {
 
-	if (line[line_no].start_trace == NOT_INDEX) {
-		line[line_no].name = name_prefix + " " + to_string(line_no);
-		line[line_no].start_trace = trace_no;
-		line[line_no].end_trace = trace_no;
-		line[line_no].traces_indexes.push_back(trace_no);
-		line[line_no].start = point;
-		line[line_no].type = type;
+    auto &this_line = line[line_no];
+
+	if (this_line.start_trace == NOT_INDEX) {
+		this_line.name = name_prefix + " " + to_string(line_no);
+		this_line.start_trace = trace_no;
+		this_line.end_trace = trace_no;
+		this_line.traces_indexes.push_back(trace_no);
+		this_line.start = point;
+		this_line.type = type;
 	}
 	else {
-		if (line[line_no].end_trace + 1 == trace_no) {
-			line[line_no].sequential_traces_count++;
-			if (line[line_no].sequential_traces_count > 3 && !line[line_no].by_bounds) {
-				line[line_no].by_bounds = true;
-				line[line_no].bounds.push_back({ line[line_no].start_trace, trace_no });
-				line[line_no].traces_indexes.clear();
-				line[line_no].traces_indexes.shrink_to_fit();
+		if (this_line.end_trace + 1 == trace_no) {
+            this_line.sequential_traces_count++;
+			if (this_line.sequential_traces_count > 3 && !this_line.by_bounds) {
+				this_line.by_bounds = true;
+				this_line.bounds.push_back({ this_line.start_trace, trace_no });
+				this_line.traces_indexes.clear();
+				this_line.traces_indexes.shrink_to_fit();
 			}
-			else if (line[line_no].by_bounds) {
-				auto last_bound = --line[line_no].bounds.end();
+			else if (this_line.by_bounds) {
+				auto last_bound = --this_line.bounds.end();
 				last_bound->second = trace_no;
 			}
 			else
-				line[line_no].traces_indexes.push_back(trace_no);
+                this_line.traces_indexes.push_back(trace_no);
 		}
 		else {
-			if (line[line_no].by_bounds)
-				line[line_no].bounds.push_back({ trace_no, trace_no });
+			if (this_line.by_bounds)
+				this_line.bounds.push_back({ trace_no, trace_no });
 			else
-				line[line_no].traces_indexes.push_back(trace_no);
+                this_line.traces_indexes.push_back(trace_no);
 		}
-		line[line_no].end_trace = trace_no;
-		line[line_no].end = point;
+		this_line.end_trace = trace_no;
+		this_line.end = point;
 	}
+    this_line.traces_count++;
 }
 
 void segy_reader::check_memory_for_headers() {
@@ -381,14 +394,25 @@ void segy_reader::preprocessing() {
 	if (y_index != NOT_INDEX)
 		y_coord_present = true;
 
-	int count = traces_count();
+	size_t count = (size_t)traces_count();
 
 	check_memory_for_headers();
-    smart_buffer.set_optimal_capacity();
+    smart_buffer.set_optimal_capacity(count);
 
+    shared_ptr<segy_trace_header> header;
 	int i = 0;
+    bool flag = true;
+
 	do {
-        auto header = dynamic_pointer_cast<segy_trace_header>(trace_header(i));
+        try {
+            header = dynamic_pointer_cast<segy_trace_header>(trace_header(i));
+        }
+        catch (bad_trace_index& e) {
+            break;
+        }
+        catch (end_of_file& e) {
+            break;
+        }
 
 		if (headers_in_memory)
 			headers.push_back(header);
@@ -405,9 +429,21 @@ void segy_reader::preprocessing() {
 		line_processing(xline,
 			seismic_line_info::seismic_line_type::xline, "Xline", xl, i, { x, y });
 		++i;
-	} while (i < count);
+	} while (flag);
 
     f_traces_count = i;
+
+    // Delete lines with one trace (probably there is 2D seismic)
+    for (auto it = iline.begin(); it != iline.end();)
+        if (it->second.traces_count == 1)
+            it = iline.erase(it);
+        else
+            it++;
+    for (auto it = xline.begin(); it != xline.end();)
+        if (it->second.traces_count == 1)
+            it = xline.erase(it);
+        else
+            it++;
 
 	transform(
 		iline.begin(),
@@ -457,6 +493,13 @@ void segy_reader::store_traces_to_buffer(int index) {
     else if (smart_buffer.fail()) {
         size_t underloaded_bytes = smart_buffer.underload();
         vector<byte_t> tmp(underloaded_bytes);
+
+        size_t pos = (size_t)f_istream.tellg();
+        if (pos + underloaded_bytes > f_filesize)
+            underloaded_bytes = f_filesize - pos;
+        if (underloaded_bytes == 0)
+            throw end_of_file();
+
         f_istream.read((char*)tmp.data(), underloaded_bytes);
         smart_buffer.parse_underloaded(tmp);
         return;
@@ -466,6 +509,9 @@ void segy_reader::store_traces_to_buffer(int index) {
     size_t pos = (size_t)f_istream.tellg();
     if (pos + bytes_count > f_filesize)
         bytes_count = f_filesize - pos;
+    if (bytes_count == 0)
+        throw end_of_file();
+
     memset(smart_buffer.raw(), 0, smart_buffer.raw_size());
     f_istream.read((char*)smart_buffer.raw(), bytes_count);
     smart_buffer.parse(index);

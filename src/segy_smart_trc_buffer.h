@@ -54,7 +54,7 @@ public:
     size_t                                          underload() { return f_underload; }
     void                                            parse_underloaded(const std::vector<byte_t> &raw_underload);
 
-    void                                            set_optimal_capacity();
+    void                                            set_optimal_capacity(size_t max_cap);
 
     byte_t                                          *raw();
 

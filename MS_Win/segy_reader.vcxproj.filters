@@ -90,6 +90,9 @@
     <ClInclude Include="..\src\segy_smart_trc_buffer.h">
       <Filter>Файлы заголовков\segy</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\seismic_exception.h">
+      <Filter>Файлы заголовков\base</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\test.cpp">

@@ -23,10 +23,10 @@ void smart_trc_buffer::set_trc_capacity(size_t cap) {
     f_headers_buffer.resize(cap);
 }
 
-void smart_trc_buffer::set_optimal_capacity() {
+void smart_trc_buffer::set_optimal_capacity(size_t max_cap) {
     size_t new_cap = 0.3 * get_available_memory() / 2 
         / (segy_file::trace_header_size + f_bin_header->samples_count() * segy_data_format_size(f_bin_header->data_format()));
-    set_trc_capacity(new_cap);
+    set_trc_capacity(new_cap < max_cap ? new_cap : max_cap);
 }
 
 void smart_trc_buffer::load(const vector<byte_t> &raw_buffer, size_t absolute_index_start_trc) {
@@ -68,7 +68,7 @@ void smart_trc_buffer::parse(size_t absolute_index_start_trc) {
 }
 
 void smart_trc_buffer::_parse(size_t start_offset) {
-    size_t samples_count;
+    size_t samples_count = 0;
     size_t offset = start_offset;
 
     while (offset < f_raw_buffer.size()) {

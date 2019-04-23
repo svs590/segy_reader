@@ -47,6 +47,7 @@ for info in reader.header_map().to_dict():
 ''' Trace 300000 '''
 trc = reader.trace(300000)
 header = trc.header()
+print(f'Trace CDP X: {header.CDP_X()}')
 print(f'Trace header: {header.to_dict()}')
 print(f'Trace data: {trc.data()}')
 

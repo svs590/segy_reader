@@ -1,5 +1,6 @@
 #include <map>
 #include <string>
+#include <iostream>
 
 #include "segy_trace_header.h"
 #include "utils.h"
@@ -61,6 +62,8 @@ void segy_trace_header::parse_required() {
     f_samples_count     = get("Samples count");
     f_sample_interval   = get("Sample interval");
 
+    f_coord_scalar      = get("Scalar coords");
+
     f_req_field_init    = true;
 }
 
@@ -113,6 +116,13 @@ seismic_variant_value segy_trace_header::Src_Y() {
         return (int)0;
 }
 
+seismic_variant_value segy_trace_header::coord_scalar() {
+    if (f_req_field_init)
+        return f_coord_scalar;
+    else
+        return (int)1;
+}
+
 seismic_variant_value segy_trace_header::samples_count() {
     if (f_req_field_init)
         return f_samples_count;
@@ -126,6 +136,25 @@ seismic_variant_value segy_trace_header::sample_interval() {
     else
         return NOT_INDEX;
 }
+
+seismic_variant_value segy_trace_header::X() {
+    if (f_req_field_init) {
+        seismic_variant_value res;
+        int64_t scalar;
+        VARIANT_VALUE_CAST(int64_t, scalar, f_coord_scalar);
+        if (scalar == 0)
+            f_coord_scalar = (short)1;
+        VARIANT_VALUE_OPERATION(f_CDP_X, f_coord_scalar, res, *);
+        return res;
+    }
+    else
+        return NOT_INDEX;
+}
+
+seismic_variant_value segy_trace_header::Y() {
+    return 0.;
+}
+
 
 int segy_trace_header::count() const {
 	return 0;

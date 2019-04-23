@@ -80,6 +80,7 @@ int main() {
     //cout << get<int>(trc_header->CDP_X()) << '\t' << get<int>(trc_header->crossline()) << endl << get<short>(trc_header->samples_count()) << endl;
 
     auto trace = reader->trace(300);
+    cout << std::get<int>(dynamic_pointer_cast<segy_trace_header>(trace->header())->X()) << endl;
     trace = reader->trace(300);
     trace = reader->trace(300);
     trace = reader->trace(300);

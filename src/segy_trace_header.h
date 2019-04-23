@@ -54,8 +54,11 @@ public:
     seismic_variant_value                   CDP();
     seismic_variant_value                   Src_X();
     seismic_variant_value                   Src_Y();
+    seismic_variant_value                   coord_scalar();
     seismic_variant_value                   samples_count();
     seismic_variant_value                   sample_interval();
+    seismic_variant_value                   X();
+    seismic_variant_value                   Y();
 
 private:
     void parse_required();
@@ -67,6 +70,7 @@ private:
     seismic_variant_value                   f_CDP;
     seismic_variant_value                   f_Src_X;
     seismic_variant_value                   f_Src_Y;
+    seismic_variant_value                   f_coord_scalar;
     seismic_variant_value                   f_samples_count;
     seismic_variant_value                   f_sample_interval;
 

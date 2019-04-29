@@ -399,7 +399,7 @@ void segy_reader::preprocessing() {
 
 	check_memory_for_headers();
     smart_buffer.set_optimal_capacity(count);
-    cout << smart_buffer.trc_capacity() << endl;
+
     shared_ptr<segy_trace_header> header;
 	int i = 0;
     bool flag = true;

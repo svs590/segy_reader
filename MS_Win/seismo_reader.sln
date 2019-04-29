@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2048
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "segy_reader", "segy_reader.vcxproj", "{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "seismo_reader", "seismo_reader.vcxproj", "{45552E7A-D70A-41C5-9DE8-FE17B4A8F4EA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

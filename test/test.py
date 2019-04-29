@@ -4,7 +4,7 @@
 import sys
 sys.path.insert(0, '../bin')
 
-import segy_reader as sgr
+import seismo_reader as sgr
 import matplotlib.pyplot as plt
 import numpy as np
 from timeit import default_timer as timer
@@ -47,7 +47,7 @@ for info in reader.header_map().to_dict():
 ''' Trace 300000 '''
 trc = reader.trace(300000)
 header = trc.header()
-print(f'Trace CDP X: {header.CDP_X()}')
+#print(f'Trace CDP X: {header.CDP_X()}')
 print(f'Trace header: {header.to_dict()}')
 print(f'Trace data: {trc.data()}')
 

@@ -16,7 +16,7 @@ namespace py = pybind11;
 using namespace std;
 
 
-PYBIND11_MODULE(segy_reader, m)
+PYBIND11_MODULE(seismo_reader, m)
 {
 	m.doc() = "Python segy_reader plugin";
 

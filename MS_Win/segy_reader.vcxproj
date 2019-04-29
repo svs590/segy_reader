@@ -281,6 +281,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\base.cpp" />
     <ClCompile Include="..\src\data_conversion.cpp" />
+    <ClCompile Include="..\src\data_types.cpp" />
     <ClCompile Include="..\src\py_mudule.cpp" />
     <ClCompile Include="..\src\segy_bin_header.cpp" />
     <ClCompile Include="..\src\segy_file.cpp" />

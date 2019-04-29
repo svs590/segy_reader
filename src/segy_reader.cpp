@@ -69,7 +69,8 @@ void segy_reader::init(bool reopen) {
         f_first_trc_offset = text_headers_size + bin_header_size;
 
     smart_buffer = smart_trc_buffer(f_header_map, f_bin_header);
-    resize_buffer(100);
+    //resize_buffer(100);
+    smart_buffer.set_trc_capacity(1);
 
     f_istream.seekg(f_first_trc_offset, ios::beg);
 }
@@ -398,7 +399,7 @@ void segy_reader::preprocessing() {
 
 	check_memory_for_headers();
     smart_buffer.set_optimal_capacity(count);
-
+    cout << smart_buffer.trc_capacity() << endl;
     shared_ptr<segy_trace_header> header;
 	int i = 0;
     bool flag = true;

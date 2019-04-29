@@ -28,6 +28,7 @@ segy_trace_header::segy_trace_header(const segy_trace_header &header) {
         f_Src_Y             = header.f_Src_Y;
         f_samples_count     = header.f_samples_count;
         f_sample_interval   = header.f_sample_interval;
+        f_coord_scalar      = header.f_coord_scalar;
     }
 
     f_req_field_init        = header.f_req_field_init;
@@ -63,6 +64,9 @@ void segy_trace_header::parse_required() {
     f_sample_interval   = get("Sample interval");
 
     f_coord_scalar      = get("Scalar coords");
+    using namespace seismic_variant_operations;
+    if (f_coord_scalar == 0)
+        f_coord_scalar = (short)1;
 
     f_req_field_init    = true;
 }
@@ -139,12 +143,8 @@ seismic_variant_value segy_trace_header::sample_interval() {
 
 seismic_variant_value segy_trace_header::X() {
     if (f_req_field_init) {
-        seismic_variant_value res;
-        int64_t scalar;
-        VARIANT_VALUE_CAST(int64_t, scalar, f_coord_scalar);
-        if (scalar == 0)
-            f_coord_scalar = (short)1;
-        VARIANT_VALUE_OPERATION(f_CDP_X, f_coord_scalar, res, *);
+        using namespace seismic_variant_operations;
+        auto res = f_CDP_X * f_coord_scalar;
         return res;
     }
     else
@@ -152,7 +152,13 @@ seismic_variant_value segy_trace_header::X() {
 }
 
 seismic_variant_value segy_trace_header::Y() {
-    return 0.;
+    if (f_req_field_init) {
+        using namespace seismic_variant_operations;
+        auto res = f_CDP_Y * f_coord_scalar;
+        return res;
+    }
+    else
+        return NOT_INDEX;
 }
 
 

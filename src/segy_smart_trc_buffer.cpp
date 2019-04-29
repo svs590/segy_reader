@@ -21,6 +21,7 @@ void smart_trc_buffer::set_trc_capacity(size_t cap) {
         segy_file::trace_header_size + f_bin_header->samples_count() * segy_data_format_size(f_bin_header->data_format()))
     );
     f_headers_buffer.resize(cap);
+    f_size = (f_size > 0) ? (f_size <= cap) ? f_size : cap : 0;
 }
 
 void smart_trc_buffer::set_optimal_capacity(size_t max_cap) {

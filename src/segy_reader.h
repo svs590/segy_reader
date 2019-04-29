@@ -53,6 +53,7 @@ class segy_reader : public seismic_data_provider {
     size_t f_filesize;
     size_t f_first_trc_offset;
 
+    size_t buffer_default_size = 1;
     smart_trc_buffer smart_buffer;
 
 public:

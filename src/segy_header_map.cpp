@@ -31,7 +31,11 @@ segy_header_map::map_standard_req = {
     { "Samples count", {114, 2, seismic_data_type::SHORT,
         "Number of samples in this trace"} },
     { "Sample interval", {116, 2, seismic_data_type::SHORT,
-        "Sample interval for this trace"} }
+        "Sample interval for this trace"} },
+    { "Scalar coords", {70, 2, seismic_data_type::SHORT,
+        "Scalar to be applied to all coordinates specified in Standard "
+        "Trace Header bytes73-88 and to bytes Trace Header 181-188 to give "
+        "the real value"} }
 };
 
 /*
@@ -87,10 +91,6 @@ segy_header_map::map_standard = {
     { "Scalar elevation", {68, 2, seismic_data_type::SHORT,
         "Scalar to be applied to all elevations and depths specified in "
         "Standard TraceHeader bytes 41-68 to give the real value"} },
-    { "Scalar coords", {70, 2, seismic_data_type::SHORT,
-        "Scalar to be applied to all coordinates specified in Standard "
-        "Trace Header bytes73-88 and to bytes Trace Header 181-188 to give "
-        "the real value"} },
 
     { "Group Y", {80, 4, seismic_data_type::INT,
         "Source coordinate - X"} },

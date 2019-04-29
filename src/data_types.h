@@ -3,6 +3,7 @@
 #include <variant>
 #include <string>
 #include <cstdint>
+#include <numeric>
 
 #include <Eigen/Dense>
 
@@ -17,14 +18,16 @@ typedef unsigned char byte_t;
 using seismic_variant_value =
 std::variant<
     char,
+    byte_t,
     short,
     unsigned short,
     int,
+    unsigned int,
     int64_t,
     uint64_t,
     float,
-    double,
-    std::string
+    //std::string,
+    double
 >;
 
 using seismic_variant_vector = std::variant<
@@ -60,51 +63,12 @@ using seismic_variant_vector = std::variant<
         value_out = static_cast<type_out>(std::get<char>(variant_value));           \
 }
 
+namespace seismic_variant_operations {
+    seismic_variant_value operator+(const seismic_variant_value& left, const seismic_variant_value& right);
+    seismic_variant_value operator*(const seismic_variant_value& left, const seismic_variant_value& right);
 
-#define VARIANT_VALUE_OPERATION_CASE_LINE(val_1, val_2, res, type, op)              \
-{                                                                                   \
-    type a, b;                                                                      \
-    VARIANT_VALUE_CAST(type, a, val_1)                                              \
-    VARIANT_VALUE_CAST(type, b, val_2)                                              \
-    res = static_cast<type>(a op b);                                                \
-}
-
-#define VARIANT_VALUE_OPERATION(val_1, val_2, res, op) {                            \
-    int t1 = val_1.index();                                                         \
-    int t2 = val_2.index();                                                         \
-    int t;                                                                          \
-    if (t1 >= t2)                                                                   \
-        t = t1;                                                                     \
-    else                                                                            \
-        t = t2;                                                                     \
-    switch (t) {                                                                    \
-    case 0:                                                                         \
-        VARIANT_VALUE_OPERATION_CASE_LINE(val_1, val_2, res, char, op)              \
-        break;                                                                      \
-    case 1:                                                                         \
-        VARIANT_VALUE_OPERATION_CASE_LINE(val_1, val_2, res, short, op)             \
-        break;                                                                      \
-    case 2:                                                                         \
-        VARIANT_VALUE_OPERATION_CASE_LINE(val_1, val_2, res, unsigned short, op)    \
-        break;                                                                      \
-    case 3:                                                                         \
-        VARIANT_VALUE_OPERATION_CASE_LINE(val_1, val_2, res, int, op)               \
-        break;                                                                      \
-    case 4:                                                                         \
-        VARIANT_VALUE_OPERATION_CASE_LINE(val_1, val_2, res, int64_t, op)           \
-        break;                                                                      \
-    case 5:                                                                         \
-        VARIANT_VALUE_OPERATION_CASE_LINE(val_1, val_2, res, uint64_t, op)          \
-        break;                                                                      \
-    case 6:                                                                         \
-        VARIANT_VALUE_OPERATION_CASE_LINE(val_1, val_2, res, float, op)             \
-        break;                                                                      \
-    case 7:                                                                         \
-        VARIANT_VALUE_OPERATION_CASE_LINE(val_1, val_2, res, double, op)            \
-        break;                                                                      \
-    default:                                                                        \
-        break;                                                                      \
-    }                                                                               \
+    template <typename T>
+    bool operator==(const seismic_variant_value &left, T right);
 }
 
 enum class seismic_data_type {

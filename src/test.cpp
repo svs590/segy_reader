@@ -101,6 +101,9 @@ int main() {
 	
 
     */
+
+    auto t = reader->headers(0, 5000);
+
 	cout << "Preprocessing..." << endl;
 	auto f_start_point = system_clock::now();
 	reader->preprocessing();

@@ -116,9 +116,6 @@
     <ClCompile Include="..\src\segy_trace_header.cpp">
       <Filter>Исходные файлы\segy</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base.cpp">
-      <Filter>Файлы заголовков\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\data_conversion.cpp">
       <Filter>Исходные файлы\utils</Filter>
     </ClCompile>
@@ -127,6 +124,12 @@
     </ClCompile>
     <ClCompile Include="..\src\segy_smart_trc_buffer.cpp">
       <Filter>Исходные файлы\segy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base.cpp">
+      <Filter>Исходные файлы\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\data_types.cpp">
+      <Filter>Исходные файлы\utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -32,6 +32,7 @@ void segy_reader::init(bool reopen) {
     f_bin_header = nullptr;
     bin_header();
 
+    f_header_map = shared_ptr<seismic_header_map>(new segy_header_map(header_map_type::STANDARD));
     f_geometry = shared_ptr<seismic_geometry_info>(new seismic_geometry_info);
 
     processed = false;

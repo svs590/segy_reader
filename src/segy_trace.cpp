@@ -72,6 +72,22 @@ void segy_trace::set_data(const seismic_variant_vector &data) {
 	f_data = data;
 }
 
+seismic_variant_value segy_trace::X() {
+    return f_header->X();
+}
+
+seismic_variant_value segy_trace::Y() {
+    return f_header->Y();
+}
+
+seismic_variant_value segy_trace::iline() {
+    return f_header->iline();
+}
+
+seismic_variant_value segy_trace::crossline() {
+    return f_header->crossline();
+}
+
 void segy_trace::parse(const byte_t *data, int num_samples, segy_data_format format, endian_order order) {
     switch (format) {
     case segy_data_format::float32_ibm:

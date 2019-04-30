@@ -217,6 +217,10 @@ void py_seismic_trace_header_init(py::module &m,
 		py::arg("field_name"),
 		"Returns field data_type"
 	);
+    py_seismic_trace_header.def("iline", &seismic_trace_header::iline);
+    py_seismic_trace_header.def("crossline", &seismic_trace_header::crossline);
+    py_seismic_trace_header.def("X", &seismic_trace_header::X);
+    py_seismic_trace_header.def("Y", &seismic_trace_header::Y);
 	py_seismic_trace_header.def("to_dict", &seismic_trace_header::to_map);
 }
 
@@ -227,6 +231,11 @@ void py_seismic_trace_init(py::module &m,
 	py_trace.def("set_header", &seismic_trace::set_header);
 	py_trace.def("data", &seismic_trace::data);
 	py_trace.def("set_data", &seismic_trace::set_data);
+
+    py_trace.def("iline", &seismic_trace::iline);
+    py_trace.def("crossline", &seismic_trace::crossline);
+    py_trace.def("X", &seismic_trace::X);
+    py_trace.def("Y", &seismic_trace::Y);
 }
 
 #endif

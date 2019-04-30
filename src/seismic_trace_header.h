@@ -26,6 +26,11 @@ public:
     virtual void set(const std::map<std::string, seismic_variant_value> &map) = 0;
     virtual bool is_valid() = 0;
 
+    virtual seismic_variant_value   X() = 0;
+    virtual seismic_variant_value   Y() = 0;
+    virtual seismic_variant_value   iline() = 0;
+    virtual seismic_variant_value   crossline() = 0;
+
 #ifdef PYTHON
 	
 #endif

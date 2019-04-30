@@ -47,8 +47,8 @@ public:
     virtual void set(const std::map<std::string, seismic_variant_value> &map);
     virtual bool is_valid();
 
-    seismic_variant_value                   iline();
-    seismic_variant_value                   crossline();
+    virtual seismic_variant_value           iline();
+    virtual seismic_variant_value           crossline();
     seismic_variant_value                   CDP_X();
     seismic_variant_value                   CDP_Y();
     seismic_variant_value                   CDP();
@@ -57,8 +57,8 @@ public:
     seismic_variant_value                   coord_scalar();
     seismic_variant_value                   samples_count();
     seismic_variant_value                   sample_interval();
-    seismic_variant_value                   X();
-    seismic_variant_value                   Y();
+    virtual seismic_variant_value           X();
+    virtual seismic_variant_value           Y();
 
 private:
     void parse_required();

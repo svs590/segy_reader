@@ -26,6 +26,11 @@ public:
 	virtual void set_header(std::shared_ptr<seismic_trace_header> header) = 0;
 	virtual seismic_variant_vector &data() = 0;
 	virtual void set_data(const seismic_variant_vector &data) = 0;
+
+    virtual seismic_variant_value   X() = 0;
+    virtual seismic_variant_value   Y() = 0;
+    virtual seismic_variant_value   iline() = 0;
+    virtual seismic_variant_value   crossline() = 0;
 };
 
 #ifdef PYTHON

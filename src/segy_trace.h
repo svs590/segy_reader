@@ -49,6 +49,11 @@ public:
 	virtual seismic_variant_vector &data();
 	virtual void set_data(const seismic_variant_vector &data);
 
+    virtual seismic_variant_value   X();
+    virtual seismic_variant_value   Y();
+    virtual seismic_variant_value   iline();
+    virtual seismic_variant_value   crossline();
+
 	virtual object_type type_id() { return object_type::SEGY_TRACE; }
 
 private:

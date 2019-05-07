@@ -4,7 +4,12 @@
 using namespace std;
 
 
-smart_trc_buffer::smart_trc_buffer(shared_ptr<seismic_header_map> header_map, shared_ptr<segy_bin_header> bin_header) {
+smart_trc_buffer::smart_trc_buffer(
+    shared_ptr<seismic_header_map> header_map, 
+    shared_ptr<segy_bin_header> bin_header,
+    segy_coord coord
+) {
+    f_coord = coord;
     reset(header_map, bin_header);
     set_trc_capacity(1);
 }
@@ -77,7 +82,7 @@ void smart_trc_buffer::_parse(size_t start_offset) {
 
         byte_t *raw_header = &f_raw_buffer[offset];
         auto header = shared_ptr<segy_trace_header>(
-            new segy_trace_header(f_header_map, raw_header, f_bin_header->endian())
+            new segy_trace_header(f_header_map, raw_header, f_bin_header->endian(), f_coord)
             );
 
         if (!header->is_valid())

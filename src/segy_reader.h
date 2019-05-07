@@ -17,6 +17,7 @@ namespace bfs = boost::filesystem;
 #include "segy_bin_header.h"
 #include "segy_trace_header.h"
 #include "segy_trace.h"
+#include "segy_file.h"
 
 
 #ifdef PYTHON
@@ -31,6 +32,7 @@ struct segy_reader_config {
     std::wstring filename;
     header_map_type header_map_type = header_map_type::STANDARD;
     bool ebcdic_header              = true;
+    segy_coord coord                = segy_coord::CDP;
 };
 
 class segy_reader : public seismic_data_provider {

@@ -15,9 +15,9 @@
 
 class seismic_trace_header : public obj_base {
 public:
-	virtual int						count() const = 0;
-	virtual int						contains(const std::string &name) const = 0;
-	virtual seismic_data_type		type(const std::string &name) const = 0;
+	virtual size_t                  count() const = 0;
+	virtual int                     contains(const std::string &name) const = 0;
+	virtual seismic_data_type       type(const std::string &name) const = 0;
 
 	virtual seismic_variant_value   get(const std::string &name) const = 0;
 	virtual void                    set(const std::string &name, seismic_variant_value val) = 0;

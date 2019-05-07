@@ -44,6 +44,9 @@ reader.header_map().from_dict(header_map_dict)
 for info in reader.header_map().to_dict():
     print(f'{info} \t {header_map_dict[info]}')
 
+config.coordinates = sgr.segy_coordinates.SRC
+reader.set_config(config)
+
 ''' Trace 300000 '''
 trc = reader.trace(300000)
 header = trc.header()

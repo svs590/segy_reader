@@ -6,6 +6,11 @@ struct segy_file {
 	static const int trace_header_size = 240;
 };
 
+enum class segy_coord {
+    CDP,
+    SRC
+};
+
 enum class segy_data_format {
     float32_ibm         = 1,
     int32_2complement,

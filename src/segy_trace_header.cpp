@@ -17,6 +17,7 @@ segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map) {
 segy_trace_header::segy_trace_header(const segy_trace_header &header) {
     f_map                   = header.f_map;
     f_raw_data              = header.f_raw_data;
+    f_coord                 = header.f_coord;
 
     if (header.f_req_field_init) {
         f_iline             = header.f_iline;
@@ -36,15 +37,21 @@ segy_trace_header::segy_trace_header(const segy_trace_header &header) {
 
 segy_trace_header& segy_trace_header::operator=(const segy_trace_header &obj) {
     f_map = obj.f_map;
+    f_endian_order = obj.f_endian_order;
+    f_coord = obj.f_coord;
     f_raw_data = obj.f_raw_data;
 	return *this;
 }
 
-segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map, 
-    byte_t *raw_data, endian_order order) {
-
+segy_trace_header::segy_trace_header(
+    shared_ptr<seismic_header_map> map, 
+    byte_t *raw_data, 
+    endian_order order,
+    segy_coord coord
+) {
     this->f_map = map;
     f_endian_order = order;
+    f_coord = coord;
     copy(raw_data, raw_data + segy_file::trace_header_size, f_raw_data.data());
     parse_required();
 }
@@ -131,39 +138,43 @@ seismic_variant_value segy_trace_header::samples_count() {
     if (f_req_field_init)
         return f_samples_count;
     else
-        return NOT_INDEX;
+        return (int)0;
 }
 
 seismic_variant_value segy_trace_header::sample_interval() {
     if (f_req_field_init)
         return f_sample_interval;
     else
-        return NOT_INDEX;
+        return (int)0;
 }
 
 seismic_variant_value segy_trace_header::X() {
     if (f_req_field_init) {
         using namespace seismic_variant_operations;
-        auto res = f_CDP_X * f_coord_scalar;
-        return res;
+        if (f_coord == segy_coord::CDP)
+            return f_CDP_X * f_coord_scalar;
+        else
+            return f_Src_X * f_coord_scalar;
     }
     else
-        return NOT_INDEX;
+        return (int)0;
 }
 
 seismic_variant_value segy_trace_header::Y() {
     if (f_req_field_init) {
         using namespace seismic_variant_operations;
-        auto res = f_CDP_Y * f_coord_scalar;
-        return res;
+        if (f_coord == segy_coord::CDP)
+            return f_CDP_Y * f_coord_scalar;
+        else
+            return f_Src_Y * f_coord_scalar;
     }
     else
-        return NOT_INDEX;
+        return (int)0;
 }
 
 
-int segy_trace_header::count() const {
-	return 0;
+size_t segy_trace_header::count() const {
+	return f_map->count();
 }
 
 int segy_trace_header::contains(const string &name) const {
@@ -367,6 +378,11 @@ bool segy_trace_header::is_valid() {
 void py_segy_trace_header_init(py::module &m,
 	py::class_<segy_trace_header,
 	shared_ptr<segy_trace_header>> &py_segy_trace_header) {
+
+    py::enum_<segy_coord>(m, "segy_coordinates")
+        .value("CDP", segy_coord::CDP)
+        .value("SRC", segy_coord::SRC)
+        .export_values();
 
 	py_segy_trace_header.def(py::init<shared_ptr<seismic_header_map>>(),
 		py::arg("header_map")

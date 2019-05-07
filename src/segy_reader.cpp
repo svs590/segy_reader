@@ -18,62 +18,66 @@ using namespace std;
 
 
 void segy_reader::init(bool reopen) {
-    f_headers.clear();
-
     if (reopen) {
+        f_headers.clear();
+
         if (f_istream.is_open())
             close_file();
         open_file();
+
+        f_text_header.clear();
+        text_header();
+
+        f_bin_header = nullptr;
+        bin_header();
+
+        processed = false;
+        headers_in_memory = false;
+
+        f_filesize = bfs::file_size(f_config.filename);
+        f_samples_count = f_bin_header->samples_count();
+
+        int ethc                    = f_bin_header->extended_text_headers_count();
+        int max_trc_addheaders      = f_bin_header->max_add_trc_headers_count();
+        size_t text_headers_size    = segy_file::text_header_size * (1 + ethc);
+        size_t bin_header_size      = segy_file::bin_header_size;
+        size_t max_trc_header_size  = segy_file::trace_header_size * (1 + max_trc_addheaders);
+        size_t data_format_size     = segy_data_format_size(f_bin_header->data_format());
+        bool is_same                = f_bin_header->is_same_for_file();
+
+        if (f_bin_header->is_segy_2() && f_bin_header->stream_traces_count() != 0)
+            f_traces_count = f_bin_header->stream_traces_count();
+        else {
+            f_approx_traces_count = (int64_t)((f_filesize - text_headers_size - bin_header_size) /
+                (max_trc_header_size + (size_t)f_samples_count * data_format_size));
+
+            size_t approx_filesize = text_headers_size + bin_header_size +
+                max_trc_header_size * f_approx_traces_count +
+                f_samples_count * data_format_size * f_approx_traces_count;
+
+            if (!is_same && f_filesize != approx_filesize)
+                cout << "Warning: traces count is approximate, precise count will be "
+                "be received after file preprocessing" << endl;
+        }
+
+        if (f_bin_header->is_segy_2() && f_bin_header->first_trace_offset() != 0)
+            f_first_trc_offset = f_bin_header->first_trace_offset();
+        else
+            f_first_trc_offset = text_headers_size + bin_header_size;
+
+        f_istream.seekg(f_first_trc_offset, ios::beg);
     }
     
-    f_text_header.clear();
-    text_header();
-
-    f_bin_header = nullptr;
-    bin_header();
-
-    f_header_map = shared_ptr<seismic_header_map>(new segy_header_map(header_map_type::STANDARD));
-    f_geometry = shared_ptr<seismic_geometry_info>(new seismic_geometry_info);
-
-    processed = false;
-    headers_in_memory = false;
-
-    f_filesize = bfs::file_size(f_config.filename);
-    f_samples_count = f_bin_header->samples_count();
-
-    int ethc                    = f_bin_header->extended_text_headers_count();
-    int max_trc_addheaders      = f_bin_header->max_add_trc_headers_count();
-    size_t text_headers_size    = segy_file::text_header_size * (1 + ethc);
-    size_t bin_header_size      = segy_file::bin_header_size;
-    size_t max_trc_header_size  = segy_file::trace_header_size * (1 + max_trc_addheaders);
-    size_t data_format_size     = segy_data_format_size(f_bin_header->data_format());
-    bool is_same                = f_bin_header->is_same_for_file();
-
-    if (f_bin_header->is_segy_2() && f_bin_header->stream_traces_count() != 0)
-        f_traces_count = f_bin_header->stream_traces_count();
-    else {
-        f_approx_traces_count = (int64_t)((f_filesize - text_headers_size - bin_header_size) /
-            (max_trc_header_size + (size_t)f_samples_count * data_format_size));
-
-        size_t approx_filesize = text_headers_size + bin_header_size +
-            max_trc_header_size * f_approx_traces_count +
-            f_samples_count * data_format_size * f_approx_traces_count;
-
-        if (!is_same && f_filesize != approx_filesize)
-            cout << "Warning: traces count is approximate, precise count will be "
-            "be received after file preprocessing" << endl;
+    if (f_header_map == nullptr) {
+        f_headers.clear();
+        f_header_map = shared_ptr<seismic_header_map>(new segy_header_map(header_map_type::STANDARD));
     }
 
-    if (f_bin_header->is_segy_2() && f_bin_header->first_trace_offset() != 0)
-        f_first_trc_offset = f_bin_header->first_trace_offset();
-    else
-        f_first_trc_offset = text_headers_size + bin_header_size;
+    if (f_geometry == nullptr)
+        f_geometry = shared_ptr<seismic_geometry_info>(new seismic_geometry_info);
 
-    smart_buffer = smart_trc_buffer(f_header_map, f_bin_header);
-    //resize_buffer(100);
+    smart_buffer = smart_trc_buffer(f_header_map, f_bin_header, f_config.coord);
     smart_buffer.set_trc_capacity(1);
-
-    f_istream.seekg(f_first_trc_offset, ios::beg);
 }
 
 segy_reader::segy_reader(const segy_reader_config &config) {
@@ -86,7 +90,7 @@ segy_reader::~segy_reader() {
 }
 
 void segy_reader::set_config(const segy_reader_config &config) {
-    bool reopen = f_config.filename == config.filename;
+    bool reopen = f_config.filename != config.filename;
     f_config = config;
     init(reopen);
 }
@@ -531,6 +535,10 @@ void py_segy_reader_init(py::module &m,
     reader_config.def_property("filename", 
         [](segy_reader_config &c) { return c.filename; },
         [](segy_reader_config &c, std::wstring &filename) { c.filename = filename; }
+    );
+    reader_config.def_property("coordinates",
+        [](segy_reader_config &c) { return c.coord; },
+        [](segy_reader_config &c, segy_coord coord) { c.coord = coord; }
     );
     //reader_config.def_property("ebdict_header", &segy_reader_config::ebcdic_header);
 

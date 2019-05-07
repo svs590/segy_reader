@@ -11,6 +11,7 @@
 
 #include "seismic_trace_header.h"
 #include "seismic_header_map.h"
+#include "segy_file.h"
 
 #ifdef PYTHON
 #include <pybind11/pybind11.h>
@@ -25,16 +26,21 @@ class segy_trace_header : public seismic_trace_header {
 	std::shared_ptr<seismic_header_map> f_map;
     endian_order f_endian_order = endian_order::big;
     std::array<byte_t, segy_file::trace_header_size> f_raw_data;
+    segy_coord f_coord = segy_coord::CDP;
     bool f_req_field_init = false;
 public:
 	segy_trace_header(std::shared_ptr<seismic_header_map> map);
-    segy_trace_header(std::shared_ptr<seismic_header_map> map, 
-        byte_t *raw_data, endian_order swap);
+    segy_trace_header(
+        std::shared_ptr<seismic_header_map> map, 
+        byte_t *raw_data, 
+        endian_order swap,
+        segy_coord coord = segy_coord::CDP
+    );
 	segy_trace_header(const segy_trace_header &header);
 	~segy_trace_header() {}
 	segy_trace_header& operator=(const segy_trace_header &obj);
 
-	virtual int						count() const;
+	virtual size_t					count() const;
 	virtual int						contains(const std::string &name) const;
 	virtual seismic_data_type		type(const std::string &name) const;
 

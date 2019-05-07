@@ -78,9 +78,15 @@ int main() {
 
     //auto trc_header = dynamic_pointer_cast<segy_trace_header>(reader->header(0));
     //cout << get<int>(trc_header->CDP_X()) << '\t' << get<int>(trc_header->crossline()) << endl << get<short>(trc_header->samples_count()) << endl;
-
     auto trace = reader->trace(300);
     cout << std::get<int>(dynamic_pointer_cast<segy_trace_header>(trace->header())->X()) << endl;
+
+    config.coord = segy_coord::SRC;
+    dynamic_pointer_cast<segy_reader>(reader)->set_config(config);
+
+    trace = reader->trace(300);
+    cout << std::get<int>(dynamic_pointer_cast<segy_trace_header>(trace->header())->X()) << endl;
+
     trace = reader->trace(300);
     trace = reader->trace(300);
     trace = reader->trace(300);

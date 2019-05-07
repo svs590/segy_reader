@@ -138,10 +138,21 @@ void py_seismic_geometry_info_init(py::module &m) {
 	py::class_<seismic_geometry_info, shared_ptr<seismic_geometry_info>>
 		py_geometry_info(m, "geometry_info");
 
+    py::enum_<seismic_geometry_info::seismic_geometry_type>(m, "geometry_type")
+        .value("slice_2D", seismic_geometry_info::seismic_geometry_type::g2D)
+        .value("volume_3D", seismic_geometry_info::seismic_geometry_type::g3D)
+        .value("unknown", seismic_geometry_info::seismic_geometry_type::unknown)
+        .export_values();
+
 	py_geometry_info.def(
-        py::init<const vector<seismic_line_info>&, const vector<seismic_line_info>&>(),
+        py::init<
+            const vector<seismic_line_info>&, 
+            const vector<seismic_line_info>&, 
+            seismic_geometry_info::seismic_geometry_type
+        >(),
 		py::arg("iline_info_array"),
-        py::arg("crossline_info_array")
+        py::arg("crossline_info_array"),
+        py::arg("geometry_type")
 	);
 	py_geometry_info.def("lines", 
         (std::vector<seismic_line_info>
@@ -153,6 +164,10 @@ void py_seismic_geometry_info_init(py::module &m) {
             (seismic_geometry_info::*)(seismic_line_info::seismic_line_type)
         )&seismic_geometry_info::lines,
         "Returns array of line information"
+    );
+    py_geometry_info.def("type",
+        &seismic_geometry_info::geometry_type,
+        "Returns geometry type: 2D, 3D or unknown"
     );
 }
 

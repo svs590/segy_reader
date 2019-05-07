@@ -451,6 +451,11 @@ void segy_reader::preprocessing() {
         else
             it++;
 
+    if (iline.size() == 0 || xline.size() == 0)
+        f_geometry->f_gtype = seismic_geometry_info::seismic_geometry_type::g2D;
+    else
+        f_geometry->f_gtype = seismic_geometry_info::seismic_geometry_type::g3D;
+
     f_geometry->f_ilines.clear();
     f_geometry->f_crosslines.clear();
 

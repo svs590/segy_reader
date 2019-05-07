@@ -60,18 +60,25 @@ protected:
 };
 
 class seismic_geometry_info {
+public:
+    enum class seismic_geometry_type { g2D, g3D, unknown };
+private:
 	std::vector<seismic_line_info> f_ilines;
     std::vector<seismic_line_info> f_crosslines;
+    seismic_geometry_type f_gtype = seismic_geometry_type::unknown;
 public:
 	seismic_geometry_info() {}
 	seismic_geometry_info(
         const std::vector<seismic_line_info> &ilines, 
-        const std::vector<seismic_line_info> &crosslines
+        const std::vector<seismic_line_info> &crosslines,
+        seismic_geometry_type gtype
     ) {
-		this->f_ilines = ilines;
-        this->f_crosslines = crosslines;
+		f_ilines = ilines;
+        f_crosslines = crosslines;
+        f_gtype = gtype;
 	}
 
+    seismic_geometry_type geometry_type() { return f_gtype; }
 
 	std::vector<seismic_line_info> lines() { 
         std::vector<seismic_line_info> res(f_ilines.size() + f_crosslines.size());

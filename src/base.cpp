@@ -138,11 +138,22 @@ void py_seismic_geometry_info_init(py::module &m) {
 	py::class_<seismic_geometry_info, shared_ptr<seismic_geometry_info>>
 		py_geometry_info(m, "geometry_info");
 
-	py_geometry_info.def(py::init<vector<seismic_line_info>>(),
-		py::arg("line_info_array")
+	py_geometry_info.def(
+        py::init<const vector<seismic_line_info>&, const vector<seismic_line_info>&>(),
+		py::arg("iline_info_array"),
+        py::arg("crossline_info_array")
 	);
-	py_geometry_info.def("lines", &seismic_geometry_info::lines,
-		"Returns array of line information");
+	py_geometry_info.def("lines", 
+        (std::vector<seismic_line_info>
+            (seismic_geometry_info::*)())&seismic_geometry_info::lines,
+		"Returns array of line information"
+    );
+    py_geometry_info.def("lines",
+        (std::vector<seismic_line_info>
+            (seismic_geometry_info::*)(seismic_line_info::seismic_line_type)
+        )&seismic_geometry_info::lines,
+        "Returns array of line information"
+    );
 }
 
 void py_seismic_line_info_init(py::module &m) {
@@ -168,8 +179,8 @@ void py_seismic_line_info_init(py::module &m) {
 		py::arg("type")
 	);
 	line_info.def_property_readonly("start_point",	&seismic_line_info::start_point);
-	line_info.def_property_readonly("end_point",		&seismic_line_info::end_point);
-	line_info.def_property_readonly("name",		&seismic_line_info::name);
+	line_info.def_property_readonly("end_point",	&seismic_line_info::end_point);
+	line_info.def_property_readonly("name",		    &seismic_line_info::name);
 }
 
 void py_segy_abstract_header_init(py::module &m,

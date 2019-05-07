@@ -60,14 +60,42 @@ protected:
 };
 
 class seismic_geometry_info {
-	std::vector<seismic_line_info> f_lines;
+	std::vector<seismic_line_info> f_ilines;
+    std::vector<seismic_line_info> f_crosslines;
 public:
 	seismic_geometry_info() {}
-	seismic_geometry_info(std::vector<seismic_line_info> lines) {
-		this->f_lines = lines;
+	seismic_geometry_info(
+        const std::vector<seismic_line_info> &ilines, 
+        const std::vector<seismic_line_info> &crosslines
+    ) {
+		this->f_ilines = ilines;
+        this->f_crosslines = crosslines;
 	}
 
-	std::vector<seismic_line_info> lines() { return f_lines; }
+
+	std::vector<seismic_line_info> lines() { 
+        std::vector<seismic_line_info> res(f_ilines.size() + f_crosslines.size());
+        std::copy(f_ilines.begin(), f_ilines.end(), res.begin());
+        std::copy(f_crosslines.begin(), f_crosslines.end(), res.begin() + f_ilines.size());
+        return res;
+    }
+
+    std::vector<seismic_line_info> lines(seismic_line_info::seismic_line_type line_type) {
+        switch (line_type)
+        {
+        case seismic_line_info::seismic_line_type::iline:
+            return f_ilines;
+            break;
+        case seismic_line_info::seismic_line_type::xline:
+            return f_crosslines;
+            break;
+        case seismic_line_info::seismic_line_type::none:
+            return {};
+            break;
+        default:
+            break;
+        }
+    }
 
 	friend class segy_reader;
 

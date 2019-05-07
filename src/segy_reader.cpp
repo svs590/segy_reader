@@ -447,17 +447,20 @@ void segy_reader::preprocessing() {
         else
             it++;
 
+    f_geometry->f_ilines.clear();
+    f_geometry->f_crosslines.clear();
+
 	transform(
 		iline.begin(),
 		iline.end(),
-		back_inserter(f_geometry->f_lines),
+		back_inserter(f_geometry->f_ilines),
 		[](auto &kv) { return kv.second; }
 	);
 	iline.clear();
 	transform(
 		xline.begin(),
 		xline.end(),
-		back_inserter(f_geometry->f_lines),
+		back_inserter(f_geometry->f_crosslines),
 		[](auto &kv) { return kv.second; }
 	);
 	xline.clear();

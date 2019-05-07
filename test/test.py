@@ -88,6 +88,7 @@ print('Preprocessing done')
 
 geom = reader.geometry()
 lines = geom.lines()
+xlines = geom.lines(sgr.line_type.xline)
 
 for i in range(0, len(lines), 100):
     plt.plot(
@@ -105,7 +106,7 @@ plt.show()
 
 ''' line 370 plot '''
 start = timer()
-l370 = reader.traces(lines[1370])
+l370 = reader.traces(lines[0])
 end = timer()
 print(f'Get line time: {end-start} s')
 

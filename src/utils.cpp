@@ -20,7 +20,7 @@ using namespace std;
 
 
 wstring utf8_to_unicode(const string& internal) {
-	locale::global(locale("en_US.utf8"));
+	//locale::global(locale("en_US.utf8"));
 	auto& f = use_facet<codecvt<char, wchar_t, mbstate_t>>(locale());
 
 	// note that the following can be done with wstring_convert

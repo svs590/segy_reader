@@ -898,13 +898,14 @@ seismic_variant_vector segy_data_to_native<segy_data_format::float32_ibm>(
     endian_order order) {
 
     unsigned fraction;
+    byte_t *f = new byte_t[4];
     int exponent;
     int signum;
 
     Eigen::VectorXf res(buffer_size / 4);
 
     for (int i = 0; i < buffer_size; i += 4) {
-        memcpy(&fraction, &buffer[i], 4);
+        fraction = byte_to_uint(&buffer[i], order);
 
         signum = fraction >> 31;
         fraction <<= 1;

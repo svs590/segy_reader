@@ -359,7 +359,7 @@ map<string, seismic_variant_value> segy_trace_header::to_map() {
 }
 
 void segy_trace_header::set(const std::map<std::string, seismic_variant_value> &map) {
-    throw exception("segy_trace_header: set: method not implemented");
+    throw runtime_error("segy_trace_header: set: method not implemented");
 }
 
 bool segy_trace_header::is_valid() {

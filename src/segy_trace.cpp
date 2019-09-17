@@ -1,5 +1,6 @@
 #include "segy_trace.h"
 #include "data_conversion.h"
+#include <exception>
 
 using namespace std;
 
@@ -100,7 +101,7 @@ void segy_trace::parse(const byte_t *data, int num_samples, segy_data_format for
         DATA_TO_NATIVE_CASE_LINE(segy_data_format::int16_2complement, num_samples, order);
         break;
     case segy_data_format::float32_obsolete:
-        throw exception("segy_trace: parse: float32 obsolete is not supported");
+        throw runtime_error("segy_trace: parse: float32 obsolete is not supported");
         break;
     case segy_data_format::float32:
         DATA_TO_NATIVE_CASE_LINE(segy_data_format::float32, num_samples, order);
@@ -109,7 +110,7 @@ void segy_trace::parse(const byte_t *data, int num_samples, segy_data_format for
         DATA_TO_NATIVE_CASE_LINE(segy_data_format::float64, num_samples, order);
         break;
     case segy_data_format::int24_2complement:
-        throw exception("segy_trace: parse: int24 two's complement is not supported");
+        throw runtime_error("segy_trace: parse: int24 two's complement is not supported");
         break;
     case segy_data_format::int8_2complement:
         DATA_TO_NATIVE_CASE_LINE(segy_data_format::int8_2complement, num_samples, order);
@@ -127,7 +128,7 @@ void segy_trace::parse(const byte_t *data, int num_samples, segy_data_format for
         DATA_TO_NATIVE_CASE_LINE(segy_data_format::uint64, num_samples, order);
         break;
     case segy_data_format::uint24:
-        throw exception("segy_trace: parse: uint24 is not supported");
+        throw runtime_error("segy_trace: parse: uint24 is not supported");
         break;
     case segy_data_format::uint8:
         DATA_TO_NATIVE_CASE_LINE(segy_data_format::uint8, num_samples, order);

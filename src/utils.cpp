@@ -44,7 +44,7 @@ long long get_available_memory() {
 	return statex.ullAvailPhys;
 #elif __linux__
 	// TODO
-	return;
+	return 1024 * 1024 * 1024;
 #endif
 
 }

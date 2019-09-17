@@ -15,7 +15,7 @@ class BinaryDistribution(Distribution):
         return True
 
 
-binaries_required = {'posix' : ['seismo_reader.so'], 'nt' : ['seismo_reader.pyd']}
+binaries_required = {'posix' : ['seismo_reader.so', 'libboost_filesystem.so.1.71.0'], 'nt' : ['seismo_reader.pyd']}
 
 vf = open('version.txt', 'r')
 
@@ -27,7 +27,7 @@ __mask__ = 'seismo_reader*.whl'  # маска файла, по которой б
 if os.name == 'posix':
     __bin_dir__ = '../bin/'
 elif os.name == 'nt':
-    __bin_dir__ = '../bin/'
+    __bin_dir__ = '../bin/Release'
 else:
     print('Current OS is not supported')
     exit(1)
@@ -76,12 +76,7 @@ def collect_bin_files(dir):
         bin_folder = ''
     bin_files = []
     for file in all_files:
-        if file.endswith('.dll'):
-            bin_files.append(os.path.join(bin_folder, os.path.basename(file)))
-        if file.endswith('.pyd'):
-            bin_files.append(os.path.join(bin_folder, os.path.basename(file)))
-        if file.endswith('.so'):
-            bin_files.append(os.path.join(bin_folder, os.path.basename(file)))
+        bin_files.append(os.path.join(bin_folder, os.path.basename(file)))
     print("==> Collecting %d binary files..." % len(bin_files))
     for bin_file in bin_files:
         print("   ==> '%s'" % bin_file)

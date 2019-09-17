@@ -10,7 +10,7 @@ import numpy as np
 from timeit import default_timer as timer
 
 config = sgr.reader_config()
-config.filename = 'D:/FullStack_PSTM.segy'
+config.filename = '~/Documents/FullStack_PSTM.segy'
 reader = sgr.segy_reader(config)
 
 print(reader.text_header())

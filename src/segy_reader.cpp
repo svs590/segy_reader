@@ -1,361 +1,558 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-
-#include "geolib_defines.h"
-#include "csSegyHeader.h"
+#include <iostream>
+#include <bitset>
 
 #include "segy_reader.h"
 #include "segy_bin_header.h"
+#include "segy_header_map.h"
 #include "utils.h"
+#include "data_conversion.h"
+#include "segy_file.h"
+#include "seismic_exception.h"
+
+#include <Eigen/Dense>
 
 using namespace std;
-using namespace cseis_geolib;
 
-DLLIMPORT void* cseis_csNativeSegyReader_createInstance(
-	const char *filename_in,
-	int nTracesBuffer,
-	int segyHeaderMap,
-	bool reverseByteOrderData_in,
-	bool reverseByteOrderHdr_in,
-	bool autoscale_hdrs_in
-);
-DLLIMPORT void				cseis_csNativeSegyReader_deleteInstance(void *obj);
-DLLIMPORT void				cseis_csNativeSegyReader_closeFile(void *obj);
-DLLIMPORT int				cseis_SegyReader_sampleByteSize(void *obj);
-DLLIMPORT int				cseis_SegyReader_numTraces(void *obj);
-DLLIMPORT int				cseis_SegyReader_numSamples(void *obj);
-DLLIMPORT int				cseis_SegyReader_numHeaders(void *obj);
-DLLIMPORT float				cseis_SegyReader_sampleInterval(void *obj);
-DLLIMPORT const void *		cseis_SegyReader_binHeader(void *obj);
-DLLIMPORT const char *		cseis_csSegyReader_1charHeader(void *obj);
-DLLIMPORT int				cseis_csReader_1hdrIntValue(void *obj, int hdrIndex);
-DLLIMPORT float				cseis_csSegyReader_1hdrFloatValue(void *obj, int hdrIndex);
-DLLIMPORT double			cseis_csSegyReader_1hdrDoubleValue(void *obj, int hdrIndex);
-DLLIMPORT bool				cseis_csSegyReader_1moveToTrace(void *obj, int firstTraceIndex, int numTracesToRead);
-DLLIMPORT const float *		cseis_csSegyReader_1getNextTrace(void *obj);
-DLLIMPORT const void * const cseis_csSegyReader_getTrcHdrMap(void *obj);
-DLLIMPORT void				cseis_csNativeSegyReader_charBinHeader(void *obj, char *buf);
-DLLIMPORT bool				cseis_csSegyReader_2moveToTrace(void *obj, int firstTraceIndex);
 
-segy_reader::segy_reader(const void *obj) {
-	this->obj = const_cast<void*>(obj);
+void segy_reader::init(bool reopen) {
+    if (reopen) {
+        f_headers.clear();
+
+        if (f_istream.is_open())
+            close_file();
+        open_file();
+
+        f_text_header.clear();
+        text_header();
+
+        f_bin_header = nullptr;
+        bin_header();
+
+        processed = false;
+        headers_in_memory = false;
+
+        f_filesize = bfs::file_size(f_config.filename);
+        f_samples_count = f_bin_header->samples_count();
+
+        int ethc                    = f_bin_header->extended_text_headers_count();
+        int max_trc_addheaders      = f_bin_header->max_add_trc_headers_count();
+        size_t text_headers_size    = segy_file::text_header_size * (1 + ethc);
+        size_t bin_header_size      = segy_file::bin_header_size;
+        size_t max_trc_header_size  = segy_file::trace_header_size * (1 + max_trc_addheaders);
+        size_t data_format_size     = segy_data_format_size(f_bin_header->data_format());
+        bool is_same                = f_bin_header->is_same_for_file();
+
+        if (f_bin_header->is_segy_2() && f_bin_header->stream_traces_count() != 0)
+            f_traces_count = f_bin_header->stream_traces_count();
+        else {
+            f_approx_traces_count = (int64_t)((f_filesize - text_headers_size - bin_header_size) /
+                (max_trc_header_size + (size_t)f_samples_count * data_format_size));
+
+            size_t approx_filesize = text_headers_size + bin_header_size +
+                max_trc_header_size * f_approx_traces_count +
+                f_samples_count * data_format_size * f_approx_traces_count;
+
+            if (!is_same && f_filesize != approx_filesize)
+                cout << "Warning: traces count is approximate, precise count will be "
+                "be received after file preprocessing" << endl;
+        }
+
+        if (f_bin_header->is_segy_2() && f_bin_header->first_trace_offset() != 0)
+            f_first_trc_offset = f_bin_header->first_trace_offset();
+        else
+            f_first_trc_offset = text_headers_size + bin_header_size;
+
+        f_istream.seekg(f_first_trc_offset, ios::beg);
+    }
+    
+    if (f_header_map == nullptr) {
+        f_headers.clear();
+        f_header_map = shared_ptr<seismic_header_map>(new segy_header_map(header_map_type::STANDARD));
+    }
+
+    if (f_geometry == nullptr)
+        f_geometry = shared_ptr<seismic_geometry_info>(new seismic_geometry_info);
+
+    smart_buffer = smart_trc_buffer(f_header_map, f_bin_header, f_config.coord);
+    smart_buffer.set_trc_capacity(1);
 }
 
-segy_reader::segy_reader(const segy_reader &obj) {
-	this->obj = obj.obj;
+segy_reader::segy_reader(const segy_reader_config &config) {
+    f_config = config;
+    init(true);
 }
 
 segy_reader::~segy_reader() {
-	cseis_csNativeSegyReader_deleteInstance(obj);
+    close_file();
 }
 
-segy_reader& segy_reader::operator=(const void *obj) {
-	this->obj = const_cast<void*>(obj);
-	samples_count = NOT_INDEX;
-	return *this;
+void segy_reader::set_config(const segy_reader_config &config) {
+    bool reopen = f_config.filename != config.filename;
+    f_config = config;
+    init(reopen);
 }
 
-segy_reader::segy_reader(
-	string filename_in,
-	int nTracesBuffer,
-	int segyHeaderMap,
-	bool reverseByteOrderData_in,
-	bool reverseByteOrderHdr_in,
-	bool autoscale_hdrs_in
-) {
-	obj = cseis_csNativeSegyReader_createInstance(
-		filename_in.c_str(),
-		nTracesBuffer,
-		segyHeaderMap,
-		reverseByteOrderData_in,
-		reverseByteOrderHdr_in,
-		autoscale_hdrs_in
-	);
+void segy_reader::close() {
+    close_file();
 }
 
-void segy_reader::closeFile() {
-	cseis_csNativeSegyReader_closeFile(obj);
-}
-int segy_reader::sampleByteSize() {
-	return cseis_SegyReader_sampleByteSize(obj);
-}
-int segy_reader::tracesCount() {
-	return cseis_SegyReader_numTraces(obj);
-}
-int segy_reader::samplesCount() {
-	if (samples_count == NOT_INDEX)
-		samples_count = cseis_SegyReader_numSamples(obj);
-	return samples_count;
-}
-int segy_reader::headersCount() {
-	return cseis_SegyReader_numHeaders(obj);
-}
-float segy_reader::sampleInterval() {
-	return cseis_SegyReader_sampleInterval(obj);
-}
-segy_bin_header segy_reader::binHeader() {
-	return cseis_SegyReader_binHeader(obj);
+int64_t segy_reader::traces_count() {
+    if (f_traces_count == NOT_INDEX)
+        return f_approx_traces_count;
+	return f_traces_count;
 }
 
-void segy_reader::moveToTrace(int firstTraceIndex, int numTracesToRead) {
-	if (!cseis_csSegyReader_1moveToTrace(obj, firstTraceIndex, numTracesToRead))
-		throw std::runtime_error("Error while moving to trace " +
-			to_string(firstTraceIndex));
-}
-void segy_reader::moveToTrace(int firstTraceIndex) {
-	if (!cseis_csSegyReader_2moveToTrace(obj, firstTraceIndex))
-		throw std::runtime_error("Error while moving to trace " +
-			to_string(firstTraceIndex));
-}
-const float *segy_reader::nextTraceRef() {
-	return cseis_csSegyReader_1getNextTrace(obj);
-}
-std::vector<float> segy_reader::getNextTrace() {
-	const float *nativeTrace = nextTraceRef();
-	if (nativeTrace == nullptr)
-		return {};
-
-	samplesCount();
-	std::vector<float> trace(samples_count);
-	std::memcpy((void*)trace.data(), (void*)nativeTrace, samples_count * sizeof(float));
-	return trace;
-}
-std::vector<float> segy_reader::getTrace(int index) {
-	moveToTrace(index, 1);
-	return getNextTrace();
+int segy_reader::samples_count() {
+	if (f_samples_count == NOT_INDEX)
+		f_samples_count = 0;
+	return f_samples_count;
 }
 
-segy_header_map segy_reader::traceHeaderMap() {
-	return cseis_csSegyReader_getTrcHdrMap(obj);
+double segy_reader::sample_interval() {
+    return f_bin_header->sample_interval();
 }
-string segy_reader::charBinHeader() {
-	char *buf = new char[csSegyHeader::SIZE_CHARHDR];
-	cseis_csNativeSegyReader_charBinHeader(obj, buf);
-	auto res = string(buf);
-	delete[] buf;
+
+shared_ptr<seismic_abstract_header> segy_reader::bin_header() {
+	if (f_bin_header != nullptr)
+		return f_bin_header;
+
+	std::vector<byte_t> buf(segy_file::bin_header_size);
+
+	size_t pos = f_istream.tellg();
+	f_istream.seekg(segy_file::text_header_size, ios::beg);
+	f_istream.read((char*)buf.data(), segy_file::bin_header_size);
+	f_istream.seekg(pos, ios::beg);
+
+	if (f_istream.fail())
+		throw runtime_error("segy_reader: unexpected error occurred when reading segy binary header");
+
+	f_bin_header.reset(new segy_bin_header(buf));
+
+	return f_bin_header;
+}
+
+void segy_reader::move(int trc_index) {
+    if (smart_buffer.is_header_loaded(trc_index))
+        return;
+
+    int64_t pos = f_first_trc_offset
+        + (int64_t)trc_index * (
+            (int64_t)segy_file::trace_header_size
+            + (int64_t)f_samples_count * (int64_t)segy_data_format_size(f_bin_header->data_format())
+        );
+
+    if (pos > f_filesize)
+        throw bad_trace_index();
+
+    f_istream.seekg(pos, ios::beg);
+
+    if (f_istream.fail())
+        throw runtime_error("segy_reader: unexpected error occurred while moving to trace "
+            + to_string(trc_index));
+}
+
+shared_ptr<seismic_trace> segy_reader::trace(int index) {
+    if (smart_buffer.is_trc_loaded(index))
+        return smart_buffer.trace(index);
+
+    store_traces_to_buffer(index);
+    if (smart_buffer.is_trc_loaded(index))
+        return smart_buffer.trace(index);
+    else
+        throw bad_trace_index();
+}
+
+shared_ptr<seismic_trace_header> segy_reader::header(int index) {
+    if (smart_buffer.is_trc_loaded(index))
+        return smart_buffer.get_header(index);
+
+    store_traces_to_buffer(index);
+    if (smart_buffer.is_trc_loaded(index))
+        return smart_buffer.get_header(index);
+    else 
+        throw bad_trace_index();
+}
+
+shared_ptr<seismic_header_map> segy_reader::header_map() {
+    return f_header_map;
+}
+
+void segy_reader::set_header_map(shared_ptr<seismic_header_map> map) {
+    f_header_map = map;
+    smart_buffer.reset(map, f_bin_header);
+}
+
+string segy_reader::text_header() {
+	if (!f_text_header.empty())
+		return f_text_header;
+
+	vector<char> buf(segy_file::text_header_size);
+
+	f_istream.seekg(0);
+	f_istream.read(buf.data(), segy_file::text_header_size);
+	if (f_istream.fail()) 
+		throw runtime_error("segy_reader: unexpected error occurred when reading segy text header");
+	
+	if (f_config.ebcdic_header)
+		f_text_header = ebcdic_to_char(buf.data());
+	else
+		f_text_header = string(buf.data());
+	
+	return f_text_header;
+}
+
+vector<shared_ptr<seismic_trace>> segy_reader::traces(int start, int end) {
+	vector<shared_ptr<seismic_trace>> res;
+	traces(start, end, res);
 	return res;
 }
 
-std::vector<float> segy_reader::iline(int il_num) {
-	if (sorting != segy_sorting::unknown)
-		if (!(il_num >= lineMap.il_start) ||
-			!(il_num < lineMap.il_start + lineMap.il_count))
-			throw std::invalid_argument("invalid iline number.");
+vector<shared_ptr<seismic_trace>> segy_reader::traces(seismic_line_info line_info) {
+	preprocessing();
+	samples_count();
 
-	samplesCount();
+	vector<shared_ptr<seismic_trace>> res;
 
-	std::vector<float> res;
-
-	int startTrace = (il_num - lineMap.il_start) * lineMap.il_offset;
-	int count = lineMap.xl_count;
-	int offset;
-	int buffer;
-
-	switch (sorting) {
-	case segy_sorting::iline:
-		offset = lineMap.xl_offset;
-		buffer = 1; // lineMap.xl_count;
-		break;
-	case segy_sorting::xline:
-		offset = lineMap.il_offset;
-		buffer = 1;
-		break;
-	case segy_sorting::unsorted:
-		throw std::exception("reading lines from unsorted .segy file still not inplemented.");
-		break;
-	case segy_sorting::unknown:
-		determineSorting();
-		res = iline(il_num);
-		break;
-	default:
-		return {};
-		break;
+	if (line_info.f_by_bounds) {
+		vector<shared_ptr<seismic_trace>> buffer;
+		for (int i = 0; i < line_info.f_bounds.size(); ++i) {
+			traces(line_info.f_bounds[i].first, line_info.f_bounds[i].second, buffer);
+			res.insert(res.end(), buffer.begin(), buffer.end());
+		}
+	}
+	else {
+		traces(line_info.f_traces_indexes, 1, res);
 	}
 
-	getLine(iline_trcs[il_num], buffer, res);
 	return res;
 }
 
-std::vector<float> segy_reader::xline(int xl_num) {
-	if (sorting != segy_sorting::unknown)
-		if (!(xl_num >= lineMap.xl_start) ||
-			!(xl_num < lineMap.xl_start + lineMap.xl_count))
-			throw std::invalid_argument("invalid xline number.");
+void segy_reader::traces(
+	const vector<int> &trcs, 
+	int trc_buffer, 
+	vector<shared_ptr<seismic_trace>> &line) {
 
-	samplesCount();
+    smart_buffer.set_trc_capacity(trc_buffer);
+	line.resize(trcs.size());
+	
+	for (int i = 0; i < trcs.size(); ++i) 
+        line[i] = trace(trcs[i]);
+}
 
-	std::vector<float> res;
+void segy_reader::traces(int start_trace, int end_trace,
+	vector<shared_ptr<seismic_trace>> &line) {
 
-	int startTrace = (xl_num - lineMap.xl_start) * lineMap.xl_offset;
-	int count = lineMap.il_count;
-	int offset;
-	int buffer;
+	int count = end_trace - start_trace + 1;
+	int buffer_size = end_trace - start_trace + 1;
+    smart_buffer.set_trc_capacity(buffer_size);
+	line.resize(count);
+	move(start_trace);
 
-	switch (sorting) {
-	case segy_sorting::iline:
-		offset = lineMap.il_offset;
-		buffer = 1;
-		break;
+	for (int i = 0; i < count; ++i) 
+        line[i] = trace(start_trace + i);
+}
 
-	case segy_sorting::xline:
-		offset = lineMap.xl_offset;
-		buffer = 1; // lineMap.il_count;
-		break;
-	case segy_sorting::unsorted:
-		throw std::exception("reading lines from unsorted .segy file still not inplemented.");
-		break;
-	case segy_sorting::unknown:
-		determineSorting();
-		res = xline(xl_num);
-		break;
-	default:
-		return {};
-		break;
+vector<shared_ptr<seismic_trace_header>> segy_reader::headers(seismic_line_info line_info) {
+	preprocessing();
+	samples_count();
+
+	vector<shared_ptr<seismic_trace_header>> res;
+
+	if (line_info.f_by_bounds) {
+		vector<shared_ptr<seismic_trace_header>> buffer;
+		for (int i = 0; i < line_info.f_bounds.size(); ++i) {
+			headers(line_info.f_bounds[i].first, line_info.f_bounds[i].second, buffer);
+			res.insert(res.end(), buffer.begin(), buffer.end());
+		}
+	}
+	else {
+		headers(line_info.f_traces_indexes, 1, res);
 	}
 
-	getLine(xline_trcs[xl_num], buffer, res);
 	return res;
 }
 
-void segy_reader::getLine(const vector<int> &trcs, int trc_buffer, vector<float> &line) {
-	line.resize(trcs.size() * samples_count);
-	//moveToTrace(trcs[0], trc_buffer);
-	for (int i = 0; i < trcs.size(); ++i) {
-		moveToTrace(trcs[i], trc_buffer);
-		auto trace = nextTraceRef();
-		memcpy(&line[i * samples_count], trace, samples_count * sizeof(float));
+vector<shared_ptr<seismic_trace_header>> segy_reader::headers(int start, int end) {
+	vector<shared_ptr<seismic_trace_header>> res;
+	headers(start, end, res);
+	return res;
+}
+
+void segy_reader::headers(
+	const vector<int> &trcs,
+	int trc_buffer,
+	vector<shared_ptr<seismic_trace_header>> &headers_buffer) {
+
+    smart_buffer.set_trc_capacity(trc_buffer);
+
+    headers_buffer.resize(trcs.size());
+	if (!headers_in_memory) {
+		for (int i = 0; i < trcs.size(); ++i)
+            headers_buffer[i] = header(trcs[i]);
+	}
+	else {
+		for (int i = 0; i < trcs.size(); ++i)
+            headers_buffer.push_back(this->f_headers[trcs[i]]);
 	}
 }
 
-template <>
-int segy_reader::headerValue(int index) {
-	return cseis_csReader_1hdrIntValue(obj, index);
-}
-template <>
-float segy_reader::headerValue(int index) {
-	return cseis_csSegyReader_1hdrFloatValue(obj, index);
-}
-template <>
-double segy_reader::headerValue(int index) {
-	return cseis_csSegyReader_1hdrDoubleValue(obj, index);
+void segy_reader::headers(
+	int start_trace,
+	int end_trace,
+	vector<shared_ptr<seismic_trace_header>> &headers_buffer) {
+
+	int count = end_trace - start_trace + 1;
+	int buffer_size = end_trace - start_trace + 1;
+    smart_buffer.set_trc_capacity(buffer_size);
+    headers_buffer.resize(count);
+	if (!headers_in_memory){
+		move(start_trace);
+		for (int i = 0; i < count; ++i)
+            headers_buffer[i] = header(start_trace + i);
+	}
+	else if (this->f_headers.size() > end_trace) {
+		auto start_copying = this->f_headers.cbegin() + start_trace;
+		copy(start_copying, start_copying + count, headers_buffer.begin());
+	}
 }
 
-void segy_reader::determineSorting() {
-	if (sorting != segy_sorting::unknown)
+void segy_reader::line_processing(
+	map<int, seismic_line_info> &line, 
+	seismic_line_info::seismic_line_type type,
+	string name_prefix, 
+	int line_no, 
+	int trace_no,
+	pair<float, float> point) {
+
+    auto &this_line = line[line_no];
+
+	if (this_line.f_start_trace == NOT_INDEX) {
+		this_line.f_name = name_prefix + " " + to_string(line_no);
+		this_line.f_start_trace = trace_no;
+		this_line.f_end_trace = trace_no;
+		this_line.f_traces_indexes.push_back(trace_no);
+		this_line.f_start_point = point;
+		this_line.f_type = type;
+	}
+	else {
+		if (this_line.f_end_trace + 1 == trace_no) {
+            this_line.f_sequential_traces_count++;
+			if (this_line.f_sequential_traces_count > 3 && !this_line.f_by_bounds) {
+				this_line.f_by_bounds = true;
+				this_line.f_bounds.push_back({ this_line.f_start_trace, trace_no });
+				this_line.f_traces_indexes.clear();
+				this_line.f_traces_indexes.shrink_to_fit();
+			}
+			else if (this_line.f_by_bounds) {
+				auto last_bound = --this_line.f_bounds.end();
+				last_bound->second = trace_no;
+			}
+			else
+                this_line.f_traces_indexes.push_back(trace_no);
+		}
+		else {
+			if (this_line.f_by_bounds)
+				this_line.f_bounds.push_back({ trace_no, trace_no });
+			else
+                this_line.f_traces_indexes.push_back(trace_no);
+		}
+		this_line.f_end_trace = trace_no;
+		this_line.f_end_point = point;
+	}
+    this_line.f_traces_count++;
+}
+
+void segy_reader::check_memory_for_headers() {
+	int count = traces_count();
+	int fields_count = f_header_map->count();
+
+	// Грубая оценка памяти, необходимой для хранения всех хэдеров
+	// Запрашиваем 30% ОЗУ под хэдеры
+	uint64_t need_mem = count * (
+		(size_t)sizeof(segy_trace_header)
+		+ (size_t)(sizeof(double) * fields_count)
+		);
+	uint64_t mem_avail = get_available_memory();
+	if (0.3 * mem_avail >= need_mem)
+		headers_in_memory = true;
+}
+
+void segy_reader::preprocessing() {
+	if (processed)
 		return;
 
-	lineMap.il_count = NOT_INDEX;
-	lineMap.xl_count = NOT_INDEX;
-	lineMap.il_offset = NOT_INDEX;
-	lineMap.xl_offset = NOT_INDEX;
+	bool x_coord_present = false;
+	bool y_coord_present = false;
+	float x = 0, y = 0;
+	int il, xl;
 
-	segy_header_map hdrMap = traceHeaderMap();
-	int hdrRowPos = hdrMap.contains("row");
-	int hdrColPos = hdrMap.contains("col");
+	map<int, seismic_line_info> iline;
+	map<int, seismic_line_info> xline;
 
-	int il, il_prev;
-	int xl, xl_prev;
+	auto header_map_p = dynamic_pointer_cast<segy_header_map>(header_map());
+	int x_index = header_map_p->contains("CDP X");
+	int y_index = header_map_p->contains("CDP Y");
+	if (x_index != NOT_INDEX)
+		x_coord_present = true;
+	if (y_index != NOT_INDEX)
+		y_coord_present = true;
 
-	int il_min = numeric_limits<int>::max();
-	int xl_min = numeric_limits<int>::max();
-	int il_max = 0;
-	int xl_max = 0;
+	size_t count = (size_t)traces_count();
 
-	int il_count = 1;
-	int xl_count = 1;
-	int il_offset = 1;
-	int xl_offset = 1;
+	check_memory_for_headers();
+    smart_buffer.set_optimal_capacity(count);
 
-	moveToTrace(0, 1);
-	nextTraceRef();
+    shared_ptr<segy_trace_header> header;
+	int i = 0;
+    bool flag = true;
 
-	il_prev = headerValue<int>(hdrRowPos);
-	xl_prev = headerValue<int>(hdrColPos);
+	do {
+        try {
+            header = dynamic_pointer_cast<segy_trace_header>(this->header(i));
+        }
+        catch (bad_trace_index& e) {
+            break;
+        }
+        catch (end_of_file& e) {
+            break;
+        }
 
-	iline_trcs[il_prev].push_back(0);
-	xline_trcs[xl_prev].push_back(0);
+		if (headers_in_memory)
+			f_headers.push_back(header);
+        
+        VARIANT_VALUE_CAST(int, il, header->iline());
+        VARIANT_VALUE_CAST(int, xl, header->crossline());
+        if (x_coord_present)
+            VARIANT_VALUE_CAST(int, x, header->CDP_X());
+        if (y_coord_present)
+            VARIANT_VALUE_CAST(int, y, header->CDP_Y());
 
-	for (int i = 1; i < tracesCount(); ++i) {
-		nextTraceRef();
+		line_processing(iline, 
+			seismic_line_info::seismic_line_type::iline, "Iline", il, i, { x, y });
+		line_processing(xline,
+			seismic_line_info::seismic_line_type::xline, "Xline", xl, i, { x, y });
+		++i;
+	} while (flag);
 
-		il = headerValue<int>(hdrRowPos);
-		xl = headerValue<int>(hdrColPos);
+    f_traces_count = i;
 
-		iline_trcs[il].push_back(i);
-		xline_trcs[xl].push_back(i);
+    // Delete lines with one trace (probably there is 2D seismic)
+    for (auto it = iline.begin(); it != iline.end();)
+        if (it->second.f_traces_count == 1)
+            it = iline.erase(it);
+        else
+            it++;
+    for (auto it = xline.begin(); it != xline.end();)
+        if (it->second.f_traces_count == 1)
+            it = xline.erase(it);
+        else
+            it++;
 
-		if (il < il_min)
-			il_min = il;
-		if (il > il_max)
-			il_max = il;
-		if (xl < xl_min)
-			xl_min = xl;
-		if (xl > xl_max)
-			xl_max = xl;
+    if (iline.size() == 0 || xline.size() == 0)
+        f_geometry->f_gtype = seismic_geometry_info::seismic_geometry_type::g2D;
+    else
+        f_geometry->f_gtype = seismic_geometry_info::seismic_geometry_type::g3D;
 
-		if (il_prev == il && xl_prev != xl) {
-			if (sorting == segy_sorting::unknown)
-				sorting = segy_sorting::iline;
-			else if (sorting == segy_sorting::xline) {
-				sorting = segy_sorting::unsorted;
-			}
-		}
+    f_geometry->f_ilines.clear();
+    f_geometry->f_crosslines.clear();
 
-		if (il_prev != il && xl_prev == xl) {
-			if (sorting == segy_sorting::unknown)
-				sorting = segy_sorting::xline;
-			else if (sorting == segy_sorting::iline) {
-				sorting = segy_sorting::unsorted;
-			}
-		}
+	transform(
+		iline.begin(),
+		iline.end(),
+		back_inserter(f_geometry->f_ilines),
+		[](auto &kv) { return kv.second; }
+	);
+	iline.clear();
+	transform(
+		xline.begin(),
+		xline.end(),
+		back_inserter(f_geometry->f_crosslines),
+		[](auto &kv) { return kv.second; }
+	);
+	xline.clear();
 
-		il_prev = il;
-		xl_prev = xl;
+	processed = true;
+}
+
+void segy_reader::open_file() {
+	f_istream.open(f_config.filename, std::ios_base::in | std::ios_base::binary);
+	if (f_istream.fail()) {
+		throw runtime_error("segy_reader: could not open segy file");
 	}
+}
 
-	lineMap.il_count = il_max - il_min;
-	lineMap.xl_count = xl_max - xl_min;
+void segy_reader::close_file() {
+	if (f_istream.is_open())
+		f_istream.close();
+}
+
+void segy_reader::resize_buffer(size_t size) {
+    size_t max_trc_header_size = segy_file::trace_header_size * (1 + max_trc_addheaders);
+    size_t data_format_size = segy_data_format_size(f_bin_header->data_format());
+
+    int approx_fulltrace_size = max_trc_header_size + f_samples_count * data_format_size;
+    smart_buffer.set_trc_capacity(size);
+}
+
+void segy_reader::store_traces_to_buffer(int index) {
+    // if buffer stores previous trace, there is no need to use move
+    if (!(index - 1 == smart_buffer.end_trace()))
+        move(index);
+
+    // if buffer stores underloaded trace with index 'index'
+    // read underloaded bytes and parse
+    else if (smart_buffer.fail()) {
+        size_t underloaded_bytes = smart_buffer.underload();
+        vector<byte_t> tmp(underloaded_bytes);
+
+        size_t pos = (size_t)f_istream.tellg();
+        if (pos + underloaded_bytes > f_filesize)
+            underloaded_bytes = f_filesize - pos;
+        if (underloaded_bytes == 0)
+            throw end_of_file();
+
+        f_istream.read((char*)tmp.data(), underloaded_bytes);
+        smart_buffer.parse_underloaded(tmp);
+        return;
+    }
+    
+    size_t bytes_count = smart_buffer.raw_size();
+    size_t pos = (size_t)f_istream.tellg();
+    if (pos + bytes_count > f_filesize)
+        bytes_count = f_filesize - pos;
+    if (bytes_count == 0)
+        throw end_of_file();
+
+    memset(smart_buffer.raw(), 0, smart_buffer.raw_size());
+    f_istream.read((char*)smart_buffer.raw(), bytes_count);
+    smart_buffer.parse(index);
 }
 
 #ifdef PYTHON
+void py_segy_reader_init(py::module &m,
+	py::class_<segy_reader, shared_ptr<segy_reader>> &py_segy_reader) {
 
-void vector_to_numpy(vector<float> &x, py::array_t<float> y) {
-	y.resize({ x.size() });
-	memcpy((void*)y.data(), (void*)x.data(), x.size() * sizeof(float));
+    py::class_<segy_reader_config> reader_config(m, "reader_config");
+    reader_config.def(py::init<>());
+    reader_config.def_property("filename", 
+        [](segy_reader_config &c) { return c.filename; },
+        [](segy_reader_config &c, std::wstring &filename) { c.filename = filename; }
+    );
+    reader_config.def_property("coordinates",
+        [](segy_reader_config &c) { return c.coord; },
+        [](segy_reader_config &c, segy_coord coord) { c.coord = coord; }
+    );
+    //reader_config.def_property("ebdict_header", &segy_reader_config::ebcdic_header);
+
+	py_segy_reader.def(py::init<segy_reader_config>(),
+		py::arg("config")
+	);
+    py_segy_reader.def("config", &segy_reader::config);
+    py_segy_reader.def("set_config", &segy_reader::set_config,
+        py::arg("config")
+    );
 }
-
-py::array_t<float> segy_reader::pyGetNextTrace() {
-	py::array_t<float> trace;
-
-	const float *nativeTrace = nextTraceRef();
-	if (nativeTrace == nullptr)
-		return trace;
-
-	samplesCount();
-	trace.resize({ samples_count });
-	std::memcpy((void*)trace.data(), (void*)nativeTrace, samples_count * sizeof(float));
-	return trace;
-}
-
-py::array_t<float> segy_reader::pyIline(int il_num) {
-	py::array_t<float> line;
-	auto il = iline(il_num);
-
-	vector_to_numpy(il, line);
-	line.resize({ lineMap.xl_count, samples_count });
-
-	return line;
-}
-
-py::array_t<float> segy_reader::pyXline(int xl_num) {
-	py::array_t<float> line;
-	auto xl = xline(xl_num);
-
-	vector_to_numpy(xl, line);
-	line.resize({ lineMap.il_count, samples_count });
-
-	return line;
-}
-
 #endif

@@ -26,8 +26,8 @@ std::variant<
     int64_t,
     uint64_t,
     float,
-    //std::string,
-    double
+    double,
+    std::string
 >;
 
 using seismic_variant_vector = std::variant<
@@ -41,26 +41,47 @@ using seismic_variant_vector = std::variant<
     Eigen::Matrix<double, -1, 1>
 >;
 
-#define VARIANT_VALUE_CAST(type_out, value_out, variant_value)                      \
+template <typename From, typename To>
+struct numeric_cast {
+    static inline void cast(To &value, const From &from) {
+        value = static_cast<To>(from);
+    }
+};
+
+template <typename From, typename To>
+struct no_numeric_cast {
+    static inline void cast(To &value, const From &from) {
+        throw std::invalid_argument("You mixed numeric type with string type.");
+    }
+};
+
+template <>
+struct no_numeric_cast<std::string, std::string> {
+    static inline void cast(std::string &value, const std::string &from) {
+        value = from;
+    }
+};
+
+template <typename From, typename To>
+struct caster_selector {
+    using type = std::conditional_t<
+        std::is_arithmetic<From>::value && std::is_arithmetic<To>::value,
+        numeric_cast<From, To>,
+        no_numeric_cast<From, To>
+    >;
+};
+
+#define VARIANT_VALUE_CAST(value_out, variant_value)                                \
 {                                                                                   \
+    using type_out = std::decay_t<decltype(value_out)>;                             \
     if (holds_alternative<type_out>(variant_value))                                 \
-        value_out = std::get<type_out>(variant_value);                              \
-    else if (holds_alternative<int>(variant_value))                                 \
-        value_out = static_cast<type_out>(std::get<int>(variant_value));            \
-    else if (holds_alternative<int64_t>(variant_value))                             \
-        value_out = static_cast<type_out>(std::get<int64_t>(variant_value));        \
-    else if (holds_alternative<uint64_t>(variant_value))                            \
-        value_out = static_cast<type_out>(std::get<uint64_t>(variant_value));       \
-    else if (holds_alternative<short>(variant_value))                               \
-        value_out = static_cast<type_out>(std::get<short>(variant_value));          \
-    else if (holds_alternative<unsigned short>(variant_value))                      \
-        value_out = static_cast<type_out>(std::get<unsigned short>(variant_value)); \
-    else if (holds_alternative<float>(variant_value))                               \
-        value_out = static_cast<type_out>(std::get<float>(variant_value));          \
-    else if (holds_alternative<double>(variant_value))                              \
-        value_out = static_cast<type_out>(std::get<double>(variant_value));         \
-    else if (holds_alternative<char>(variant_value))                                \
-        value_out = static_cast<type_out>(std::get<char>(variant_value));           \
+        caster_selector<type_out, type_out>::type::cast(value_out, std::get<type_out>(variant_value)); \
+    else {                                                                          \
+        std::visit([&value_out](auto&& arg) {                                       \
+            using T = std::decay_t<decltype(arg)>;                                  \
+            caster_selector<T, type_out>::type::cast(value_out, arg);               \
+        }, variant_value);                                                          \
+    }                                                                               \
 }
 
 namespace seismic_variant_operations {

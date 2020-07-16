@@ -13,6 +13,8 @@ namespace bfs = boost::filesystem;
 
 #define DLLIMPORT extern "C" __declspec(dllimport)
 
+enum class modifier { read_only, custom, automatic };
+
 std::wstring utf8_to_unicode(const std::string& internal);
 
 class geolib_type_converter {

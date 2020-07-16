@@ -5,6 +5,7 @@
 #include <variant>
 
 #include "data_types.h"
+#include "utils.h"
 
 #ifdef PYTHON
 #include <pybind11/pybind11.h>
@@ -17,6 +18,9 @@ class seismic_abstract_header {
 public:
 	virtual seismic_variant_value get(const std::string &name) = 0;
 	virtual std::map<std::string, seismic_variant_value> to_map() = 0;
+
+    //virtual seismic_variant_value set(const std::string &name) = 0;
+    //virtual void from_map(std::map<std::string, seismic_variant_value> &map) = 0;
 };
 
 #ifdef PYTHON

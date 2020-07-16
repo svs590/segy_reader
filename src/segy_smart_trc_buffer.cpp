@@ -56,7 +56,7 @@ void smart_trc_buffer::parse_underloaded(const vector<byte_t> &raw_underload) {
 
     size_t last_trc_offset = f_trc_offsets.back();
     size_t last_trc_samples;
-    VARIANT_VALUE_CAST(size_t, last_trc_samples, f_headers_buffer.back()->samples_count());
+    VARIANT_VALUE_CAST(last_trc_samples, f_headers_buffer.back()->samples_count());
     size_t last_trc_size = last_trc_samples * segy_data_format_size(f_bin_header->data_format());
 
     _parse(last_trc_offset + last_trc_size);
@@ -90,7 +90,7 @@ void smart_trc_buffer::_parse(size_t start_offset) {
 
         f_headers_buffer.push_back(header);
 
-        VARIANT_VALUE_CAST(size_t, samples_count, header->samples_count());
+        VARIANT_VALUE_CAST(samples_count, header->samples_count());
 
         offset += segy_file::trace_header_size
             + samples_count * segy_data_format_size(f_bin_header->data_format());
@@ -148,7 +148,6 @@ shared_ptr<segy_trace> smart_trc_buffer::trace(size_t absolute_index) {
         size_t offset = f_trc_offsets[absolute_index - f_absolute_trc_beg];
         size_t samples_count;
         VARIANT_VALUE_CAST(
-            size_t,
             samples_count,
             f_headers_buffer[absolute_index - f_absolute_trc_beg]->samples_count()
         );

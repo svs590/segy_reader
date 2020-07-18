@@ -15,12 +15,13 @@ namespace py = pybind11;
 
 
 class seismic_abstract_header {
+    std::map<std::string, seismic_variant_value> m_header_fields;
 public:
 	virtual seismic_variant_value get(const std::string &name) = 0;
 	virtual std::map<std::string, seismic_variant_value> to_map() = 0;
 
-    //virtual seismic_variant_value set(const std::string &name) = 0;
-    //virtual void from_map(std::map<std::string, seismic_variant_value> &map) = 0;
+    virtual void set(const std::string &name, seismic_variant_value val) = 0;
+    virtual void from_map(std::map<std::string, seismic_variant_value> &map) = 0;
 };
 
 #ifdef PYTHON

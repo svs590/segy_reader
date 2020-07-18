@@ -99,11 +99,16 @@ public:
     virtual seismic_variant_value get(const std::string &name);
     virtual std::map<std::string, seismic_variant_value> to_map();
 
+    virtual void set(const std::string &name, seismic_variant_value val);
+    virtual void from_map(std::map<std::string, seismic_variant_value> &map);
+
 private:
 	void initialize();
     void init_map();
 	void set_zero();
     void determine_endian();
+
+    void set_field(const std::string &name, seismic_variant_value &val);
 
 	int f_job_id;						// 4 bytes
 	int f_line_num;						// 4 bytes

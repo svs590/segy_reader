@@ -74,14 +74,10 @@ struct caster_selector {
 #define VARIANT_VALUE_CAST(value_out, variant_value)                                \
 {                                                                                   \
     using type_out = std::decay_t<decltype(value_out)>;                             \
-    if (holds_alternative<type_out>(variant_value))                                 \
-        caster_selector<type_out, type_out>::type::cast(value_out, std::get<type_out>(variant_value)); \
-    else {                                                                          \
-        std::visit([&value_out](auto&& arg) {                                       \
-            using T = std::decay_t<decltype(arg)>;                                  \
-            caster_selector<T, type_out>::type::cast(value_out, arg);               \
-        }, variant_value);                                                          \
-    }                                                                               \
+    std::visit([&value_out](auto&& arg) {                                           \
+        using T = std::decay_t<decltype(arg)>;                                      \
+        caster_selector<T, type_out>::type::cast(value_out, arg);                   \
+    }, variant_value);                                                              \
 }
 
 namespace seismic_variant_operations {

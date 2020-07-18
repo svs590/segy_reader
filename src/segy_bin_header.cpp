@@ -2,6 +2,7 @@
 #include "segy_file.h"
 #include "data_conversion.h"
 #include "utils.h"
+#include "seismic_exception.h"
 
 #include <iostream>
 #include <iterator>
@@ -19,7 +20,7 @@ segy_bin_header::segy_bin_header() {
 
 segy_bin_header::segy_bin_header(const vector<byte_t> &raw_data) {
     if (raw_data.size() != segy_file::bin_header_size)
-        throw runtime_error("segy_bin_header: binary file header has invalid size");
+        SR_THROW(runtime_error, "segy_bin_header: binary file header has invalid size");
 
     this->raw_data = raw_data;
     determine_endian();
@@ -130,7 +131,40 @@ seismic_variant_value segy_bin_header::get(const string &name) {
     if (it != f_fields.cend())
         return it->second;
     else
-        throw new invalid_argument("segy_bin_header: get: invalid field name");
+        SR_THROW(invalid_argument, "invalid field name");
+}
+
+void segy_bin_header::set(const std::string &name, seismic_variant_value val) {
+    auto it = f_fields.find(name);
+    if (it != f_fields.cend())
+        set_field(name, val);
+    else
+        SR_THROW(invalid_argument, "invalid field name");
+}
+
+#define SET_FIELD_SWITCH_CASE_IMPL(op, field_name, input_name, field_type, value)   \
+    op (input_name == #field_name) {                                                \
+        field_type __val;                                                           \
+        VARIANT_VALUE_CAST(__val, value);                                           \
+        set_##field_name#(__val);                                                   \
+    }
+
+#define SET_FIELD_SWITCH_CASE_BEGIN(field_name, input_name, field_type, value)      \
+    SET_FIELD_SWITCH_CASE_IMPL(if, field_name, input_name, field_type, value)
+
+#define SET_FIELD_SWITCH_CASE(field_name, input_name, field_type, value)            \
+    SET_FIELD_SWITCH_CASE_IMPL(else if, field_name, input_name, field_type, value)
+
+
+void segy_bin_header::set_field(const std::string &name, seismic_variant_value &val) {
+    SET_FIELD_SWITCH_CASE_BEGIN(job_id, name, decltype(f_job_id), val)
+    SET_FIELD_SWITCH_CASE(line_num, name, decltype(f_line_num), val)
+    SET_FIELD_SWITCH_CASE(reel_num, name, decltype(f_reel_num), val)
+    SET_FIELD_SWITCH_CASE(traces_count, name, decltype(f_traces_count), val)
+    SET_FIELD_SWITCH_CASE(aux_traces_count, name, decltype(f_aux_traces_count), val)
+    SET_FIELD_SWITCH_CASE(sample_interval, name, decltype(f_sample_interval), val)
+    SET_FIELD_SWITCH_CASE(sample_interval_orig, name, decltype(f_sample_interval_orig), val)
+    SET_FIELD_SWITCH_CASE(samples_count, name, decltype(f_samples_count), val)
 }
 
 map<string, seismic_variant_value> segy_bin_header::to_map() {
@@ -141,41 +175,41 @@ map<string, seismic_variant_value> segy_bin_header::to_map() {
 
 void segy_bin_header::init_map() {
     f_fields = {
-    { "job_id",                    f_job_id,                   },
-    { "line_num",                  f_line_num,                 },
-    { "reel_num",                  f_reel_num,                 },
-    { "traces_count",              f_traces_count,             },
-    { "aux_traces_count",          f_aux_traces_count,         },
-    { "sample_interval",           f_sample_interval,          },
-    { "sample_interval_orig",      f_sample_interval_orig,     },
-    { "samples_count",             f_samples_count,            },
-    { "samples_count_orig",        f_samples_count_orig,       },
-    { "data_format",               (int)f_data_format,         },
-    { "ensemble_fold",             f_ensemble_fold,            },
-    { "sorting_code",              f_sorting_code,             },
-    { "vert_sum_code",             f_vert_sum_code,            },
-    { "sweep_fr_start",            f_sweep_fr_start,           },
-    { "sweep_fr_end",              f_sweep_fr_end,             },
-    { "sweep_len",                 f_sweep_len,                },
-    { "sweep_type",                f_sweep_type,               },
-    { "sweep_chanel_trcs_count",   f_sweep_chanel_trcs_count,  },
-    { "sweep_trc_taper_len_start", f_sweep_trc_taper_len_start,},
-    { "sweep_trc_taper_len_end",   f_sweep_trc_taper_len_end,  },
-    { "taper_type",                f_taper_type,               },
-    { "correlated_traces",         f_correlated_traces,        },
-    { "gain_recovered",            f_gain_recovered,           },
-    { "amplitude_rec_method",      f_amplitude_rec_method,     },
-    { "measurement_system",        f_measurement_system,       },
-    { "signal_polarity",           f_signal_polarity,          },
-    { "polarity_code",             f_polarity_code,            },
-    { "endian_swap",               (int)f_endian_order,        },
-    { "is_segy_2",                 (int)f_is_segy_2,           },
-    { "is_same_for_file",          f_is_same_for_file,         },
-    { "extended_headers_count",    f_extended_text_headers_count},
-    { "max_add_trc_headers_count", f_max_add_trc_headers_count,},
-    { "time_basis",                f_time_basis,               },
-    { "stream_traces_count",       f_stream_traces_count,      },
-    { "first_trace_offset",        f_first_trace_offset,       }
+        { "job_id",                    f_job_id,                   },
+        { "line_num",                  f_line_num,                 },
+        { "reel_num",                  f_reel_num,                 },
+        { "traces_count",              f_traces_count,             },
+        { "aux_traces_count",          f_aux_traces_count,         },
+        { "sample_interval",           f_sample_interval,          },
+        { "sample_interval_orig",      f_sample_interval_orig,     },
+        { "samples_count",             f_samples_count,            },
+        { "samples_count_orig",        f_samples_count_orig,       },
+        { "data_format",               (int)f_data_format,         },
+        { "ensemble_fold",             f_ensemble_fold,            },
+        { "sorting_code",              f_sorting_code,             },
+        { "vert_sum_code",             f_vert_sum_code,            },
+        { "sweep_fr_start",            f_sweep_fr_start,           },
+        { "sweep_fr_end",              f_sweep_fr_end,             },
+        { "sweep_len",                 f_sweep_len,                },
+        { "sweep_type",                f_sweep_type,               },
+        { "sweep_chanel_trcs_count",   f_sweep_chanel_trcs_count,  },
+        { "sweep_trc_taper_len_start", f_sweep_trc_taper_len_start,},
+        { "sweep_trc_taper_len_end",   f_sweep_trc_taper_len_end,  },
+        { "taper_type",                f_taper_type,               },
+        { "correlated_traces",         f_correlated_traces,        },
+        { "gain_recovered",            f_gain_recovered,           },
+        { "amplitude_rec_method",      f_amplitude_rec_method,     },
+        { "measurement_system",        f_measurement_system,       },
+        { "signal_polarity",           f_signal_polarity,          },
+        { "polarity_code",             f_polarity_code,            },
+        { "endian_swap",               (int)f_endian_order,        },
+        { "is_segy_2",                 (int)f_is_segy_2,           },
+        { "is_same_for_file",          f_is_same_for_file,         },
+        { "extended_headers_count",    f_extended_text_headers_count},
+        { "max_add_trc_headers_count", f_max_add_trc_headers_count,},
+        { "time_basis",                f_time_basis,               },
+        { "stream_traces_count",       f_stream_traces_count,      },
+        { "first_trace_offset",        f_first_trace_offset,       }
     };
 
     f_map_need_update = false;

@@ -13,6 +13,9 @@
 namespace py = pybind11;
 #endif
 
+#include "seismic_exception.h"
+
+
 typedef unsigned char byte_t;
 
 using seismic_variant_value =
@@ -41,6 +44,14 @@ using seismic_variant_vector = std::variant<
     Eigen::Matrix<double, -1, 1>
 >;
 
+template <typename From>
+struct enum_cast {
+    using To = std::conditional_t<std::is_enum<From>::value, int, From>;
+    static inline To cast(const From &from) {
+        return static_cast<To>(from);
+    }
+};
+
 template <typename From, typename To>
 struct numeric_cast {
     static inline void cast(To &value, const From &from) {
@@ -51,7 +62,11 @@ struct numeric_cast {
 template <typename From, typename To>
 struct no_numeric_cast {
     static inline void cast(To &value, const From &from) {
-        throw std::invalid_argument("You mixed numeric type with string type.");
+        SR_THROW(
+            std::invalid_argument,
+            "Mixing inappropriate types (" + std::string(typeid(From).name())
+            + " with " + std::string(typeid(To).name()) + ")"
+        );
     }
 };
 
@@ -65,7 +80,9 @@ struct no_numeric_cast<std::string, std::string> {
 template <typename From, typename To>
 struct caster_selector {
     using type = std::conditional_t<
-        std::is_arithmetic<From>::value && std::is_arithmetic<To>::value,
+        (std::is_arithmetic<From>::value && std::is_arithmetic<To>::value)
+        || (std::is_integral<From>::value && std::is_enum<To>::value)
+        || (std::is_enum<From>::value && std::is_integral<To>::value),
         numeric_cast<From, To>,
         no_numeric_cast<From, To>
     >;

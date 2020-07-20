@@ -202,11 +202,29 @@ void py_segy_abstract_header_init(py::module &m,
 	py::class_<seismic_abstract_header, 
 		shared_ptr<seismic_abstract_header>> &py_abstract_header) {
 	
-	py_abstract_header.def("get_field", &seismic_abstract_header::get,
-		py::arg("name"),
-		"Returns pair (field name, value) by name");
-	py_abstract_header.def("to_dict", &seismic_abstract_header::to_map,
-		"Returns dict kind of {name : (byte_position, byte_size, data_type, description)}");
+	py_abstract_header.def(
+        "get", &seismic_abstract_header::get,
+		py::arg("field_name"),
+		"Returns pair (field name, value) by name"
+    );
+    py_abstract_header.def(
+        "set", &seismic_abstract_header::set,
+        py::arg("field_name"),
+        py::arg("value"),
+        "Set value for field"
+    );
+	py_abstract_header.def(
+        "to_dict", &seismic_abstract_header::to_map,
+		"Returns dict kind of { field name : value }"
+    );
+    py_abstract_header.def(
+        "from_dict", &seismic_abstract_header::from_map,
+        "Set header from dict kind of { field name : value }"
+    );
+    py_abstract_header.def(
+        "description", &seismic_abstract_header::fields_descr,
+        "Get description for header fields"
+    );
 }
 
 void py_seismic_data_types_init(py::module &m) {

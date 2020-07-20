@@ -70,6 +70,14 @@ std::string char_to_ecdic(const std::string &str) {
 	return res;
 }
 
+int8_t byte_to_int8_t(byte_t const* ptr, endian_order order) {
+    return static_cast<int8_t>(*ptr);
+}
+
+uint8_t byte_to_uint8_t(byte_t const* ptr, endian_order order) {
+    return static_cast<uint8_t>(*ptr);
+}
+
 template <>
 short byte_to_short<endian_order::big>(byte_t const* ptr) {
     short val = *reinterpret_cast<short const*>(ptr);
@@ -352,6 +360,14 @@ double byte_to_double<endian_order::mid_little>(byte_t const* ptr) {
     int64_t val = *reinterpret_cast<int64_t const*>(ptr);
     val = conditional_reverse<order::little, order::native>(val);
     return *reinterpret_cast<double const*>(&val);
+}
+
+void int8_t_to_byte(int8_t value, byte_t *ptr, endian_order order) {
+    *ptr = static_cast<byte_t>(value);
+}
+
+void uint8_t_to_byte(uint8_t value, byte_t *ptr, endian_order order) {
+    *ptr = static_cast<byte_t>(value);
 }
 
 template <>

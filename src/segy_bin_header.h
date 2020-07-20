@@ -1,8 +1,10 @@
-#pragma once
+﻿#pragma once
 
 #include <map>
 #include <string>
 #include <vector>
+
+#include <boost/preprocessor.hpp>
 
 #ifdef PYTHON
 #include <pybind11/pybind11.h>
@@ -14,87 +16,272 @@ namespace py = pybind11;
 #include "data_conversion.h"
 #include "segy_file.h"
 
+
+#define SyBH_FIELD_NAME(tuple)                                                      \
+    BOOST_PP_TUPLE_ELEM(5, 0, tuple)
+
+#define SyBH_FIELD_RAW_TYPE(tuple)                                                  \
+    BOOST_PP_TUPLE_ELEM(5, 1, tuple)
+
+#define SyBH_FIELD_OUT_TYPE(tuple)                                                  \
+    BOOST_PP_TUPLE_ELEM(5, 2, tuple)
+
+#define SyBH_FIELD_OFFSET(tuple)                                                    \
+    BOOST_PP_TUPLE_ELEM(5, 3, tuple)
+
+#define SyBH_FIELD_DESCR(tuple)                                                     \
+    BOOST_PP_TUPLE_ELEM(5, 4, tuple)
+
+#define DEFINE_SyBH_FIELDS_OP(z, data, el)                                          \
+    SyBH_FIELD_OUT_TYPE(el) BOOST_PP_CAT(m_, SyBH_FIELD_NAME(el));
+
+#define DEFINE_SyBH_GET_METHODS_OP(z, data, el)                                     \
+    SyBH_FIELD_OUT_TYPE(el) SyBH_FIELD_NAME(el)()                                   \
+        { return BOOST_PP_CAT(m_, SyBH_FIELD_NAME(el)); }
+
+#define DEFINE_SyBH_SET_METHODS_OP(z, data, el)                                     \
+    void                                                                            \
+    BOOST_PP_CAT(set_, SyBH_FIELD_NAME(el))(const SyBH_FIELD_OUT_TYPE(el) &val) {   \
+        m_map_need_update = true; BOOST_PP_CAT(m_, SyBH_FIELD_NAME(el)) = val;            \
+    }
+
+#define DEFINE_SyBH_METHODS(seq, method_op)                                         \
+    BOOST_PP_SEQ_FOR_EACH(method_op, ~, seq)
+
+#define DEFINE_SyBH_FIELDS(seq)                                                     \
+    BOOST_PP_SEQ_FOR_EACH(DEFINE_SyBH_FIELDS_OP, ~, seq)
+
+
 class segy_bin_header : public seismic_abstract_header {
-    bool f_map_need_update;
-    std::map<std::string, seismic_variant_value> f_fields;
-    std::vector<byte_t> raw_data;
+
+/**
+  * Segy bin header fieds tuple like (name, raw_type, type_out, byte_offset, brief description) 
+  * where
+  *     name            - field name
+  *     raw_type        - raw type (see segy doc.)
+  *     type_out        - type that use to store value in runtime
+  *     byte_offset     - first byte of field (see segy doc.)
+  */
+#define SyBH_FIELDS                                                     \
+    ((                                                                  \
+        job_id,                    int32_t,    int32_t,            0,   \
+        "Job identification number"                                     \
+    ))                                                                  \
+    ((                                                                  \
+        line_num,                  int32_t,    int32_t,            4,   \
+        "Line number. For 3D data, this will contain the in-linenumber" \
+    ))                                                                  \
+    ((                                                                  \
+        reel_num,                  int32_t,    int32_t,            8,   \
+        "Reel number"                                                   \
+    ))                                                                  \
+    ((                                                                  \
+        traces_count,              uint16_t,   int32_t,            12,  \
+        "Number of data traces per ensemble"                            \
+    ))                                                                  \
+    ((                                                                  \
+        aux_traces_count,          uint16_t,   int32_t,            14,  \
+        "Number of auxiliary traces per ensemble"                       \
+    ))                                                                  \
+    ((                                                                  \
+        sample_interval,           uint16_t,   double,             16,  \
+        "Sample interval (us / Hz / m / ft)"                            \
+    ))                                                                  \
+    ((                                                                  \
+        sample_interval_orig,      uint16_t,   double,             18,  \
+        "Sample interval of original field recording (us / Hz / m / ft)"\
+    ))                                                                  \
+    ((                                                                  \
+        samples_count,             uint16_t,   int32_t,            20,  \
+        "Number of samples per data trace"                              \
+    ))                                                                  \
+    ((                                                                  \
+        samples_count_orig,        uint16_t,   int32_t,            22,  \
+        "Number of samples per data trace for original field recording" \
+    ))                                                                  \
+    ((                                                                  \
+        data_format,               uint16_t,   segy_data_format,   24,  \
+        "Data sample format code:\n\t1 - 4-byte IBM float"              \
+        "\n\t2 - 4-byte, two\'s complement integer"                     \
+        "\n\t3 - 2-byte, two\'s complement integer"                     \
+        "\n\t4 - 4-byte fixed-point with gain (obsolete)"               \
+        "\n\t5 - 4-byte IEEE float\n\t6 - 8-byte IEEE float"            \
+        "\n\t7 - 3-byte two\'s complement integer"                      \
+        "\n\t8 - 1-byte, two\'s complement integer"                     \
+        "\n\t9 - 8-byte, two\'s complement integer"                     \
+        "\n\t10 - 4-byte, unsigned integer\n\t11 - 2-byte, unsigned integer"\
+        "\n\t12 - 8-byte, unsigned integer\n\t15 - 3-byte, unsigned integer"\
+        "\n\t16 - 1-byte, unsigned integer"                             \
+    ))                                                                  \
+                                                                        \
+    ((                                                                  \
+        ensemble_fold,             uint16_t,   int32_t,            26,  \
+        "The expected number of data traces per trace ensemble (e.g. the CMP fold)"\
+    ))                                                                  \
+    ((                                                                  \
+        sorting_code,              uint16_t,   int32_t,            28,  \
+        "Trace sorting code:\n\t-1 - Other\n\t0 - Unknown\n\t1 - No sorting"\
+        "\n\t2 - CDP ensemble\n\t3 - Single fold continuous profile"    \
+        "\n\t4 - Horizontally stacked\n\t5 - Common source point"       \
+        "\n\t6 - Common receiver point\n\t7 - Common offset point"      \
+        "\n\t8 - Common mid-point\n\t9 - Common conversion point"       \
+    ))                                                                  \
+    ((                                                                  \
+        vert_sum_code,             uint16_t,   int32_t,            30,  \
+        "Vertical sum code:\n\t1 - No sum\n\t2 - two sum\n\t..."        \
+    ))                                                                  \
+    ((                                                                  \
+        sweep_fr_start,            uint16_t,   int32_t,            32,  \
+        "Sweep frequency at start (Hz)"                                 \
+    ))                                                                  \
+    ((                                                                  \
+        sweep_fr_end,              uint16_t,   int32_t,            34,  \
+        "Sweep frequency at end (Hz)"                                   \
+    ))                                                                  \
+    ((                                                                  \
+        sweep_len,                 uint16_t,   int32_t,            36,  \
+        "Sweep length (ms)"                                             \
+    ))                                                                  \
+    ((                                                                  \
+        sweep_type,                uint16_t,   int32_t,            38,  \
+        "Sweep type code:\n\t1 - Linear\n\t2 - Parabolic\n\t 3 - Exponential"\
+        "\n\t4 - Other"                                                 \
+    ))                                                                  \
+    ((                                                                  \
+        sweep_chanel_trcs_count,   uint16_t,   int32_t,            40,  \
+        "Trace number of sweep channel"                                 \
+    ))                                                                  \
+    ((                                                                  \
+        sweep_trc_taper_len_start, uint16_t,   int32_t,            42,  \
+        "Sweep trace taper length in milliseconds at start if tapered " \
+        "(the taper starts at zero time and is effective for this length)"\
+    ))                                                                  \
+    ((                                                                  \
+        sweep_trc_taper_len_end,   uint16_t,   int32_t,            44,  \
+        "Sweep trace taper length in milliseconds at end (the ending "  \
+        "taper starts at sweep length minus the taper length at end)"   \
+    ))                                                                  \
+    ((                                                                  \
+        taper_type,                uint16_t,   int32_t,            46,  \
+        "Taper type:\n\t1 - Linear\n\t2 - Cosine squared\n\t3 = Other"  \
+    ))                                                                  \
+    ((                                                                  \
+        correlated_traces,         uint16_t,   int32_t,            48,  \
+        "Correlated data traces:\n\t 1 - No\n\t2 = Yes"                 \
+    ))                                                                  \
+    ((                                                                  \
+        gain_recovered,            uint16_t,   int32_t,            50,  \
+        "Binary gain recovered:\n\t1 - Yes\n\t2 = No"                   \
+    ))                                                                  \
+    ((                                                                  \
+        amplitude_rec_method,      uint16_t,   int32_t,            52,  \
+        "Amplitude recovery method:\n\t1 - None\n\t2 - Spherical divergence"\
+        "\n\t3 - AGC\n\t4 - Other"                                      \
+    ))                                                                  \
+    ((                                                                  \
+        measurement_system,        uint16_t,   int32_t,            54,  \
+        "Measurement system (see Segy documentation):\n\t1 - Meters"    \
+        "\n\t2 - Feet"                                                  \
+    ))                                                                  \
+                                                                        \
+    ((                                                                  \
+        signal_polarity,           uint16_t,   int32_t,            56,  \
+        "Impulse signal polarity:\n\t1 - Increase in pressure or upward "\
+        "geophone case movement gives negativenumber on trace"          \
+        "\n\t2 - Increase in pressure or upward geophone case movement "\
+        "gives positivenumber on trace"                                 \
+    ))                                                                  \
+    ((                                                                  \
+        polarity_code,             uint16_t,   int32_t,            58,  \
+        "Vibratory polarity code (seismic signal lags pilot signal by):"\
+        "\n\t1 - 337.5 to 22.5 deg\n\t2 - 22.5 to 67.5 deg"             \
+        "\n\t3 - 67.5 to 112.5 deg\n\t4 - 112.5 to 157.5 deg"           \
+        "\n\t5 - 157.5 to 202.5 deg\n\t6 - 202.5 to 247.5 deg"          \
+        "\n\t7 - 247.5 to 292.5 deg\n\t8 - 292.5 to 337.5 deg"          \
+    ))                                                                  \
+                                                                        \
+    ((                                                                  \
+        extended_traces_count,     int32_t,    int32_t,            60,  \
+        "Extended number of data traces per ensemble"                   \
+    ))                                                                  \
+    ((                                                                  \
+        extended_aux_traces_count, int32_t,    int32_t,            64,  \
+        "Extended number of auxiliary traces per ensemble"              \
+    ))                                                                  \
+    ((                                                                  \
+        extended_samples_count,    int32_t,    int32_t,            68,  \
+        "Extended number of samples per data trace"                     \
+    ))                                                                  \
+    ((                                                                  \
+        extended_sample_interval,  double,     double,             72,  \
+        "Extended sample interval, IEEE double precision (64-bit)"      \
+    ))                                                                  \
+    ((                                                                  \
+        extended_sample_interval_orig, double, double,             80,  \
+        "Extended sample interval of original field recording, "        \
+        "IEEE double precision (64-bit)"                                \
+    ))                                                                  \
+    ((                                                                  \
+        extended_samples_count_orig, int32_t,  int32_t,            88,  \
+        "Extended number of samples per data trace in original recording"\
+    ))                                                                  \
+    ((                                                                  \
+        extended_ensemble_fold,    int32_t,    int32_t,            92,  \
+        "Extended ensemble fold"                                        \
+    ))                                                                  \
+                                                                        \
+    ((                                                                  \
+        is_segy_2,                 uint8_t,    bool,               300, \
+        "Major SEG-Y Format Revision Number. A value of 1 indicates "   \
+        "SEG-Y 2.0 format, a value ofzero indicates traditional SEG-Y"  \
+    ))                                                                  \
+    ((                                                                  \
+        is_same_for_file,          int16_t,    int32_t,            302, \
+        "A value of one indicates that all traces in this SEG-Yfile "   \
+        "are guaranteed to have the same sample interval, number of "   \
+        "trace headerblocks and trace samples"                          \
+    ))                                                                  \
+    ((                                                                  \
+        extended_text_headers_count, int16_t,  int32_t,            304, \
+        "Number of 3200-byte, Extended Textual File Header"             \
+    ))                                                                  \
+    ((                                                                  \
+        max_add_trc_headers_count, int32_t,    int32_t,            306, \
+        "Maximum number of additional 240 byte trace headers"           \
+    ))                                                                  \
+    ((                                                                  \
+        time_basis,                uint16_t,   uint32_t,           310, \
+        "Time basis code:\n\t1 - Local\n\t2 - GMT\n\t3 - Other (see "   \
+        "Extended Textual File Header)\n\t4 - UTC\n\t5 - GPS"           \
+    ))                                                                  \
+    ((                                                                  \
+        stream_traces_count,       uint64_t,   uint64_t,           312, \
+        "Number of traces in this file or stream"                       \
+    ))                                                                  \
+    ((                                                                  \
+        first_trace_offset,        uint64_t,   uint64_t,           320, \
+        "Byte offset of first trace relative to start of file or "      \
+        "stream if known, otherwisezero"                                \
+    ))
+
+    static std::map<std::string, std::map<std::string, std::string>>    m_descr;
+
+    std::vector<byte_t>                                                 m_raw_data;
+    bool                                                                m_map_need_update;
+    endian_order                                                        m_endian_order = endian_order::big;
+
+    DEFINE_SyBH_FIELDS(SyBH_FIELDS);
+
 public:
+    DEFINE_SyBH_METHODS(SyBH_FIELDS, DEFINE_SyBH_GET_METHODS_OP);
+    DEFINE_SyBH_METHODS(SyBH_FIELDS, DEFINE_SyBH_SET_METHODS_OP);
+
 	segy_bin_header();
-	segy_bin_header(const std::vector<byte_t> &raw_data);
+	segy_bin_header(const std::vector<byte_t> &m_raw_data);
 	~segy_bin_header();
 
-	int job_id()								{ return f_job_id; }
-	int line_num()								{ return f_line_num; }
-	int reel_num()								{ return f_reel_num; }
-	int traces_count()							{ return f_traces_count; }
-	int aux_traces_count()						{ return f_aux_traces_count; }
-	double sample_interval()					{ return f_sample_interval; }
-	double sample_interval_orig()				{ return f_sample_interval_orig; }
-	int samples_count()							{ return f_samples_count; }
-	int samples_count_orig()					{ return f_samples_count_orig; }
-    segy_data_format data_format()				{ return f_data_format; }
-	int ensemble_fold()							{ return f_ensemble_fold; }
-	int sorting_code()							{ return f_sorting_code; }
-	int vert_sum_code()							{ return f_vert_sum_code; }
-	int sweep_fr_start()						{ return f_sweep_fr_start; }
-	int sweep_fr_end()							{ return f_sweep_fr_end; }
-	int sweep_len()								{ return f_sweep_len; }
-	int sweep_type()							{ return f_sweep_type; }
-	int sweep_chanel_trcs_count()				{ return f_sweep_chanel_trcs_count; }
-	int sweep_trc_taper_len_start()				{ return f_sweep_trc_taper_len_start; }
-	int sweep_trc_taper_len_end()				{ return f_sweep_trc_taper_len_end; }
-	int taper_type()							{ return f_taper_type; }
-	int correlated_traces()						{ return f_correlated_traces; }
-	int gain_recovered()						{ return f_gain_recovered; }
-	int amplitude_rec_method()					{ return f_amplitude_rec_method; }
-	int measurement_system()					{ return f_measurement_system; }
-	int signal_polarity()						{ return f_signal_polarity; }
-	int polarity_code()							{ return f_polarity_code; }
-	bool is_segy_2()							{ return f_is_segy_2; }
-	bool is_same_for_file()						{ return f_is_same_for_file; }
-	int extended_text_headers_count()			{ return f_extended_text_headers_count; }
-	int max_add_trc_headers_count()				{ return f_max_add_trc_headers_count; }
-	int time_basis()							{ return f_time_basis; }
-	int64_t stream_traces_count()				{ return f_stream_traces_count; }
-	int64_t first_trace_offset()				{ return f_first_trace_offset; }
-	endian_order endian()						{ return f_endian_order; }
-
-	void set_job_id(int val)					{ f_map_need_update = true; f_job_id = val; }
-	void set_line_num(int val)					{ f_map_need_update = true; f_line_num = val; }
-	void set_reel_num(int val)					{ f_map_need_update = true; f_reel_num = val; }
-	void set_traces_count(int val)				{ f_map_need_update = true; f_traces_count = val; }
-	void set_aux_traces_count(int val)			{ f_map_need_update = true; f_aux_traces_count = val; }
-	void set_sample_interval(int val)			{ f_map_need_update = true; f_sample_interval = val; }
-	void set_sample_interval_orig(int val)		{ f_map_need_update = true; f_sample_interval_orig = val; }
-	void set_samples_count(int val)				{ f_map_need_update = true; f_samples_count = val; }
-	void set_samples_count_orig(int val)		{ f_map_need_update = true; f_samples_count_orig = val; }
-	void set_data_format(segy_data_format val)  { f_map_need_update = true; f_data_format = val; }
-	void set_ensemble_fold(int val)				{ f_map_need_update = true; f_ensemble_fold = val; }
-	void set_sorting_code(int val)				{ f_map_need_update = true; f_sorting_code = val; }
-	void set_vert_sum_code(int val)				{ f_map_need_update = true; f_vert_sum_code = val; }
-	void set_sweep_fr_start(int val)			{ f_map_need_update = true; f_sweep_fr_start = val; }
-	void set_sweep_fr_end(int val)				{ f_map_need_update = true; f_sweep_fr_end = val; }
-	void set_sweep_len(int val)					{ f_map_need_update = true; f_sweep_len = val; }
-	void set_sweep_type(int val)				{ f_map_need_update = true; f_sweep_type = val; }
-	void set_sweep_chanel_trcs_count(int val)	{ f_map_need_update = true; f_sweep_chanel_trcs_count = val; }
-	void set_sweep_trc_taper_len_start(int val)	{ f_map_need_update = true; f_sweep_trc_taper_len_start = val; }
-	void set_sweep_trc_taper_len_end(int val)	{ f_map_need_update = true; f_sweep_trc_taper_len_end = val; }
-	void set_taper_type(int val)				{ f_map_need_update = true; f_taper_type = val; }
-	void set_correlated_traces(int val)			{ f_map_need_update = true; f_correlated_traces = val; }
-	void set_gain_recovered(int val)			{ f_map_need_update = true; f_gain_recovered = val; }
-	void set_amplitude_rec_method(int val)		{ f_map_need_update = true; f_amplitude_rec_method = val; }
-	void set_measurement_system(int val)		{ f_map_need_update = true; f_measurement_system = val; }
-	void set_signal_polarity(int val)			{ f_map_need_update = true; f_signal_polarity = val; }
-	void set_polarity_code(int val)				{ f_map_need_update = true; f_polarity_code = val; }
-	void set_segy_2(bool val)					{ f_map_need_update = true; f_is_segy_2 = val; }
-	void set_same_for_file(bool val)			{ f_map_need_update = true; f_is_same_for_file = val; }
-	void set_extended_text_headers_count(int val){ f_map_need_update = true; f_extended_text_headers_count = val; }
-	void set_max_add_trc_headers_count(int val)	{ f_map_need_update = true; f_max_add_trc_headers_count = val; }
-	void set_time_basis(int val)				{ f_map_need_update = true; f_time_basis = val; }
-	void set_stream_traces_count(int64_t val)	{ f_map_need_update = true; f_stream_traces_count = val; }
-	void set_first_trace_offset(int64_t val)	{ f_map_need_update = true; f_first_trace_offset = val; }
-    void set_endian(endian_order val)           { f_map_need_update = true; f_endian_order = val; initialize(); }
-
+    endian_order endian()               { return m_endian_order;    }
+    void set_endian(endian_order order) { m_map_need_update = true; m_endian_order = order; }
 
     virtual seismic_variant_value get(const std::string &name);
     virtual std::map<std::string, seismic_variant_value> to_map();
@@ -102,61 +289,18 @@ public:
     virtual void set(const std::string &name, seismic_variant_value val);
     virtual void from_map(std::map<std::string, seismic_variant_value> &map);
 
+    virtual std::map<std::string, std::map<std::string, std::string>> fields_descr();
+
+    std::vector<byte_t> raw_data();
+
 private:
-	void initialize();
+	void init_from_raw();
+    void write_to_raw();
     void init_map();
 	void set_zero();
-    void determine_endian();
-
-    void set_field(const std::string &name, seismic_variant_value &val);
-
-	int f_job_id;						// 4 bytes
-	int f_line_num;						// 4 bytes
-	int f_reel_num;						// 4 bytes
-	int f_traces_count;					// 2 bytes
-	int f_aux_traces_count;				// 2 bytes
-	double f_sample_interval;			// 2 bytes
-	double f_sample_interval_orig;		// 2 bytes
-	int f_samples_count;				// 2 bytes
-	int f_samples_count_orig;			// 2 bytes
-    segy_data_format f_data_format;		// 2 bytes
-	int f_ensemble_fold;				// 2 bytes
-	int f_sorting_code;					// 2 bytes
-	int f_vert_sum_code;				// 2 bytes
-	int f_sweep_fr_start;				// 2 bytes
-	int f_sweep_fr_end;					// 2 bytes
-	int f_sweep_len;					// 2 bytes
-	int f_sweep_type;					// 2 bytes
-	int f_sweep_chanel_trcs_count;		// 2 bytes
-	int f_sweep_trc_taper_len_start;	// 2 bytes
-	int f_sweep_trc_taper_len_end;		// 2 bytes
-	int f_taper_type;					// 2 bytes
-	int f_correlated_traces;			// 2 bytes
-	int f_gain_recovered;				// 2 bytes
-	int f_amplitude_rec_method;			// 2 bytes
-	int f_measurement_system;			// 2 bytes
-	int f_signal_polarity;				// 2 bytes
-	int f_polarity_code;				// 2 bytes
-
-	// If nonzero, rewriting original fields
-	int f_extended_traces_count;		// 4 bytes
-	int f_extended_aux_traces_count;	// 4 bytes
-	int f_extended_samples_count;		// 4 bytes
-	double f_extended_sample_interval;	// 8 bytes, IEEE double
-	double f_extended_sample_interval_orig;// 8 bytes, IEEE double
-	int f_extended_samples_count_orig;	// 4 bytes
-	int f_extended_ensemble_fold;		// 4 bytes
-
-    endian_order f_endian_order         = endian_order::big;
-
-	bool f_is_segy_2;					// 1 byte
-	int f_is_same_for_file;				// 2 bytes
-	int f_extended_text_headers_count;	// 2 bytes, -1 - variable count
-	int f_max_add_trc_headers_count;	// 4 bytes
-	int f_time_basis;					// 2 bytes
-	uint64_t f_stream_traces_count;		// 8 bytes
-	uint64_t f_first_trace_offset;		// 8 bytes, if nonzero overrides f_extended_text_headers_count
-	
+    void init_endian();
+    void write_endian();
+    void override_by_extended();
 };
 
 #ifdef PYTHON

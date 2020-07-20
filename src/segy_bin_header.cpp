@@ -129,6 +129,12 @@ segy_bin_header::segy_bin_header(const vector<byte_t> &m_raw_data) {
     m_modifier = modifier::read_only;
 }
 
+segy_bin_header::segy_bin_header(const map<string, seismic_variant_value> &map)
+    : segy_bin_header() {
+    
+    from_map(map);
+}
+
 void segy_bin_header::set_zero() {
     m_raw_data = vector<byte_t>(segy_file::bin_header_size, (byte_t) 0);
     init_from_raw();
@@ -232,7 +238,7 @@ map<string, seismic_variant_value> segy_bin_header::to_map() {
 	return m_fields;
 }
 
-void segy_bin_header::from_map(map<string, seismic_variant_value> &map) {
+void segy_bin_header::from_map(const map<string, seismic_variant_value> &map) {
     for (auto &p : map)
         set(p.first, p.second);
 }
@@ -253,6 +259,10 @@ void py_segy_bin_header_init(
 	py::class_<segy_bin_header, shared_ptr<segy_bin_header>> &py_segy_bin_header
 ) {
     py_segy_bin_header.def(py::init<>());
+    py_segy_bin_header.def(
+        py::init<const map<string, seismic_variant_value>>(),
+        py::arg("fields_dict")
+    );
 
     py_segy_bin_header.def(
         "raw_data", 

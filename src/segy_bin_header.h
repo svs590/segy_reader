@@ -278,6 +278,7 @@ public:
 
 	segy_bin_header();
 	segy_bin_header(const std::vector<byte_t> &m_raw_data);
+    segy_bin_header(const std::map<std::string, seismic_variant_value> &m_raw_data);
 	~segy_bin_header();
 
     endian_order endian()               { return m_endian_order;    }
@@ -287,7 +288,7 @@ public:
     virtual std::map<std::string, seismic_variant_value> to_map();
 
     virtual void set(const std::string &name, seismic_variant_value val);
-    virtual void from_map(std::map<std::string, seismic_variant_value> &map);
+    virtual void from_map(const std::map<std::string, seismic_variant_value> &map);
 
     virtual std::map<std::string, std::map<std::string, std::string>> fields_descr();
 
@@ -304,6 +305,8 @@ private:
 };
 
 #ifdef PYTHON
-void py_segy_bin_header_init(py::module &m,
-	py::class_<segy_bin_header, std::shared_ptr<segy_bin_header>> &py_segy_bin_header);
+void py_segy_bin_header_init(
+    py::module &m,
+	py::class_<segy_bin_header, std::shared_ptr<segy_bin_header>> &py_segy_bin_header
+);
 #endif

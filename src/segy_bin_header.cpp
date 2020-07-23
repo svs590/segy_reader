@@ -24,89 +24,89 @@ string first_to_lower(const string &s) {
     return res;
 }
 
-#define TO_USERFRIENDLY_STRING(str)                                         \
+#define TO_USERFRIENDLY_STRING(str)                                                 \
     first_to_upper(regex_replace(str, regex("_"), " "))
 
-#define FROM_USERFRIENDLY_STRING(str)                                       \
+#define FROM_USERFRIENDLY_STRING(str)                                               \
     first_to_lower(regex_replace(str, regex(" "), "_"))
 
-#define SyBH_READ_FROM_RAW_BUFFER_OP(z, data, el)                           \
-    BOOST_PP_CAT(m_, SyBH_FIELD_NAME(el)) = static_cast<SyBH_FIELD_OUT_TYPE(el)>( \
-        BOOST_PP_CAT(byte_to_, SyBH_FIELD_RAW_TYPE(el)) (                   \
-            &m_raw_data[SyBH_FIELD_OFFSET(el)],                             \
-            m_endian_order                                                  \
-        )                                                                   \
+#define SyBH_READ_FROM_RAW_BUFFER_OP(z, data, el)                                   \
+    BOOST_PP_CAT(m_, SyBH_FIELD_NAME(el)) = static_cast<SyBH_FIELD_OUT_TYPE(el)>(   \
+        BOOST_PP_CAT(byte_to_, SyBH_FIELD_RAW_TYPE(el)) (                           \
+            &m_raw_data[SyBH_FIELD_OFFSET(el)],                                     \
+            m_endian_order                                                          \
+        )                                                                           \
     );
 
-#define SyBH_READ_FROM_RAW_BUFFER(seq)                                      \
+#define SyBH_READ_FROM_RAW_BUFFER(seq)                                              \
     BOOST_PP_SEQ_FOR_EACH(SyBH_READ_FROM_RAW_BUFFER_OP, ~, seq)
 
-#define SyBH_WRITE_TO_RAW_BUFFER_OP(z, data, el)                            \
-    SyBH_FIELD_RAW_TYPE(el)_to_byte(                                        \
-        static_cast<SyBH_FIELD_RAW_TYPE(el)>(BOOST_PP_CAT(m_, SyBH_FIELD_NAME(el))), \
-        &m_raw_data[SyBH_FIELD_OFFSET(el)],                                 \
-        m_endian_order                                                      \
+#define SyBH_WRITE_TO_RAW_BUFFER_OP(z, data, el)                                    \
+    SyBH_FIELD_RAW_TYPE(el)_to_byte(                                                \
+        static_cast<SyBH_FIELD_RAW_TYPE(el)>(BOOST_PP_CAT(m_, SyBH_FIELD_NAME(el))),\
+        &m_raw_data[SyBH_FIELD_OFFSET(el)],                                         \
+        m_endian_order                                                              \
     );
 
-#define SyBH_WRITE_TO_RAW_BUFFER(seq)                                       \
+#define SyBH_WRITE_TO_RAW_BUFFER(seq)                                               \
         BOOST_PP_SEQ_FOR_EACH(SyBH_WRITE_TO_RAW_BUFFER_OP, ~, seq)
 
-#define SyBH_WRITE_MAP_OP(z, data, el)                                      \
-    {                                                                       \
-        TO_USERFRIENDLY_STRING(BOOST_PP_STRINGIZE(SyBH_FIELD_NAME(el))),    \
-        enum_cast<decltype(BOOST_PP_CAT(m_, SyBH_FIELD_NAME(el)))>::cast(   \
-            BOOST_PP_CAT(m_, SyBH_FIELD_NAME(el))                           \
-        )                                                                   \
+#define SyBH_WRITE_MAP_OP(z, data, el)                                              \
+    {                                                                               \
+        TO_USERFRIENDLY_STRING(BOOST_PP_STRINGIZE(SyBH_FIELD_NAME(el))),            \
+        enum_cast<decltype(BOOST_PP_CAT(m_, SyBH_FIELD_NAME(el)))>::cast(           \
+            BOOST_PP_CAT(m_, SyBH_FIELD_NAME(el))                                   \
+        )                                                                           \
     },
 
-#define SyBH_WRITE_MAP(seq)                                                 \
-    m_fields = {                                                            \
-        BOOST_PP_SEQ_FOR_EACH(SyBH_WRITE_MAP_OP, ~, seq)                    \
+#define SyBH_WRITE_MAP(seq)                                                         \
+    m_fields = {                                                                    \
+        BOOST_PP_SEQ_FOR_EACH(SyBH_WRITE_MAP_OP, ~, seq)                            \
     };
 
-#define SyBH_SET_FIELD_SWITCH_OP(z, data, el)                               \
-    if (FROM_USERFRIENDLY_STRING(name) == BOOST_PP_STRINGIZE(SyBH_FIELD_NAME(el))) { \
-        SyBH_FIELD_OUT_TYPE(el) __val;                                      \
-        VARIANT_VALUE_CAST(__val, value);                                   \
-        BOOST_PP_CAT(set_, SyBH_FIELD_NAME(el))(__val);                     \
-        return;                                                             \
+#define SyBH_SET_FIELD_SWITCH_OP(z, data, el)                                       \
+    if (FROM_USERFRIENDLY_STRING(name) == BOOST_PP_STRINGIZE(SyBH_FIELD_NAME(el))) {\
+        SyBH_FIELD_OUT_TYPE(el) __val;                                              \
+        VARIANT_VALUE_CAST(__val, value);                                           \
+        BOOST_PP_CAT(set_, SyBH_FIELD_NAME(el))(__val);                             \
+        return;                                                                     \
     }
 
-#define SyBH_SET_FIELD_SWITCH(seq)                                          \
+#define SyBH_SET_FIELD_SWITCH(seq)                                                  \
         BOOST_PP_SEQ_FOR_EACH(SyBH_SET_FIELD_SWITCH_OP, ~, seq)
 
-#define SyBH_INIT_DESCR_OP(z, data, el)                                     \
-    { TO_USERFRIENDLY_STRING(BOOST_PP_STRINGIZE(SyBH_FIELD_NAME(el))),      \
-        {{                                                                  \
-            "Bytes",                                                        \
-            to_string(segy_file::text_header_size + 1 + SyBH_FIELD_OFFSET(el)) \
-            + "-" + to_string(segy_file::text_header_size +                 \
-                SyBH_FIELD_OFFSET(el) + sizeof(SyBH_FIELD_RAW_TYPE(el))     \
-            )                                                               \
-        },                                                                  \
-        {                                                                   \
-            "Description",                                                  \
-            SyBH_FIELD_DESCR(el)                                            \
-        }}                                                                  \
+#define SyBH_INIT_DESCR_OP(z, data, el)                                             \
+    { TO_USERFRIENDLY_STRING(BOOST_PP_STRINGIZE(SyBH_FIELD_NAME(el))),              \
+        {{                                                                          \
+            "Bytes",                                                                \
+            to_string(segy_file::text_header_size + 1 + SyBH_FIELD_OFFSET(el))      \
+            + "-" + to_string(segy_file::text_header_size +                         \
+                SyBH_FIELD_OFFSET(el) + sizeof(SyBH_FIELD_RAW_TYPE(el))             \
+            )                                                                       \
+        },                                                                          \
+        {                                                                           \
+            "Description",                                                          \
+            SyBH_FIELD_DESCR(el)                                                    \
+        }}                                                                          \
     },
 
-#define SyBH_INIT_DESCR(seq)                                                \
-    map<string, map<string, string>> segy_bin_header::m_descr = {           \
-        BOOST_PP_SEQ_FOR_EACH(SyBH_INIT_DESCR_OP, ~, seq)                   \
-        {                                                                   \
-            TO_USERFRIENDLY_STRING("endian"),                               \
-            {                                                               \
-                {                                                           \
-                    "Bytes",                                                \
-                    ""                                                      \
-                },                                                          \
-                {                                                           \
-                    "Description",                                          \
-                    "Byte ordering to expect for this SEG-Y file:\n\t0 - big"\
-                    "\n\t1 - little\n\t2 - mid_big\n\t3 - mid_little"       \
-                }                                                           \
-            }                                                               \
-        }                                                                   \
+#define SyBH_INIT_DESCR(seq)                                                        \
+    map<string, map<string, string>> segy_bin_header::m_descr = {                   \
+        BOOST_PP_SEQ_FOR_EACH(SyBH_INIT_DESCR_OP, ~, seq)                           \
+        {                                                                           \
+            TO_USERFRIENDLY_STRING("endian"),                                       \
+            {                                                                       \
+                {                                                                   \
+                    "Bytes",                                                        \
+                    ""                                                              \
+                },                                                                  \
+                {                                                                   \
+                    "Description",                                                  \
+                    "Byte ordering to expect for this SEG-Y file:\n\t0 - big"       \
+                    "\n\t1 - little\n\t2 - mid_big\n\t3 - mid_little"               \
+                }                                                                   \
+            }                                                                       \
+        }                                                                           \
     };
 
 

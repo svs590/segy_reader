@@ -20,7 +20,6 @@ typedef unsigned char byte_t;
 
 using seismic_variant_value =
 std::variant<
-    char,
     byte_t,
     short,
     unsigned short,
@@ -30,7 +29,8 @@ std::variant<
     uint64_t,
     float,
     double,
-    std::string
+    std::string,
+    char            ///< char after std::string for properly string cast
 >;
 
 using seismic_variant_vector = std::variant<

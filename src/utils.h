@@ -17,11 +17,7 @@ enum class modifier { read_only, read_write };
 
 std::wstring utf8_to_unicode(const std::string& internal);
 
-class geolib_type_converter {
-public:
-	template <typename _From, typename _To> 
-	static _To convert(_From type);
-};
+std::string tab_to_space(const std::string& str);
 
 long long get_available_memory();
 

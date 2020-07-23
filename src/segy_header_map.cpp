@@ -27,7 +27,7 @@ segy_header_map::map_standard_req = {
     { "Src X", {72, 4, seismic_data_type::INT,
         "Source coordinate - X"} },
     { "Src Y", {76, 4, seismic_data_type::INT,
-        "Source coordinate - X"} },
+        "Source coordinate - Y"} },
     { "Samples count", {114, 2, seismic_data_type::SHORT,
         "Number of samples in this trace"} },
     { "Sample interval", {116, 2, seismic_data_type::SHORT,

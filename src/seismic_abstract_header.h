@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <map>
 #include <variant>
 
@@ -17,6 +18,7 @@ namespace py = pybind11;
 class seismic_abstract_header {
 protected:
     std::map<std::string, seismic_variant_value>    m_fields;
+    std::vector<byte_t>                             m_raw_data;
     modifier                                        m_modifier = modifier::read_write;
 public:
 	virtual seismic_variant_value get(const std::string &name) = 0;

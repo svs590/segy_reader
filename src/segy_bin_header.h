@@ -266,7 +266,6 @@ class segy_bin_header : public seismic_abstract_header {
 
     static std::map<std::string, std::map<std::string, std::string>>    m_descr;
 
-    std::vector<byte_t>                                                 m_raw_data;
     bool                                                                m_map_need_update;
     endian_order                                                        m_endian_order = endian_order::big;
 

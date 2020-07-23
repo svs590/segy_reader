@@ -35,6 +35,28 @@ wstring utf8_to_unicode(const string& internal) {
 	return external;
 }
 
+string tab_to_space(const string& str) {
+    string res = str;
+
+    int pos = 0;
+    int seq = 0;
+
+    while (pos < res.size()) {
+        if (res[pos] == '\n')
+            seq = -1;
+
+        if (res[pos] == '\t') {
+            int count = 4 - (seq + 1) % 4;
+            res[pos] = ' ';
+            res = res.insert(pos + 1, count, ' ');
+        }
+        ++pos;
+        ++seq;
+    }
+
+    return res;
+}
+
 long long get_available_memory() {
 
 #ifdef _WIN32

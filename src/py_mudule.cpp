@@ -6,6 +6,7 @@
 
 #include "seismic_data_provider.h"
 #include "segy_reader.h"
+#include "segy_text_header.h"
 #include "segy_bin_header.h"
 #include "segy_header_map.h"
 
@@ -27,6 +28,8 @@ PYBIND11_MODULE(seismo_reader, m)
 		py_segy_reader(m, "segy_reader", data_provider);
 	py::class_<seismic_abstract_header, std::shared_ptr<seismic_abstract_header>>
 		py_abstract_header(m, "abstract_header");
+    py::class_<segy_text_header, std::shared_ptr<segy_text_header>>
+        py_segy_text_header(m, "segy_text_header", py_abstract_header);
 	py::class_<segy_bin_header, std::shared_ptr<segy_bin_header>>
 		py_segy_bin_header(m, "segy_bin_header", py_abstract_header);
 	py::class_<seismic_trace_header, std::shared_ptr<seismic_trace_header>>
@@ -44,6 +47,7 @@ PYBIND11_MODULE(seismo_reader, m)
 	py_seismic_data_provider_init(m, data_provider);
 	py_segy_reader_init(m, py_segy_reader);
 	py_segy_abstract_header_init(m, py_abstract_header);
+    py_segy_text_header_init(m, py_segy_text_header);
     py_segy_bin_header_init(m, py_segy_bin_header);
 	py_seismic_trace_header_init(m, py_seismic_trace_header);
 	py_seismic_trace_init(m, py_seismic_trace);

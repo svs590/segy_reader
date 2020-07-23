@@ -6,7 +6,6 @@
 #include <optional>
 
 #include "seismic_abstract_header.h"
-#include "seismic_text_header.h"
 
 #include <boost/preprocessor.hpp>
 #include <boost/preprocessor/facilities/is_empty_variadic.hpp>

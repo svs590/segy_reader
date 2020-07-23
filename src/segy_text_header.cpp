@@ -45,6 +45,7 @@ segy_text_header::segy_text_header(
     m_raw_data = raw_data;
     m_is_ebdic = is_ebdic;
     init_from_raw();
+    m_modifier = modifier::read_only;
 }
 
 segy_text_header::segy_text_header(

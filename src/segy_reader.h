@@ -14,6 +14,7 @@ namespace bfs = boost::filesystem;
 #include "seismic_data_provider.h"
 #include "seismic_header_map.h"
 #include "seismic_geometry.h"
+#include "segy_text_header.h"
 #include "segy_bin_header.h"
 #include "segy_trace_header.h"
 #include "segy_trace.h"
@@ -47,7 +48,7 @@ class segy_reader : public seismic_data_provider {
 
     std::shared_ptr<seismic_header_map>                 f_header_map;
 	std::shared_ptr<segy_bin_header>                    f_bin_header;
-	std::string                                         f_text_header;
+    std::shared_ptr<segy_text_header>                   f_text_header;
 	std::vector<std::shared_ptr<seismic_trace_header>>  f_headers;
 	std::shared_ptr<seismic_geometry_info>              f_geometry;
 
@@ -69,7 +70,7 @@ public:
 	virtual int                                         samples_count();
 	virtual double                                      sample_interval();
 
-	virtual std::string                                 text_header();
+	virtual std::shared_ptr<seismic_abstract_header>    text_header();
 	virtual std::shared_ptr<seismic_abstract_header>    bin_header();
 	virtual std::shared_ptr<seismic_header_map>         header_map();
 	virtual void                                        set_header_map(std::shared_ptr<seismic_header_map> map);

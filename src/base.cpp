@@ -13,9 +13,7 @@ using namespace std;
 void py_seismic_data_provider_init(py::module &m,
 	py::class_<seismic_data_provider, shared_ptr<seismic_data_provider>> &data_provider) {
 	
-	data_provider.def("text_header", [](seismic_data_provider &obj) {
-			return utf8_to_unicode(obj.text_header());
-		},
+	data_provider.def("text_header", &seismic_data_provider::text_header,
 		"Returns textural file header"
 	);
 	data_provider.def("bin_header", &seismic_data_provider::bin_header,

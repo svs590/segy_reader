@@ -25,7 +25,7 @@ void segy_reader::init(bool reopen) {
             close_file();
         open_file();
 
-        f_text_header.clear();
+        f_text_header = nullptr;
         text_header();
 
         f_bin_header = nullptr;
@@ -185,21 +185,21 @@ void segy_reader::set_header_map(shared_ptr<seismic_header_map> map) {
     smart_buffer.reset(map, f_bin_header);
 }
 
-string segy_reader::text_header() {
-    if (!f_text_header.empty())
+shared_ptr<seismic_abstract_header> segy_reader::text_header() {
+    if (f_text_header != nullptr)
         return f_text_header;
 
     vector<char> buf(segy_file::text_header_size);
+    vector<byte_t> bytes(segy_file::text_header_size);
 
     f_istream.seekg(0);
     f_istream.read(buf.data(), segy_file::text_header_size);
     if (f_istream.fail())
         throw runtime_error("segy_reader: unexpected error occurred while reading segy text header");
 
-    if (f_config.ebcdic_header)
-        f_text_header = ebcdic_to_char(buf.data());
-    else
-        f_text_header = string(buf.data());
+    memcpy(bytes.data(), buf.data(), segy_file::text_header_size);
+
+    f_text_header.reset(new segy_text_header(bytes, f_config.ebcdic_header));
 
     return f_text_header;
 }

@@ -23,7 +23,7 @@ class seismic_data_provider : public obj_base {
 public:
 	seismic_data_provider() { }
 
-	virtual std::string                                         text_header() = 0;
+	virtual std::shared_ptr<seismic_abstract_header>            text_header() = 0;
 	virtual std::shared_ptr<seismic_abstract_header>            bin_header() = 0;
 	virtual std::shared_ptr<seismic_header_map>                 header_map() = 0;
 	virtual void                                                set_header_map(std::shared_ptr<seismic_header_map> map) = 0;

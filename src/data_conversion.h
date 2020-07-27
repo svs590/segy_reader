@@ -7,6 +7,8 @@
 
 enum class endian_order { big, little, mid_big, mid_little };
 
+endian_order native_order();
+
 /**
  * Convert from EBCDIC code to C char
  */
@@ -88,6 +90,11 @@ void			int_to_byte(int value, byte_t* outPtr, endian_order order);
 #define         int32_t_to_byte int_to_byte
 
 template <endian_order From>
+void			uint_to_byte(uint32_t value, byte_t* outPtr);
+void			uint_to_byte(uint32_t value, byte_t* outPtr, endian_order order);
+#define         uint32_t_to_byte uint_to_byte
+
+template <endian_order From>
 void			int64_to_byte(int64_t value, byte_t* outPtr);
 void			int64_to_byte(int64_t value, byte_t* outPtr, endian_order order);
 #define         int64_t_to_byte int64_to_byte
@@ -110,4 +117,4 @@ seismic_variant_vector  segy_data_to_native(const byte_t *buffer, int buffer_siz
 
 
 template <segy_data_format To>
-void                    native_to_segy_data(const byte_t *buffer, int buffer_size, endian_order order);
+std::vector<byte_t>     native_to_segy_data(seismic_variant_vector data, endian_order order);

@@ -6,6 +6,7 @@
 #include <optional>
 
 #include "seismic_abstract_header.h"
+#include "segy_writer.h"
 
 #include <boost/preprocessor.hpp>
 #include <boost/preprocessor/facilities/is_empty_variadic.hpp>
@@ -46,8 +47,11 @@ namespace py = pybind11;
 #define DEFINE_SyTH_METHODS(seq)                                                    \
     BOOST_PP_SEQ_FOR_EACH(DEFINE_SyBH_SET_METHODS_OP, ~, seq)
 
+class segy_writer;
 
 class segy_text_header : public seismic_abstract_header {
+
+    friend class segy_writer;
 
 /**
   * Segy text header fieds tuple like (name, basic_template, seq_of_subs)
@@ -67,8 +71,8 @@ class segy_text_header : public seismic_abstract_header {
     ((C6,       "AREA INFO", ()))                                                       \
     ((C7,       "First CDP:\t%first_cdp,\tLast CDP:\t%last_cdp",                        \
         (first_cdp) (last_cdp)))                                                        \
-    ((C8,       "X min:\t\t%x_min,\tX max:\t\t%x_max,\tDelta:\t%x_delta"),              \
-        (x_min) (x_max) (x_delta))                                                      \
+    ((C8,       "X min:\t\t%x_min,\tX max:\t\t%x_max,\tDelta:\t%x_delta",               \
+        (x_min) (x_max) (x_delta)))                                                     \
     ((C9,       "Y min:\t\t%y_min,\tY max:\t\t%y_max,\tDelta:\t%y_delta",               \
         (y_min) (y_max) (y_delta)))                                                     \
     ((C10,       "Time min:\t%time_min,\tTime max:\t%time_max,\tDelta:\t%time_delta",   \
@@ -83,8 +87,8 @@ class segy_text_header : public seismic_abstract_header {
     ((C15,       "BINARY HEADER INFO", ()))                                             \
     ((C16,       "Location:\t\t\t\t\t\t%bin_header_loc",                                \
         (bin_header_loc)))                                                              \
-    ((C17,       "Sample interval:\t\t\t\t%bin_header_sample_interval_loc"),            \
-        (bin_header_sample_interval_loc))                                               \
+    ((C17,       "Sample interval:\t\t\t\t%bin_header_sample_interval_loc",             \
+        (bin_header_sample_interval_loc)))                                              \
     ((C18,       "Number of samples per trace:\t%bin_header_samples_count_loc",         \
         (bin_header_samples_count_loc)))                                                \
     ((C19,       "Trace data format:\t\t\t\t%bin_header_data_format_loc",               \
@@ -94,7 +98,7 @@ class segy_text_header : public seismic_abstract_header {
     ((C22,       "Location:\t\t\t\t\t\t%trace_header_loc",                              \
         (trace_header_loc)))                                                            \
     ((C23,       "Inline number:\t\t\t\t\t%trace_header_iline_loc",                     \
-        (trace_header_il_loc)))                                                         \
+        (trace_header_iline_loc)))                                                      \
     ((C24,       "Crossline number:\t\t\t\t%trace_header_crossline_loc",                \
         (trace_header_crossline_loc)))                                                  \
     ((C25,       "CDP X:\t\t\t\t\t\t\t%trace_header_cdpx_loc",                          \
@@ -148,6 +152,7 @@ public:
     std::vector<byte_t> raw_data();
 
     void set_product_name(const std::string &name);
+    void set_date_time(const std::string &name);
     void set_object_name(const std::string &name);
     void set_seismic_type(const std::string &type);
 

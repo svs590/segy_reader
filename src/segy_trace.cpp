@@ -12,8 +12,15 @@ f_data = segy_data_to_native<data_type>(                            \
     order                                                           \
 );
 
+#define NATIVE_TO_DATA_CASE_LINE(data_type, order)                  \
+data = native_to_segy_data<data_type>(                              \
+    f_data,                                                         \
+    order                                                           \
+);
+
 segy_trace::segy_trace(const segy_trace &trace) {
     f_header = make_shared<segy_trace_header>(*dynamic_pointer_cast<segy_trace_header>(trace.f_header));
+    f_order = f_header->endian();
     f_data = trace.f_data;
 }
 
@@ -25,6 +32,7 @@ segy_trace::segy_trace(
     endian_order order) {
 
     f_header = shared_ptr<seismic_trace_header>(new segy_trace_header(header));
+    f_order = order;
     parse(data, num_samples, format, order);
 }
 
@@ -33,6 +41,7 @@ segy_trace::segy_trace(
     const seismic_variant_vector &data) {
 
     f_header = shared_ptr<seismic_trace_header>(new segy_trace_header(header));
+    f_order = f_header->endian();
     f_data = data;
 }
 
@@ -52,6 +61,7 @@ segy_trace::segy_trace(
     endian_order order) {
 
     f_header = make_shared<segy_trace_header>(*header);
+    f_order = order;
     parse(data, num_samples, format, order);
 }
 
@@ -101,7 +111,7 @@ void segy_trace::parse(const byte_t *data, int num_samples, segy_data_format for
         DATA_TO_NATIVE_CASE_LINE(segy_data_format::int16_2complement, num_samples, order);
         break;
     case segy_data_format::float32_obsolete:
-        throw runtime_error("segy_trace: parse: float32 obsolete is not supported");
+        SR_THROW(runtime_error, "float32 obsolete is not supported");
         break;
     case segy_data_format::float32:
         DATA_TO_NATIVE_CASE_LINE(segy_data_format::float32, num_samples, order);
@@ -110,7 +120,7 @@ void segy_trace::parse(const byte_t *data, int num_samples, segy_data_format for
         DATA_TO_NATIVE_CASE_LINE(segy_data_format::float64, num_samples, order);
         break;
     case segy_data_format::int24_2complement:
-        throw runtime_error("segy_trace: parse: int24 two's complement is not supported");
+        SR_THROW(runtime_error, "int24 two's complement is not supported");
         break;
     case segy_data_format::int8_2complement:
         DATA_TO_NATIVE_CASE_LINE(segy_data_format::int8_2complement, num_samples, order);
@@ -134,7 +144,70 @@ void segy_trace::parse(const byte_t *data, int num_samples, segy_data_format for
         DATA_TO_NATIVE_CASE_LINE(segy_data_format::uint8, num_samples, order);
         break;
     default:
-        throw invalid_argument("segy_trace: parse: invalid data type");
+        SR_THROW(invalid_argument, "invalid data type");
         break;
     }
+}
+
+vector<byte_t> segy_trace::raw_data(segy_data_format format, endian_order order) {
+    vector<byte_t> header;
+    vector<byte_t> data;
+    
+    f_header->reset_endian_order(order);
+
+    header = f_header->raw_data();
+
+    switch (format) {
+    case segy_data_format::float32_ibm:
+        NATIVE_TO_DATA_CASE_LINE(segy_data_format::float32_ibm, order);
+        break;
+    case segy_data_format::int32_2complement:
+        NATIVE_TO_DATA_CASE_LINE(segy_data_format::int32_2complement, order);
+        break;
+    case segy_data_format::int16_2complement:
+        NATIVE_TO_DATA_CASE_LINE(segy_data_format::int16_2complement, order);
+        break;
+    case segy_data_format::float32_obsolete:
+        SR_THROW(runtime_error, "float32 obsolete is not supported");
+        break;
+    case segy_data_format::float32:
+        NATIVE_TO_DATA_CASE_LINE(segy_data_format::float32, order);
+        break;
+    case segy_data_format::float64:
+        NATIVE_TO_DATA_CASE_LINE(segy_data_format::float64, order);
+        break;
+    case segy_data_format::int24_2complement:
+        SR_THROW(runtime_error, "int24 two's complement is not supported");
+        break;
+    case segy_data_format::int8_2complement:
+        NATIVE_TO_DATA_CASE_LINE(segy_data_format::int8_2complement, order);
+        break;
+    case segy_data_format::int64_2complement:
+        NATIVE_TO_DATA_CASE_LINE(segy_data_format::int64_2complement, order);
+        break;
+    case segy_data_format::uint32:
+        NATIVE_TO_DATA_CASE_LINE(segy_data_format::uint32, order);
+        break;
+    case segy_data_format::uint16:
+        NATIVE_TO_DATA_CASE_LINE(segy_data_format::uint16, order);
+        break;
+    case segy_data_format::uint64:
+        NATIVE_TO_DATA_CASE_LINE(segy_data_format::uint64, order);
+        break;
+    case segy_data_format::uint24:
+        throw runtime_error("segy_trace: parse: uint24 is not supported");
+        break;
+    case segy_data_format::uint8:
+        NATIVE_TO_DATA_CASE_LINE(segy_data_format::uint8, order);
+        break;
+    default:
+        SR_THROW(invalid_argument, "invalid data type");
+        break;
+    }
+
+    vector<byte_t> all(header.size() + data.size());
+    copy(header.begin(), header.end(), all.begin());
+    copy(data.begin(), data.end(), all.begin() + header.size());
+
+    return all;
 }

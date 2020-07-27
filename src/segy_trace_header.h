@@ -24,17 +24,18 @@ namespace py = pybind11;
 
 class segy_trace_header : public seismic_trace_header {
 	std::shared_ptr<seismic_header_map> f_map;
-    endian_order f_endian_order = endian_order::big;
-    std::array<byte_t, segy_file::trace_header_size> f_raw_data;
-    segy_coord f_coord = segy_coord::CDP;
-    bool f_req_field_init = false;
+    endian_order                        f_endian_order;
+    std::vector<byte_t>                 f_raw_data;
+    seismic_coords_type                 f_coord = seismic_coords_type::CDP;
+    bool                                f_req_field_init = false;
+
 public:
 	segy_trace_header(std::shared_ptr<seismic_header_map> map);
     segy_trace_header(
         std::shared_ptr<seismic_header_map> map, 
         byte_t *raw_data, 
         endian_order swap,
-        segy_coord coord = segy_coord::CDP
+        seismic_coords_type coord = seismic_coords_type::CDP
     );
 	segy_trace_header(const segy_trace_header &header);
 	~segy_trace_header() {}
@@ -50,7 +51,7 @@ public:
 	virtual object_type type_id() { return object_type::SEGY_TRACEHEADER; }
 
     virtual std::map<std::string, seismic_variant_value> to_map();
-    virtual void set(const std::map<std::string, seismic_variant_value> &map);
+    virtual void from_map(const std::map<std::string, seismic_variant_value> &map);
     virtual bool is_valid();
 
     virtual seismic_variant_value           iline();
@@ -61,10 +62,21 @@ public:
     seismic_variant_value                   Src_X();
     seismic_variant_value                   Src_Y();
     seismic_variant_value                   coord_scalar();
-    seismic_variant_value                   samples_count();
-    seismic_variant_value                   sample_interval();
+    virtual seismic_variant_value           samples_count();
+    virtual seismic_variant_value           sample_interval();
     virtual seismic_variant_value           X();
     virtual seismic_variant_value           Y();
+
+    virtual std::vector<byte_t>             raw_data();
+
+    virtual endian_order                    endian();
+
+//protected:
+    seismic_coords_type coords();
+
+    void reset_header_map(std::shared_ptr<seismic_header_map> map);
+    void reset_endian_order(endian_order order);
+    void reset_coords(seismic_coords_type coord);
 
 private:
     void parse_required();

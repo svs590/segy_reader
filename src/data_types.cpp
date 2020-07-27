@@ -1,5 +1,5 @@
 #include "data_types.h"
-
+#include <iostream>
 
 template <class Int>
 struct next_integer { 
@@ -71,6 +71,52 @@ struct containing_type {
     >;
 };
 
+bool is_integral_type(const seismic_variant_value &val) {
+    bool res = false;
+
+    std::visit(
+        [&res](auto &&arg) {
+            res = std::is_integral<decltype(arg)>::value;
+        },
+        val
+    );
+
+    return res;
+}
+
+segy_data_format segy_format_from_data(const seismic_variant_vector &val) {
+    segy_data_format res;
+    
+    std::visit(
+        [&res](auto &&arg) {
+            using T = std::decay_t<decltype(arg)>::value_type;
+            
+            if (typeid(T).hash_code() == typeid(short).hash_code())
+                res = segy_data_format::int16_2complement;
+            else if (typeid(T).hash_code() == typeid(unsigned short).hash_code())
+                res = segy_data_format::uint16;
+            else if (typeid(T).hash_code() == typeid(int).hash_code())
+                res = segy_data_format::int32_2complement;
+            else if (typeid(T).hash_code() == typeid(uint32_t).hash_code())
+                res = segy_data_format::uint32;
+            else if (typeid(T).hash_code() == typeid(int64_t).hash_code())
+                res = segy_data_format::int64_2complement;
+            else if (typeid(T).hash_code() == typeid(uint64_t).hash_code())
+                res = segy_data_format::uint64;
+            else if (typeid(T).hash_code() == typeid(float).hash_code())
+                res = segy_data_format::float32;
+            else if (typeid(T).hash_code() == typeid(double).hash_code())
+                res = segy_data_format::float64;
+            else
+                res = segy_data_format::float32;    ///< FIXME, throw exception
+        },
+        val
+    );
+
+    return res;
+
+}
+
 template <typename T>
 inline int greater(const seismic_variant_value& left, T &right) {
     return std::visit([right](auto& val_1) -> int {
@@ -128,6 +174,17 @@ namespace seismic_variant_operations {
             return val_1_c * val_2_c;
 
         }, left, right);
+    }
+
+    int size(const seismic_variant_vector& vec) {
+        int res = 0;
+        std::visit(
+            [&res](auto& data) {
+                res = data.size();
+            },
+            vec
+        );
+        return res;
     }
 
     template <>

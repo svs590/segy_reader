@@ -14,6 +14,7 @@ namespace py = pybind11;
 #endif
 
 #include "seismic_exception.h"
+#include "segy_file.h"
 
 
 typedef unsigned char byte_t;
@@ -88,6 +89,10 @@ struct caster_selector {
     >;
 };
 
+bool is_integral_type(const seismic_variant_value &val);
+
+segy_data_format segy_format_from_data(const seismic_variant_vector &val);
+
 #define VARIANT_VALUE_CAST(value_out, variant_value)                                \
 {                                                                                   \
     using type_out = std::decay_t<decltype(value_out)>;                             \
@@ -100,6 +105,8 @@ struct caster_selector {
 namespace seismic_variant_operations {
     seismic_variant_value operator+(const seismic_variant_value& left, const seismic_variant_value& right);
     seismic_variant_value operator*(const seismic_variant_value& left, const seismic_variant_value& right);
+
+    int                   size(const seismic_variant_vector& vec);
 
     template <typename T>
     bool operator==(const seismic_variant_value &left, T right);

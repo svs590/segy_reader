@@ -4,6 +4,7 @@
 #include <locale>
 #include <codecvt>
 #include <cassert>
+#include <chrono>
 
 #ifdef _WIN32
 #define NOMINMAX
@@ -100,4 +101,14 @@ bool is_little_endian() {
     // SPARC: aa.cc[0]=1  // BigEndian
 
     return(aa.cc[0] == 2);
+}
+
+string date_time() {
+    chrono::system_clock::time_point p = chrono::system_clock::now();
+    time_t t = chrono::system_clock::to_time_t(p);
+    char str[26];
+    ctime_s(str, sizeof str, &t);
+
+    string res(str);
+    return res.replace(res.end() - 1, res.end(), 1, ' ');
 }

@@ -3,6 +3,8 @@
 #include <Eigen/Dense>
 
 #include <boost/endian/conversion.hpp>
+
+using namespace std;
 using namespace boost::endian;
 
 
@@ -68,6 +70,13 @@ std::string char_to_ecdic(const std::string &str) {
 	}
 
 	return res;
+}
+
+endian_order native_order() {
+    if (order::native == order::big)
+        return endian_order::big;
+    else
+        return endian_order::little;
 }
 
 int8_t byte_to_int8_t(byte_t const* ptr, endian_order order) {
@@ -425,6 +434,40 @@ void int_to_byte<endian_order::mid_big>(int value, byte_t* outPtr) {
 
 template <>
 void int_to_byte<endian_order::mid_little>(int value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::little>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    outPtr[0] = ptr[1];
+    outPtr[1] = ptr[0];
+    outPtr[2] = ptr[3];
+    outPtr[3] = ptr[2];
+}
+
+template <>
+void uint_to_byte<endian_order::big>(uint32_t value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    memcpy(outPtr, ptr, sizeof(uint32_t));
+}
+
+template <>
+void uint_to_byte<endian_order::little>(uint32_t value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::little>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    memcpy(outPtr, ptr, sizeof(uint32_t));
+}
+
+template <>
+void uint_to_byte<endian_order::mid_big>(uint32_t value, byte_t* outPtr) {
+    value = conditional_reverse<order::native, order::big>(value);
+    byte_t *ptr = reinterpret_cast<byte_t*>(&value);
+    outPtr[0] = ptr[1];
+    outPtr[1] = ptr[0];
+    outPtr[2] = ptr[3];
+    outPtr[3] = ptr[2];
+}
+
+template <>
+void uint_to_byte<endian_order::mid_little>(uint32_t value, byte_t* outPtr) {
     value = conditional_reverse<order::native, order::little>(value);
     byte_t *ptr = reinterpret_cast<byte_t*>(&value);
     outPtr[0] = ptr[1];
@@ -827,6 +870,25 @@ void int_to_byte(int value, byte_t* outPtr, endian_order order) {
     }
 }
 
+void uint_to_byte(uint32_t value, byte_t* outPtr, endian_order order) {
+    switch (order) {
+    case endian_order::big:
+        return uint_to_byte<endian_order::big>(value, outPtr);
+        break;
+    case endian_order::little:
+        return uint_to_byte<endian_order::little>(value, outPtr);
+        break;
+    case endian_order::mid_big:
+        return uint_to_byte<endian_order::mid_big>(value, outPtr);
+        break;
+    case endian_order::mid_little:
+        return uint_to_byte<endian_order::mid_little>(value, outPtr);
+        break;
+    default:
+        break;
+    }
+}
+
 void float_to_byte(float value, byte_t* outPtr, endian_order order) {
     switch (order)
     {
@@ -914,14 +976,13 @@ seismic_variant_vector segy_data_to_native<segy_data_format::float32_ibm>(
     endian_order order) {
 
     unsigned fraction;
-    byte_t *f = new byte_t[4];
     int exponent;
     int signum;
 
     Eigen::VectorXf res(buffer_size / 4);
 
     for (int i = 0; i < buffer_size; i += 4) {
-        fraction = byte_to_uint(&buffer[i], order);
+        fraction = byte_to_uint(&buffer[i], endian_order::big);
 
         signum = fraction >> 31;
         fraction <<= 1;
@@ -958,7 +1019,6 @@ seismic_variant_vector segy_data_to_native<segy_data_format::float32_ibm>(
         }
 
         fraction = (fraction >> 9) | (exponent << 23) | (signum << 31);
-        //memcpy(&buffer[i], &fraction, 4);
         res[i / 4] = *reinterpret_cast<float*>(&fraction);
     }
 
@@ -1107,38 +1167,313 @@ seismic_variant_vector segy_data_to_native<segy_data_format::uint8>(
 }
 
 
-//template <>
-//void native_to_segy_data<segy_data_format::float32_ibm>(const byte_t *buffer, int buffer_size, endian_order order) {
-//    unsigned fraction;
-//    int exponent;
-//    int signum;
-//
-//    for (int i = 0; i < buffer_size; i += 4) {
-//        memcpy(&fraction, &buffer[i], 4);
-//        signum = fraction >> 31;
-//        fraction <<= 1;
-//        exponent = fraction >> 24;
-//        fraction <<= 8;
-//
-//        if (exponent > 0 && exponent != 255) {
-//            fraction = (fraction >> 1) | 0x80000000;
-//            exponent += 130;
-//            fraction >>= -exponent & 3;
-//            exponent = (exponent + 3) >> 2;
-//
-//            while (fraction < 0x10000000) {
-//                --exponent;
-//                fraction <<= 4;
-//            }
-//        }
-//        else { // fraction == 0 || fraction == 255
-//            if (exponent == 255) {
-//                fraction = 0xffffff00;
-//                exponent = 0x7f;
-//            }
-//        }
-//
-//        fraction = (fraction >> 8) | (exponent << 24) | (signum << 31);
-//        memcpy(&buffer[i], &fraction, 4);
-//    }
-//}
+template <>
+vector<byte_t> native_to_segy_data<segy_data_format::float32_ibm>(
+    seismic_variant_vector data, endian_order order
+) {
+    short elem_size = segy_data_format_size(segy_data_format::float32_ibm);
+    int data_size = seismic_variant_operations::size(data);
+
+    vector<byte_t> res(elem_size * data_size);
+
+    unsigned fraction;
+    int exponent;
+    int signum;
+
+    std::visit(
+        [&res, elem_size](auto &d) {
+            uint32_t fraction;
+            int exponent;
+            int signum;
+            float casted;
+
+            for (int i = 0; i < d.size(); ++i) {
+                casted = static_cast<float>(d(i));
+
+                fraction = *reinterpret_cast<uint32_t*>(&casted);
+
+                signum = fraction >> 31;
+                fraction <<= 1;
+                exponent = fraction >> 24;
+                fraction <<= 8;
+
+                if (exponent == 255) {
+                    fraction = 0xffffff00;
+                    exponent = 0x7f;
+                }
+                else {
+                    if (exponent > 0) {
+                        fraction = (fraction >> 1) | 0x80000000;
+
+                        exponent += 130;
+                        fraction >>= -exponent & 3;
+                        exponent = (exponent + 3) >> 2;
+
+                        while (fraction < 0x10000000) {
+                            --exponent;
+                            fraction <<= 4;
+                        }
+                    }
+                    else if (fraction != 0) {
+                        exponent += 130;
+                        fraction >>= -exponent & 3;
+                        exponent = (exponent + 3) >> 2;
+
+                        while (fraction < 0x10000000) {
+                            --exponent;
+                            fraction <<= 4;
+                        }
+                    }
+                }
+
+                fraction = (fraction >> 8) | (exponent << 24) | (signum << 31);
+                fraction = byte_to_uint(reinterpret_cast<byte_t*>(&fraction), endian_order::big);
+                memcpy(&res[elem_size * i], &fraction, elem_size);
+            }
+        },
+        data
+    );
+    
+    return res;
+}
+
+template <>
+vector<byte_t> native_to_segy_data<segy_data_format::float32>(
+    seismic_variant_vector data, endian_order order
+) {
+    short elem_size = segy_data_format_size(segy_data_format::float32);
+    int data_size = seismic_variant_operations::size(data);
+
+    vector<byte_t> res(elem_size * data_size);
+
+    std::visit(
+        [&res, elem_size, order](auto &d) {
+            float casted;
+
+            for (int i = 0; i < d.size(); ++i) {
+                casted = static_cast<float>(d(i));
+                float_to_byte(casted, &res[elem_size * i], order);
+            }
+        },
+        data
+    );
+
+    return res;
+}
+
+template <>
+vector<byte_t> native_to_segy_data<segy_data_format::float64>(
+    seismic_variant_vector data, endian_order order
+) {
+    short elem_size = segy_data_format_size(segy_data_format::float64);
+    int data_size = seismic_variant_operations::size(data);
+
+    vector<byte_t> res(elem_size * data_size);
+
+    std::visit(
+        [&res, elem_size, order](auto &d) {
+            double casted;
+
+            for (int i = 0; i < d.size(); ++i) {
+                casted = static_cast<double>(d(i));
+                double_to_byte(casted, &res[elem_size * i], order);
+            }
+        },
+        data
+    );
+
+    return res;
+}
+
+template <>
+vector<byte_t> native_to_segy_data<segy_data_format::int64_2complement>(
+    seismic_variant_vector data, endian_order order
+) {
+    short elem_size = segy_data_format_size(segy_data_format::int64_2complement);
+    int data_size = seismic_variant_operations::size(data);
+
+    vector<byte_t> res(elem_size * data_size);
+
+    std::visit(
+        [&res, elem_size, order](auto &d) {
+            int64_t casted;
+
+            for (int i = 0; i < d.size(); ++i) {
+                casted = static_cast<int64_t>(d(i));
+                int64_to_byte(casted, &res[elem_size * i], order);
+            }
+        },
+        data
+    );
+
+    return res;
+}
+
+template <>
+vector<byte_t> native_to_segy_data<segy_data_format::int32_2complement>(
+    seismic_variant_vector data, endian_order order
+) {
+    short elem_size = segy_data_format_size(segy_data_format::int32_2complement);
+    int data_size = seismic_variant_operations::size(data);
+
+    vector<byte_t> res(elem_size * data_size);
+
+    std::visit(
+        [&res, elem_size, order](auto &d) {
+            int32_t casted;
+
+            for (int i = 0; i < d.size(); ++i) {
+                casted = static_cast<int32_t>(d(i));
+                int_to_byte(casted, &res[elem_size * i], order);
+            }
+        },
+        data
+    );
+
+    return res;
+}
+
+template <>
+vector<byte_t> native_to_segy_data<segy_data_format::int16_2complement>(
+    seismic_variant_vector data, endian_order order
+) {
+    short elem_size = segy_data_format_size(segy_data_format::int16_2complement);
+    int data_size = seismic_variant_operations::size(data);
+
+    vector<byte_t> res(elem_size * data_size);
+
+    std::visit(
+        [&res, elem_size, order](auto &d) {
+            int16_t casted;
+
+            for (int i = 0; i < d.size(); ++i) {
+                casted = static_cast<int16_t>(d(i));
+                short_to_byte(casted, &res[elem_size * i], order);
+            }
+        },
+        data
+    );
+
+    return res;
+}
+
+template <>
+vector<byte_t> native_to_segy_data<segy_data_format::int8_2complement>(
+    seismic_variant_vector data, endian_order order
+) {
+    short elem_size = segy_data_format_size(segy_data_format::int8_2complement);
+    int data_size = seismic_variant_operations::size(data);
+
+    vector<byte_t> res(elem_size * data_size);
+
+    std::visit(
+        [&res, elem_size, order](auto &d) {
+            int8_t casted;
+
+            for (int i = 0; i < d.size(); ++i) {
+                casted = static_cast<int8_t>(d(i));
+                res[i] = casted;
+            }
+        },
+        data
+    );
+
+    return res;
+}
+
+template <>
+vector<byte_t> native_to_segy_data<segy_data_format::uint64>(
+    seismic_variant_vector data, endian_order order
+) {
+    short elem_size = segy_data_format_size(segy_data_format::uint64);
+    int data_size = seismic_variant_operations::size(data);
+
+    vector<byte_t> res(elem_size * data_size);
+
+    std::visit(
+        [&res, elem_size, order](auto &d) {
+            uint64_t casted;
+
+            for (int i = 0; i < d.size(); ++i) {
+                casted = static_cast<uint64_t>(d(i));
+                uint64_to_byte(casted, &res[elem_size * i], order);
+            }
+        },
+        data
+    );
+
+    return res;
+}
+
+template <>
+vector<byte_t> native_to_segy_data<segy_data_format::uint32>(
+    seismic_variant_vector data, endian_order order
+) {
+    short elem_size = segy_data_format_size(segy_data_format::uint32);
+    int data_size = seismic_variant_operations::size(data);
+
+    vector<byte_t> res(elem_size * data_size);
+
+    std::visit(
+        [&res, elem_size, order](auto &d) {
+            uint32_t casted;
+
+            for (int i = 0; i < d.size(); ++i) {
+                casted = static_cast<uint32_t>(d(i));
+                uint_to_byte(casted, &res[elem_size * i], order);
+            }
+        },
+        data
+    );
+
+    return res;
+}
+
+template <>
+vector<byte_t> native_to_segy_data<segy_data_format::uint16>(
+    seismic_variant_vector data, endian_order order
+) {
+    short elem_size = segy_data_format_size(segy_data_format::uint16);
+    int data_size = seismic_variant_operations::size(data);
+
+    vector<byte_t> res(elem_size * data_size);
+
+    std::visit(
+        [&res, elem_size, order](auto &d) {
+            uint16_t casted;
+
+            for (int i = 0; i < d.size(); ++i) {
+                casted = static_cast<uint16_t>(d(i));
+                uint_to_byte(casted, &res[elem_size * i], order);
+            }
+        },
+        data
+    );
+
+    return res;
+}
+
+template <>
+vector<byte_t> native_to_segy_data<segy_data_format::uint8>(
+    seismic_variant_vector data, endian_order order
+) {
+    short elem_size = segy_data_format_size(segy_data_format::uint8);
+    int data_size = seismic_variant_operations::size(data);
+
+    vector<byte_t> res(elem_size * data_size);
+
+    std::visit(
+        [&res, elem_size, order](auto &d) {
+            uint8_t casted;
+
+            for (int i = 0; i < d.size(); ++i) {
+                casted = static_cast<uint8_t>(d(i));
+                uint_to_byte(casted, &res[elem_size * i], order);
+            }
+        },
+        data
+    );
+
+    return res;
+}
+

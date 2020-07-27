@@ -2,8 +2,7 @@
 #include "data_conversion.h"
 
 #include <regex>
-
-#include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -131,7 +130,7 @@ void segy_text_header::write_to_raw() {
     for (auto &it : m_fields) {
         string field_srt = tab_to_space(std::get<string>(it.second));
 
-        field_srt = regex_replace(field_srt, e, "<undef>");
+        field_srt = regex_replace(field_srt, e, "<und>");
 
         int size76 = 76 - field_srt.size();
 
@@ -163,22 +162,38 @@ vector<byte_t> segy_text_header::raw_data() {
 void segy_text_header::subs(const string &pattern, seismic_variant_value val) {
     for (auto &it : m_fields) {
 
-        string val_srt = "";
+        ostringstream val_srt;
         if (holds_alternative<string>(val))
-            val_srt = std::get<string>(val);
-        else
-            SR_THROW(runtime_error, "not implemented for non-string types");
+            val_srt << std::get<string>(val);
+        else {
+            if (is_integral_type(val)) {
+                size_t int64_val;
+                VARIANT_VALUE_CAST(int64_val, val);
+
+                val_srt << int64_val;
+            }
+            else {
+                double double_val;
+                VARIANT_VALUE_CAST(double_val, val);
+
+                val_srt << double_val;
+            }
+        }
 
         it.second = regex_replace(
             std::get<string>(it.second),
             regex(pattern),
-            val_srt
+            val_srt.str()
         );
     }
 }
 
 void segy_text_header::set_product_name(const string &name) {
     subs("%ProductName", name);
+}
+
+void segy_text_header::set_date_time(const std::string &name) {
+    subs("%DateTime", name);
 }
 
 void segy_text_header::set_object_name(const string &name) {

@@ -12,6 +12,10 @@ using namespace std;
 
 
 segy_trace_header::segy_trace_header(shared_ptr<seismic_header_map> map) {
+    f_raw_data.resize(segy_file::trace_header_size, 0);
+
+    f_endian_order = native_order();
+
 	this->f_map = map;
 }
 
@@ -19,6 +23,7 @@ segy_trace_header::segy_trace_header(const segy_trace_header &header) {
     f_map                   = header.f_map;
     f_raw_data              = header.f_raw_data;
     f_coord                 = header.f_coord;
+    f_endian_order          = header.f_endian_order;
 
     if (header.f_req_field_init) {
         f_iline             = header.f_iline;
@@ -48,9 +53,9 @@ segy_trace_header::segy_trace_header(
     shared_ptr<seismic_header_map> map, 
     byte_t *raw_data, 
     endian_order order,
-    segy_coord coord
-) {
-    this->f_map = map;
+    seismic_coords_type coord
+) : segy_trace_header(map) {
+
     f_endian_order = order;
     f_coord = coord;
     copy(raw_data, raw_data + segy_file::trace_header_size, f_raw_data.data());
@@ -152,7 +157,7 @@ seismic_variant_value segy_trace_header::sample_interval() {
 seismic_variant_value segy_trace_header::X() {
     if (f_req_field_init) {
         using namespace seismic_variant_operations;
-        if (f_coord == segy_coord::CDP)
+        if (f_coord == seismic_coords_type::CDP)
             return f_CDP_X * f_coord_scalar;
         else
             return f_Src_X * f_coord_scalar;
@@ -164,7 +169,7 @@ seismic_variant_value segy_trace_header::X() {
 seismic_variant_value segy_trace_header::Y() {
     if (f_req_field_init) {
         using namespace seismic_variant_operations;
-        if (f_coord == segy_coord::CDP)
+        if (f_coord == seismic_coords_type::CDP)
             return f_CDP_Y * f_coord_scalar;
         else
             return f_Src_Y * f_coord_scalar;
@@ -258,83 +263,64 @@ void segy_trace_header::set(const string &name, seismic_variant_value val) {
         int size = std::get<1>(field_info);
         auto type = std::get<2>(field_info);
 
-        switch (type) {
-        case seismic_data_type::INT:
+        if (type == seismic_data_type::INT) {
             if (size != 4)
-                throw invalid_argument("segy_trace_header: get: invalid "
-                    "byte size for field " + name);
-            if (!holds_alternative<int>(val))
-                throw invalid_argument("segy_trace_header: set: value "
-                    "for field " + name + " does not match type of INT");
-            int_to_byte(std::get<int>(val), &f_raw_data[pos], f_endian_order);
-            break;
-        case seismic_data_type::SHORT:
-            if (size != 2)
-                throw invalid_argument("segy_trace_header: get: invalid "
-                    "byte size for field " + name);
-            if (!holds_alternative<short>(val))
-                throw invalid_argument("segy_trace_header: set: value "
-                    "for field " + name + " does not match type of SHORT");
-            short_to_byte(std::get<short>(val), &f_raw_data[pos], f_endian_order);
-            break;
-        case seismic_data_type::USHORT:
-            if (size != 2)
-                throw invalid_argument("segy_trace_header: get: invalid "
-                    "byte size for field " + name);
-            if (!holds_alternative<unsigned short>(val))
-                throw invalid_argument("segy_trace_header: set: value "
-                    "for field " + name + " does not match type of USHORT");
-            ushort_to_byte(std::get<unsigned short>(val), &f_raw_data[pos], f_endian_order);
-            break;
-        case seismic_data_type::INT64:
-            if (size != 8)
-                throw invalid_argument("segy_trace_header: get: invalid "
-                    "byte size for field " + name);
-            if (!holds_alternative<int64_t>(val))
-                throw invalid_argument("segy_trace_header: set: value "
-                    "for field " + name + " does not match type of INT64");
-            int64_to_byte(std::get<int64_t>(val), &f_raw_data[pos], f_endian_order);
-            break;
-        case seismic_data_type::UINT64:
-            if (size != 8)
-                throw invalid_argument("segy_trace_header: get: invalid "
-                    "byte size for field " + name);
-            if (!holds_alternative<uint64_t>(val))
-                throw invalid_argument("segy_trace_header: set: value "
-                    "for field " + name + " does not match type of UINT64");
-            uint64_to_byte(std::get<uint64_t>(val), &f_raw_data[pos], f_endian_order);
-            break;
-        case seismic_data_type::FLOAT:
-            if (size != 4)
-                throw invalid_argument("segy_trace_header: get: invalid "
-                    "byte size for field " + name);
-            if (!holds_alternative<float>(val))
-                throw invalid_argument("segy_trace_header: set: value "
-                    "for field " + name + " does not match type of FLOAT");
-            float_to_byte(std::get<float>(val), &f_raw_data[pos], f_endian_order);
-            break;
-        case seismic_data_type::DOUBLE:
-            if (size != 8)
-                throw invalid_argument("segy_trace_header: get: invalid "
-                    "byte size for field " + name);
-            if (!holds_alternative<float>(val))
-                throw invalid_argument("segy_trace_header: set: value "
-                    "for field " + name + " does not match type of FLOAT");
-            float_to_byte(std::get<float>(val), &f_raw_data[pos], f_endian_order);
-            break;
-        case seismic_data_type::CHAR:
-            if (size != 1)
-                throw invalid_argument("segy_trace_header: get: invalid "
-                    "byte size for field " + name);
-            if (!holds_alternative<char>(val))
-                throw invalid_argument("segy_trace_header: set: value "
-                    "for field " + name + " does not match type of CHAR");
-            f_raw_data[pos] = (byte_t)(std::get<char>(val));
-            break;
-        default:
-            throw invalid_argument("segy_trace_header: get: invalid type for field " + name);
-            break;
+                SR_THROW(invalid_argument, "invalid byte size for field " + name);
+            int __val;
+            VARIANT_VALUE_CAST(__val, val);
+            int_to_byte(__val, &f_raw_data[pos], f_endian_order);
         }
+        else if (type == seismic_data_type::SHORT) {
+            if (size != 2)
+                SR_THROW(invalid_argument, "invalid byte size for field " + name);
+            int16_t __val;
+            VARIANT_VALUE_CAST(__val, val);
+            short_to_byte(__val, &f_raw_data[pos], f_endian_order);
+        }
+        else if (type == seismic_data_type::USHORT) {
+            if (size != 2)
+                SR_THROW(invalid_argument, "invalid byte size for field " + name);
+            uint16_t __val;
+            VARIANT_VALUE_CAST(__val, val);
+            ushort_to_byte(__val, &f_raw_data[pos], f_endian_order);
+        }
+        else if (type == seismic_data_type::INT64) {
+            if (size != 8)
+                SR_THROW(invalid_argument, "invalid byte size for field " + name);
+            int64_t __val;
+            VARIANT_VALUE_CAST(__val, val);
+            int64_to_byte(__val, &f_raw_data[pos], f_endian_order);
+        }
+        else if (type == seismic_data_type::UINT64) {
+            if (size != 8)
+                SR_THROW(invalid_argument, "invalid byte size for field " + name);
+            uint64_t __val;
+            VARIANT_VALUE_CAST(__val, val);
+            uint64_to_byte(__val, &f_raw_data[pos], f_endian_order);
+        }
+        else if (type == seismic_data_type::FLOAT) {
+            if (size != 4)
+                SR_THROW(invalid_argument, "invalid byte size for field " + name);
+            float __val;
+            VARIANT_VALUE_CAST(__val, val);
+            float_to_byte(__val, &f_raw_data[pos], f_endian_order);
+        }
+        else if (type == seismic_data_type::DOUBLE) {
+            if (size != 8)
+                SR_THROW(invalid_argument, "invalid byte size for field " + name);
+            double __val;
+            VARIANT_VALUE_CAST(__val, val);
+            float_to_byte(__val, &f_raw_data[pos], f_endian_order);
+        }
+        else if (type == seismic_data_type::CHAR) {
+            if (size != 1)
+                SR_THROW(invalid_argument, "invalid byte size for field " + name);
+            char __val;
+            VARIANT_VALUE_CAST(__val, val);
+            f_raw_data[pos] = static_cast<byte_t>(__val);
+        }
+        else
+            SR_THROW(invalid_argument, "invalid type for field " + name);
     }
     else
         return;
@@ -350,8 +336,9 @@ map<string, seismic_variant_value> segy_trace_header::to_map() {
     return res;
 }
 
-void segy_trace_header::set(const std::map<std::string, seismic_variant_value> &map) {
-    throw runtime_error("segy_trace_header: set: method not implemented");
+void segy_trace_header::from_map(const std::map<std::string, seismic_variant_value> &map) {
+    for (auto &field : map)
+        set(field.first, field.second);
 }
 
 bool segy_trace_header::is_valid() {
@@ -364,6 +351,96 @@ bool segy_trace_header::is_valid() {
         return false;
 
     return true;
+}
+
+vector<byte_t> segy_trace_header::raw_data() {
+    return f_raw_data;
+}
+
+endian_order segy_trace_header::endian() {
+    return f_endian_order;
+}
+
+seismic_coords_type segy_trace_header::coords() {
+    return f_coord;
+}
+
+void segy_trace_header::reset_header_map(std::shared_ptr<seismic_header_map> map) {
+    std::vector<byte_t> new_raw_data;
+    new_raw_data.resize(segy_file::trace_header_size, 0);
+
+    for (auto &old_field : f_map->to_map()) {
+        if (map->contains(old_field.first)) {
+            auto new_field = map->get_field(old_field.first);
+
+            int old_byte_start  = std::get<0>(old_field.second);
+            int old_byte_size   = std::get<1>(old_field.second);
+
+            int new_byte_start  = std::get<0>(new_field);
+            int new_byte_size   = std::get<1>(new_field);
+
+            if (old_byte_size != new_byte_size)
+                SR_THROW(invalid_argument, "can't convert old header map to new header map");
+
+            memcpy(
+                new_raw_data.data() + new_byte_start, 
+                f_raw_data.data() + old_byte_start, 
+                new_byte_size
+            );
+        }
+    }
+
+    f_raw_data = new_raw_data;
+    f_map = map;
+}
+
+void segy_trace_header::reset_endian_order(endian_order order) {
+    if (f_endian_order == order)
+        return;
+
+    for (auto &field : f_map->to_map()) {
+        int pos = std::get<0>(field.second);
+        auto type = std::get<2>(field.second);
+
+        if (type == seismic_data_type::INT) {
+            int __val = byte_to_int(&f_raw_data[pos], f_endian_order);
+            int_to_byte(__val, &f_raw_data[pos], order);
+        }
+        else if (type == seismic_data_type::SHORT) {
+            int16_t __val = byte_to_short(&f_raw_data[pos], f_endian_order);
+            short_to_byte(__val, &f_raw_data[pos], order);
+        }
+        else if (type == seismic_data_type::USHORT) {
+            uint16_t __val = byte_to_ushort(&f_raw_data[pos], f_endian_order);
+            ushort_to_byte(__val, &f_raw_data[pos], order);
+        }
+        else if (type == seismic_data_type::INT64) {
+            int64_t __val = byte_to_int64(&f_raw_data[pos], f_endian_order);
+            int64_to_byte(__val, &f_raw_data[pos], order);
+        }
+        else if (type == seismic_data_type::UINT64) {
+            uint64_t __val = byte_to_uint64(&f_raw_data[pos], f_endian_order);
+            uint64_to_byte(__val, &f_raw_data[pos], order);
+        }
+        else if (type == seismic_data_type::FLOAT) {
+            float __val = byte_to_float(&f_raw_data[pos], f_endian_order);
+            float_to_byte(__val, &f_raw_data[pos], order);
+        }
+        else if (type == seismic_data_type::DOUBLE) {
+            double __val = byte_to_double(&f_raw_data[pos], f_endian_order);
+            double_to_byte(__val, &f_raw_data[pos], order);
+        }
+        else if (type == seismic_data_type::CHAR) {
+            int8_t __val = byte_to_int8_t(&f_raw_data[pos], f_endian_order);
+            int8_t_to_byte(__val, &f_raw_data[pos], order);
+        }
+    }
+
+    f_endian_order = order;
+}
+
+void segy_trace_header::reset_coords(seismic_coords_type coord) {
+    f_coord = coord;
 }
 
 #ifdef PYTHON
@@ -379,5 +456,7 @@ void py_segy_trace_header_init(py::module &m,
 	py_segy_trace_header.def(py::init<shared_ptr<seismic_header_map>>(),
 		py::arg("header_map")
 	);
+
+    py_segy_trace_header.def("reset_header_map", &segy_trace_header::reset_header_map);
 }
 #endif

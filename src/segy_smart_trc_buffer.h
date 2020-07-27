@@ -28,13 +28,13 @@ class smart_trc_buffer {
 
     bool                                            f_fail;
     size_t                                          f_underload;
-    segy_coord                                      f_coord             = segy_coord::CDP;
+    seismic_coords_type                             f_coord             = seismic_coords_type::CDP;
 public:
     smart_trc_buffer() {}
     smart_trc_buffer(
         std::shared_ptr<seismic_header_map> header_map, 
         std::shared_ptr<segy_bin_header> bin_header, 
-        segy_coord coord = segy_coord::CDP
+        seismic_coords_type coord = seismic_coords_type::CDP
     );
 
     void                                            reset(std::shared_ptr<seismic_header_map> header_map, std::shared_ptr<segy_bin_header> bin_header);

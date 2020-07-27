@@ -54,6 +54,8 @@ public:
     virtual seismic_variant_value   iline();
     virtual seismic_variant_value   crossline();
 
+    virtual std::vector<byte_t>     raw_data(segy_data_format format, endian_order order);
+
 	virtual object_type type_id() { return object_type::SEGY_TRACE; }
 
 private:

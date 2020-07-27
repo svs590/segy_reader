@@ -25,7 +25,9 @@ enum class segy_data_format {
     uint16,
     uint64,
     uint24              = 15,
-    uint8
+    uint8,
+    
+    automatic                = 999
 };
 
 short segy_data_format_size(segy_data_format format);

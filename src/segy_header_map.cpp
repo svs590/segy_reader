@@ -207,7 +207,7 @@ segy_header_map::map_standard = {
     { "Trans const mant", {204, 4, seismic_data_type::INT,
         "Transduction Constant mantissa. The multiplicative constant used to convert the DataTrace "
         "samples to the Transduction Units"} },
-    { "Trans const mant", {208, 2, seismic_data_type::SHORT,
+    { "Trans const pow", {208, 2, seismic_data_type::SHORT,
         "Transduction Constant power. The multiplicative constant used to convert the DataTrace "
         "samples to the Transduction Units"} },
     { "Trans units", {210, 2, seismic_data_type::SHORT,

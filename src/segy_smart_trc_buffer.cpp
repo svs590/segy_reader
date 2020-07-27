@@ -7,7 +7,7 @@ using namespace std;
 smart_trc_buffer::smart_trc_buffer(
     shared_ptr<seismic_header_map> header_map, 
     shared_ptr<segy_bin_header> bin_header,
-    segy_coord coord
+    seismic_coords_type coord
 ) {
     f_coord = coord;
     reset(header_map, bin_header);

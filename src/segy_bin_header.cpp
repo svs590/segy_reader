@@ -169,7 +169,7 @@ void segy_bin_header::init_endian() {
 }
 
 void segy_bin_header::write_endian() {
-    ushort_to_byte((uint16_t)16909060, &m_raw_data[96], m_endian_order);
+    int_to_byte((int)16909060, &m_raw_data[96], m_endian_order);
 }
 
 void segy_bin_header::init_from_raw() {

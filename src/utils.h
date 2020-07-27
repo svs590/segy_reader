@@ -24,3 +24,5 @@ long long get_available_memory();
 void seekg_relative(int64_t rel_pos, bfs::ifstream &stream);
 
 bool is_little_endian();
+
+std::string date_time();

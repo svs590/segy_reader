@@ -31,6 +31,8 @@ public:
     virtual seismic_variant_value   Y() = 0;
     virtual seismic_variant_value   iline() = 0;
     virtual seismic_variant_value   crossline() = 0;
+
+    virtual std::vector<byte_t>     raw_data(segy_data_format format, endian_order order) = 0;
 };
 
 #ifdef PYTHON

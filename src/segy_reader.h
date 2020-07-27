@@ -30,10 +30,10 @@ namespace py = pybind11;
 #endif
 
 struct segy_reader_config {
-    std::wstring filename;
-    header_map_type f_header_map_type = header_map_type::STANDARD;
-    bool ebcdic_header              = true;
-    segy_coord coord                = segy_coord::CDP;
+    std::wstring            filename;
+    header_map_type         f_header_map_type   = header_map_type::STANDARD;
+    bool                    ebcdic_header       = true;
+    seismic_coords_type     coord               = seismic_coords_type::CDP;
 };
 
 class segy_reader : public seismic_data_provider {

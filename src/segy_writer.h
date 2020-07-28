@@ -120,8 +120,12 @@ public:
         std::shared_ptr<seismic_header_map> map
     );
 
-    void                                        write_trace(std::shared_ptr<seismic_trace> trace);
-
+    void                                        write_trace(
+        std::shared_ptr<seismic_trace> trace
+    );
+    void                                        write_traces(
+        std::vector<std::shared_ptr<seismic_trace>> traces
+    );
     void                                        write_line(
         seismic_line_info line,
         std::vector<std::shared_ptr<seismic_trace>> traces
@@ -146,7 +150,7 @@ private:
     
     void resize_beffers();
     
-    void flush_buffer(size_t size);
+    void flush_buffer();
 };
 
 

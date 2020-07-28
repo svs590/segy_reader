@@ -543,7 +543,7 @@ void py_segy_reader_init(py::module &m,
     );
     reader_config.def_property("coordinates",
         [](segy_reader_config &c) { return c.coord; },
-        [](segy_reader_config &c, segy_coord coord) { c.coord = coord; }
+        [](segy_reader_config &c, seismic_coords_type coord) { c.coord = coord; }
     );
     //reader_config.def_property("ebdict_header", &segy_reader_config::ebcdic_header);
 

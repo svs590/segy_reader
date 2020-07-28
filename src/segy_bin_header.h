@@ -278,6 +278,7 @@ public:
 	segy_bin_header();
 	segy_bin_header(const std::vector<byte_t> &m_raw_data);
     segy_bin_header(const std::map<std::string, seismic_variant_value> &m_raw_data);
+    segy_bin_header(segy_bin_header &bin_header);
 	~segy_bin_header();
 
     endian_order endian()               { return m_endian_order;    }

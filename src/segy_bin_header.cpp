@@ -135,6 +135,13 @@ segy_bin_header::segy_bin_header(const map<string, seismic_variant_value> &map)
     from_map(map);
 }
 
+segy_bin_header::segy_bin_header(segy_bin_header &bin_header) {
+    m_raw_data = bin_header.raw_data();
+    init_from_raw();
+
+    m_modifier = modifier::read_write;
+}
+
 void segy_bin_header::set_zero() {
     m_raw_data = vector<byte_t>(segy_file::bin_header_size, (byte_t) 0);
     init_from_raw();

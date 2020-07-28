@@ -34,6 +34,7 @@ string segy_text_header::m_parse_pattern = "(C ?[0-9]{1,2}) (.{76})";
 segy_text_header::segy_text_header() {
     set_zero();
     init_map();
+    m_modifier = modifier::read_write;
 }
 
 segy_text_header::segy_text_header(
@@ -54,6 +55,7 @@ segy_text_header::segy_text_header(
 
     m_is_ebdic = is_ebdic;
     from_map(map);
+    m_modifier = modifier::read_write;
 }
 
 seismic_variant_value segy_text_header::get(const std::string &name) {

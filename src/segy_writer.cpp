@@ -36,6 +36,7 @@ void segy_writer::init() {
     size_t text_headers_size = segy_file::text_header_size * (1 + m_add_text_headers_count);
     size_t bin_header_size = segy_file::bin_header_size;
 
+    m_text_header_offset = 0;
     m_bin_header_offset = text_headers_size;
     m_first_trc_offset  = text_headers_size + bin_header_size;
     m_last_offset       = m_first_trc_offset;
@@ -49,36 +50,79 @@ void segy_writer::init() {
     open_file();
 
     m_ostream.write(std::vector<char>(m_last_offset, '\0').data(), m_last_offset);
+
+    m_buffer_pos = 0;
 }
 
-void segy_writer::write_trace(shared_ptr<seismic_trace> trace) {
-    
+shared_ptr<seismic_abstract_header> segy_writer::text_header() {
+    return m_text_header;
+}
+
+void segy_writer::set_text_header(
+    shared_ptr<seismic_abstract_header> text_header
+) {
+    m_text_header = dynamic_pointer_cast<segy_text_header>(text_header);
+
+    if (m_text_header == nullptr)
+        SR_THROW(invalid_argument, "invalid text header, type is incorrect");
+}
+
+shared_ptr<seismic_abstract_header> segy_writer::bin_header() {
+    return m_bin_header;
+}
+
+void segy_writer::set_bin_header(
+    shared_ptr<seismic_abstract_header> bin_header
+) {
+    m_bin_header = dynamic_pointer_cast<segy_bin_header>(bin_header);
+
+    if (m_bin_header == nullptr)
+        SR_THROW(invalid_argument, "invalid bin header, type is incorrect");
+
+    m_bin_header = make_shared<segy_bin_header>(*m_bin_header);
+}
+
+shared_ptr<seismic_header_map> segy_writer::header_map() {
+    return m_header_map;
+}
+
+void segy_writer::set_header_map(
+    shared_ptr<seismic_header_map> header_map
+) {
+    m_header_map = header_map;
+}
+
+void segy_writer::write_trace(
+    shared_ptr<seismic_trace> trace
+) {
+    if (!m_first_trace_processe) {
+        update_processed_info_by_first(trace);
+        m_first_trace_processe = true;
+    }
+
+    update_processed_info(trace);
+
+    auto raw = trace->raw_data(m_config.data_format, m_endian_order);
+
+    if (m_buffer_pos + raw.size() >= m_write_buffer.size())
+        flush_buffer();
+
+    memcpy(m_write_buffer.data() + m_buffer_pos, raw.data(), raw.size());
+    m_buffer_pos += raw.size();
+}
+
+void segy_writer::write_traces(
+    vector<shared_ptr<seismic_trace>> traces
+) {
+    for (size_t i = 0; i < traces.size(); ++i)
+        write_trace(traces[i]);
 }
 
 void segy_writer::write_line(
     seismic_line_info line,
     vector<shared_ptr<seismic_trace>> traces
 ) {
-    m_buffer_pos = 0;
-
-    if (!m_first_trace_processe) {
-        update_processed_info_by_first(traces[0]);
-        m_first_trace_processe = true;
-    }
-
-    for (size_t i = 0; i < traces.size(); ++i) {
-        update_processed_info(traces[i]);
-
-        auto raw = traces[i]->raw_data(m_config.data_format, m_endian_order);
-
-        if (m_buffer_pos + raw.size() >= m_write_buffer.size()) {
-            flush_buffer(m_buffer_pos);
-            m_buffer_pos = 0;
-        }
-
-        memcpy(m_write_buffer.data() + m_buffer_pos, raw.data(), raw.size());
-        m_buffer_pos += raw.size();
-    }
+    write_traces(traces);
 }
 
 void segy_writer::update_processed_info(shared_ptr<seismic_trace> trace) {
@@ -195,14 +239,14 @@ void segy_writer::close() {
 }
 
 void segy_writer::open_file() {
-    m_ostream.open(m_config.filename, std::ios_base::trunc | std::ios_base::binary);
+    m_ostream.open(m_config.filename, std::ios_base::out | std::ios_base::binary);
     if (m_ostream.fail())
         SR_THROW(runtime_error, "could not open file to write");
 }
 
 void segy_writer::close_file() {
     if (m_ostream.is_open()) {
-        flush_buffer(m_buffer_pos);
+        flush_buffer();
 
         finalize_processed_info();
         apply_processed_info();
@@ -345,8 +389,9 @@ void segy_writer::prepare_bin_header() {
     m_bin_header->set_endian(m_endian_order);
 }
 
-void segy_writer::flush_buffer(size_t size) {
-    m_ostream.write(reinterpret_cast<char*>(m_write_buffer.data()), size);
+void segy_writer::flush_buffer() {
+    m_ostream.write(reinterpret_cast<char*>(m_write_buffer.data()), m_buffer_pos);
+    m_buffer_pos = 0;
 }
 
 #ifdef PYTHON
@@ -366,6 +411,15 @@ void py_segy_writer_init(
     );
 
     py_segy_writer.def(py::init<const segy_writer_config &>());
+
+    py_segy_writer.def("text_header", &segy_writer::text_header);
+    py_segy_writer.def("set_text_header", &segy_writer::set_text_header);
+
+    py_segy_writer.def("bin_header", &segy_writer::bin_header);
+    py_segy_writer.def("set_bin_header", &segy_writer::set_bin_header);
+
+    py_segy_writer.def("header_map", &segy_writer::header_map);
+    py_segy_writer.def("set_header_map", &segy_writer::set_header_map);
 
     py_segy_writer.def("write_line", &segy_writer::write_line);
     py_segy_writer.def("close", &segy_writer::close);

@@ -37,6 +37,7 @@ struct segy_writer_config {
     bool                ebcdic_header   = true;
     segy_data_format    data_format     = segy_data_format::automatic;
     seismic_coords_type coord           = seismic_coords_type::CDP;
+    segy_sorting        sorting         = segy_sorting::as_is;
 };
 
 class segy_writer {
@@ -102,6 +103,8 @@ public:
     segy_writer                                 config() { return m_config; }
     void                                        set_config(const segy_writer_config &config);
 
+    endian_order                                endian();
+    void                                        set_endian(endian_order order);
 
     void                                        close();
 

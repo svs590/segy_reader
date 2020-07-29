@@ -30,20 +30,28 @@ void segy_writer::set_config(const segy_writer_config &config) {
     m_config = config;
 }
 
+endian_order segy_writer::endian() {
+    return m_endian_order;
+}
+
+void segy_writer::set_endian(endian_order order) {
+    m_endian_order = order;
+}
+
 void segy_writer::init() {
     m_endian_order = native_order();
 
-    size_t text_headers_size = segy_file::text_header_size * (1 + m_add_text_headers_count);
-    size_t bin_header_size = segy_file::bin_header_size;
+    size_t text_headers_size    = segy_file::text_header_size * (1 + m_add_text_headers_count);
+    size_t bin_header_size      = segy_file::bin_header_size;
 
-    m_text_header_offset = 0;
-    m_bin_header_offset = text_headers_size;
-    m_first_trc_offset  = text_headers_size + bin_header_size;
-    m_last_offset       = m_first_trc_offset;
+    m_text_header_offset        = 0;
+    m_bin_header_offset         = text_headers_size;
+    m_first_trc_offset          = text_headers_size + bin_header_size;
+    m_last_offset               = m_first_trc_offset;
 
-    m_text_header = make_shared<segy_text_header>(segy_text_header());
-    m_bin_header = make_shared<segy_bin_header>(segy_bin_header());
-    m_header_map = make_shared<segy_header_map>(segy_header_map());
+    m_text_header               = make_shared<segy_text_header>(segy_text_header());
+    m_bin_header                = make_shared<segy_bin_header>(segy_bin_header());
+    m_header_map                = make_shared<segy_header_map>(segy_header_map());
 
     resize_beffers();
 
@@ -95,6 +103,8 @@ void segy_writer::set_header_map(
 void segy_writer::write_trace(
     shared_ptr<seismic_trace> trace
 ) {
+    trace->header()->reset_header_map(m_header_map);
+
     if (!m_first_trace_processe) {
         update_processed_info_by_first(trace);
         m_first_trace_processe = true;
@@ -399,7 +409,7 @@ void py_segy_writer_init(
     py::module &m,
     py::class_<segy_writer, std::shared_ptr<segy_writer>> &py_segy_writer
 ) {
-    py::class_<segy_writer_config> reader_config(m, "writer_config");
+    py::class_<segy_writer_config> reader_config(m, "segy_writer_config");
     reader_config.def(py::init<>());
     reader_config.def_property("filename",
         [](segy_writer_config &c) { return c.filename; },
@@ -407,10 +417,17 @@ void py_segy_writer_init(
     );
     reader_config.def_property("data_format",
         [](segy_writer_config &c) { return c.data_format; },
-        [](segy_writer_config &c, int df) { c.data_format = (segy_data_format)df; }
+        [](segy_writer_config &c, segy_data_format df) { c.data_format = df; }
+    );
+    reader_config.def_property("sorting",
+        [](segy_writer_config &c) { return c.sorting; },
+        [](segy_writer_config &c, segy_sorting s) { c.sorting = s; }
     );
 
     py_segy_writer.def(py::init<const segy_writer_config &>());
+
+    py_segy_writer.def("endian", &segy_writer::endian);
+    py_segy_writer.def("set_endian", &segy_writer::set_endian);
 
     py_segy_writer.def("text_header", &segy_writer::text_header);
     py_segy_writer.def("set_text_header", &segy_writer::set_text_header);
@@ -421,7 +438,10 @@ void py_segy_writer_init(
     py_segy_writer.def("header_map", &segy_writer::header_map);
     py_segy_writer.def("set_header_map", &segy_writer::set_header_map);
 
+    py_segy_writer.def("write_trace", &segy_writer::write_trace);
+    py_segy_writer.def("write_traces", &segy_writer::write_traces);
     py_segy_writer.def("write_line", &segy_writer::write_line);
+
     py_segy_writer.def("close", &segy_writer::close);
 }
 #endif

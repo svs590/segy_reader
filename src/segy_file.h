@@ -1,5 +1,13 @@
 #pragma once
 
+#ifdef PYTHON
+#include <pybind11/stl.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+
+namespace py = pybind11;
+#endif
+
 struct segy_file {
 	static const int text_header_size = 3200;
 	static const int bin_header_size = 400;
@@ -30,4 +38,14 @@ enum class segy_data_format {
     automatic                = 999
 };
 
+enum class segy_sorting {
+    iline,
+    crossline,
+    as_is   ///< only for writer
+};
+
 short segy_data_format_size(segy_data_format format);
+
+#ifdef PYTHON
+void py_segy_file_init(py::module &m);
+#endif

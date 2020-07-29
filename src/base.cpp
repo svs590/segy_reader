@@ -238,6 +238,13 @@ void py_seismic_data_types_init(py::module &m) {
 		.value("SHORT",		seismic_data_type::SHORT)
 		.value("USHORT",	seismic_data_type::USHORT)
 		.export_values();
+
+    py::enum_<endian_order>(m, "endian_order")
+        .value("big",       endian_order::big)
+        .value("little",    endian_order::little)
+        .value("mid_big",   endian_order::mid_big)
+        .value("mid_little", endian_order::mid_little)
+        .export_values();
 }
 
 void py_seismic_trace_header_init(py::module &m,

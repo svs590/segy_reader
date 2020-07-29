@@ -65,6 +65,8 @@ PYBIND11_MODULE(seismo_reader, m)
 	py_seismic_line_info_init(m);
 	py_seismic_data_types_init(m);
 
+    // Enums
+    py_segy_file_init(m);
 }
 
 #endif

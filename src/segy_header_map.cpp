@@ -3,6 +3,7 @@
 #include <iterator>
 
 #include <boost/container_hash/hash.hpp>
+#include <boost/preprocessor.hpp>
 #include <boost/preprocessor/control.hpp>
 
 #include "segy_header_map.h"
@@ -36,7 +37,8 @@ using namespace std;
     BOOST_PP_IF(                                                                \
         SyHM_IS_FIELD_REQ(el), data.push_back({                                 \
             TO_USERFRIENDLY_STRING(BOOST_PP_STRINGIZE(SyHM_FIELD_NAME(el))), {  \
-                SyHM_FIELD_TYPE(el), SyHM_FIELD_OFFSET(el), SyHM_FIELD_SIZE(el) \
+                SyHM_FIELD_TYPE(el), SyHM_FIELD_OFFSET(el), SyHM_FIELD_SIZE(el),\
+                static_cast<bool>(SyHM_IS_FIELD_REQ(el))                        \
             }                                                                   \
         }), EMPTY                                                               \
     );
@@ -47,12 +49,33 @@ using namespace std;
 #define SyHM_FILL_STD_OP(z, data, el)                                           \
     data.push_back({                                                            \
         TO_USERFRIENDLY_STRING(BOOST_PP_STRINGIZE(SyHM_FIELD_NAME(el))), {      \
-            SyHM_FIELD_TYPE(el), SyHM_FIELD_OFFSET(el), SyHM_FIELD_SIZE(el)     \
+            SyHM_FIELD_TYPE(el), SyHM_FIELD_OFFSET(el), SyHM_FIELD_SIZE(el),    \
+            static_cast<bool>(SyHM_IS_FIELD_REQ(el))                            \
         }                                                                       \
     });
 
 #define SyHM_FILL_STD(seq, container)                                           \
     BOOST_PP_SEQ_FOR_EACH(SyHM_FILL_STD_OP, container, seq)
+
+#define SyHM_FILL_DESCR_REQ_OP(z, data, el)                                     \
+    BOOST_PP_IF(                                                                \
+        SyHM_IS_FIELD_REQ(el), data.push_back({                                 \
+            TO_USERFRIENDLY_STRING(BOOST_PP_STRINGIZE(SyHM_FIELD_NAME(el))),    \
+            SyHM_FIELD_DESCR(el)                                                \
+        }), EMPTY                                                               \
+    );
+
+#define SyHM_FILL_DESCR_REQ(seq, container)                                     \
+    BOOST_PP_SEQ_FOR_EACH(SyHM_FILL_DESCR_REQ_OP, container, seq)
+
+#define SyHM_FILL_DESCR_STD_OP(z, data, el)                                     \
+    data.push_back({                                                            \
+        TO_USERFRIENDLY_STRING(BOOST_PP_STRINGIZE(SyHM_FIELD_NAME(el))),        \
+        SyHM_FIELD_DESCR(el)                                                    \
+    });
+
+#define SyHM_FILL_DESCR_STD(seq, container)                                     \
+    BOOST_PP_SEQ_FOR_EACH(SyHM_FILL_DESCR_STD_OP, container, seq)
 
 
 seismic_header_map::storage_t segy_header_map::m_fields_required = {};
@@ -143,12 +166,18 @@ void segy_header_map::set(
             || byte_size != std::get<2>(m_fields[idx].second))
             m_type = header_map_type::CUSTOM;
 
-        m_fields[idx].second = { type, byte_loc, byte_size };
-        //m_descr[idx] = { name,  desc };
+        m_fields[idx].second = { 
+            type, byte_loc, byte_size, std::get<3>(m_fields[idx].second) 
+        };
+        m_descr[idx] = { name,  desc };
     }
     else {
-        m_fields.push_back({ name, { type, byte_loc, byte_size } });
-        //m_descr.push_back({ name, desc });
+        m_fields.push_back(
+            { name, 
+                { type, byte_loc, byte_size, std::get<3>(m_fields[idx].second) } 
+            }
+        );
+        m_descr.push_back({ name, desc });
     }
 
     m_update_hash = true;
@@ -224,6 +253,13 @@ void segy_header_map::from_map(const seismic_header_map::map_storage_t &m) {
     }
 }
 
+map<string, string> segy_header_map::fields_descr() {
+    map<string, string> res;
+    copy(m_descr.begin(), m_descr.end(), inserter(res, res.begin()));
+
+    return res;
+}
+
 bool segy_header_map::operator==(shared_ptr<seismic_header_map> map) {
     auto syhm_map = dynamic_pointer_cast<segy_header_map>(map);
     if (syhm_map != nullptr) 
@@ -237,6 +273,10 @@ bool segy_header_map::operator==(shared_ptr<segy_header_map> map) {
 }
 
 bool segy_header_map::operator==(segy_header_map &map) {
+    if (m_type == header_map_type::STANDARD
+        && map.m_type == header_map_type::STANDARD)
+        return true;
+
     if (m_update_hash)
         calc_hash();
 
@@ -259,10 +299,12 @@ int segy_header_map::contains(
 
 void segy_header_map::fill_required() {
     SyHM_FILL_REQ(SyHM_FIELDS, m_fields);
+    SyHM_FILL_DESCR_REQ(SyHM_FIELDS, m_descr);
 }
 
 void segy_header_map::fill_standard() {
     SyHM_FILL_STD(SyHM_FIELDS, m_fields);
+    SyHM_FILL_DESCR_STD(SyHM_FIELDS, m_descr);
 }
 
 void segy_header_map::calc_hash() {

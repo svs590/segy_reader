@@ -232,9 +232,9 @@ void py_seismic_geometry_info_init(py::module &m) {
 
 void py_seismic_line_info_init(py::module &m) {
     py::enum_<seismic_line_info::seismic_line_type>(m, "line_type")
-        .value("iline",    seismic_line_info::seismic_line_type::iline)
-        .value("xline",    seismic_line_info::seismic_line_type::xline)
-        .value("none",    seismic_line_info::seismic_line_type::none)
+        .value("iline", seismic_line_info::seismic_line_type::iline)
+        .value("xline", seismic_line_info::seismic_line_type::xline)
+        .value("none",  seismic_line_info::seismic_line_type::none)
         .export_values();
 
     py::class_<seismic_line_info, shared_ptr<seismic_line_info>>
@@ -252,9 +252,9 @@ void py_seismic_line_info_init(py::module &m) {
         py::arg("line_no"),
         py::arg("type")
     );
-    line_info.def_property_readonly("start_point",    &seismic_line_info::start_point);
+    line_info.def_property_readonly("start_point",  &seismic_line_info::start_point);
     line_info.def_property_readonly("end_point",    &seismic_line_info::end_point);
-    line_info.def_property_readonly("name",            &seismic_line_info::name);
+    line_info.def_property_readonly("name",         &seismic_line_info::name);
 }
 
 void py_segy_abstract_header_init(py::module &m,
@@ -288,22 +288,22 @@ void py_segy_abstract_header_init(py::module &m,
 
 void py_seismic_data_types_init(py::module &m) {
     py::enum_<seismic_data_type>(m, "seismic_data_type")
-        .value("UNKNOWN",    seismic_data_type::UNKNOWN)
-        .value("EMPTY",        seismic_data_type::EMPTY)
-        .value("INT",        seismic_data_type::INT)
-        .value("FLOAT",        seismic_data_type::FLOAT)
+        .value("UNKNOWN",   seismic_data_type::UNKNOWN)
+        .value("EMPTY",     seismic_data_type::EMPTY)
+        .value("INT",       seismic_data_type::INT)
+        .value("FLOAT",     seismic_data_type::FLOAT)
         .value("DOUBLE",    seismic_data_type::DOUBLE)
-        .value("CHAR",        seismic_data_type::CHAR)
+        .value("CHAR",      seismic_data_type::CHAR)
         .value("STRING",    seismic_data_type::STRING)
-        .value("INT64",        seismic_data_type::INT64)
-        .value("SHORT",        seismic_data_type::SHORT)
+        .value("INT64",     seismic_data_type::INT64)
+        .value("SHORT",     seismic_data_type::SHORT)
         .value("USHORT",    seismic_data_type::USHORT)
         .export_values();
 
     py::enum_<endian_order>(m, "endian_order")
-        .value("big",       endian_order::big)
-        .value("little",    endian_order::little)
-        .value("mid_big",   endian_order::mid_big)
+        .value("big",        endian_order::big)
+        .value("little",     endian_order::little)
+        .value("mid_big",    endian_order::mid_big)
         .value("mid_little", endian_order::mid_little)
         .export_values();
 }

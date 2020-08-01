@@ -36,7 +36,7 @@ class segy_header_map : public seismic_header_map {
 #define SyHM_FIELDS                                                         \
     ((inline,               seismic_data_type::INT,     188,    4,  1,      \
         "For 3-D poststack data, this field should be used for the "        \
-        "in-line  number"                                                   \
+        "in-line number"                                                    \
     ))                                                                      \
     ((crossline,            seismic_data_type::INT,     192,    4,  1,      \
         "For 3-D poststack data, this field should be used for the "        \
@@ -406,7 +406,7 @@ public:
     virtual size_t                      count() const;
     virtual header_map_type             type() const;
 
-    // Map kind of {name : (data_type, byte_position, byte_size)}
+    // Map kind of { name : (data_type, byte_position, byte_size, required_flag) }
     virtual map_storage_t               to_map() const;
 
     virtual void                        from_map(
@@ -414,7 +414,7 @@ public:
     );
 
     virtual 
-    std::map<std::string, std::string>  fields_descr() { return {}; }
+    std::map<std::string, std::string>  fields_descr();
 
 	virtual object_type                 type_id() {
          return object_type::SEGY_HEADERMAP; 

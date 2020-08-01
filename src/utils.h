@@ -11,8 +11,6 @@ namespace bfs = boost::filesystem;
 
 #define NOT_INDEX -1
 
-#define DLLIMPORT extern "C" __declspec(dllimport)
-
 #define TO_USERFRIENDLY_STRING(str)                                             \
     first_to_upper(regex_replace(str, regex("_"), " "))
 

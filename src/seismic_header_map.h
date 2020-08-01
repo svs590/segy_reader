@@ -24,8 +24,8 @@ enum class header_map_type {
 
 class seismic_header_map : public obj_base {
 public:
-    // Tuple kind of { data_type, byte_loc, byte_size}
-    using header_field_t    = std::tuple<seismic_data_type, int, int>;
+    // Tuple kind of { data_type, byte_loc, byte_size, is_required }
+    using header_field_t    = std::tuple<seismic_data_type, int, int, bool>;
     
     /// NOTE: vector searching with small size is faster than getting std::map elem
     using storage_t         = std::vector<std::pair<std::string, header_field_t>>;

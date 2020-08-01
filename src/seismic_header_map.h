@@ -4,6 +4,7 @@
 #include <memory>
 #include <unordered_map>
 #include <tuple>
+#include <map>
 
 #include "data_types.h"
 
@@ -32,35 +33,35 @@ public:
     using descr_storage_t   = std::vector<std::pair<std::string, std::string>>;
 
 protected:
-	header_map_type     m_type;
-    storage_t           m_fields;
-    descr_storage_t     m_descr;
+	header_map_type                         m_type;
+    storage_t                               m_fields;
+    descr_storage_t                         m_descr;
 
 public:
 	virtual void set(
-		std::string     name,
-        header_field_t  val
+		std::string         name,
+        header_field_t      val
 	) = 0;
 
     virtual void set(
-        std::string     name,
-        header_field_t  val,
-        std::string     desc
+        std::string         name,
+        header_field_t      val,
+        std::string         desc
     ) = 0;
 
     virtual void set(
-        std::string name,
-        int byte_loc,
-        int byte_size,
-        seismic_data_type type
+        std::string         name,
+        int                 byte_loc,
+        int                 byte_size,
+        seismic_data_type   type
     ) = 0;
 
     virtual void set(
-        std::string name,
-        int byte_loc,
-        int byte_size,
-        seismic_data_type type,
-        std::string desc
+        std::string         name,
+        int                 byte_loc,
+        int                 byte_size,
+        seismic_data_type   type,
+        std::string         desc
     ) = 0;
 
 	virtual void                            remove(const std::string &name) = 0;

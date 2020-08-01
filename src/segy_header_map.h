@@ -355,34 +355,35 @@ class segy_header_map : public seismic_header_map {
 public:
     segy_header_map();
 	segy_header_map(header_map_type type);
+    segy_header_map(const map_storage_t &map);
 	segy_header_map(const segy_header_map &map);
 	segy_header_map(std::shared_ptr<segy_header_map> map);
     segy_header_map(std::shared_ptr<seismic_header_map> map);
 
     virtual void set(
-        std::string     name,
-        header_field_t  val
+        std::string         name,
+        header_field_t      val
     );
 
     virtual void set(
-        std::string     name,
-        header_field_t  val,
-        std::string     desc
+        std::string         name,
+        header_field_t      val,
+        std::string         desc
     );
 
     virtual void set(
-        std::string name,
-        int byte_loc,
-        int byte_size,
-        seismic_data_type type
+        std::string         name,
+        int                 byte_loc,
+        int                 byte_size,
+        seismic_data_type   type
     );
 
     virtual void set(
-        std::string name,
-        int byte_loc,
-        int byte_size,
-        seismic_data_type type,
-        std::string desc
+        std::string         name,
+        int                 byte_loc,
+        int                 byte_size,
+        seismic_data_type   type,
+        std::string         desc
     );
 
     virtual void                        remove(
@@ -427,6 +428,9 @@ public:
     );
     bool                                operator==(
         std::shared_ptr<segy_header_map> map
+    );
+    bool                                operator==(
+        segy_header_map &map
     );
 
 private:

@@ -162,13 +162,13 @@ void py_seismic_header_map_init(
         "Returns field info by name"
     );
 
-    py_header_map.def_property_readonly(
+    py_header_map.def(
         "count", 
         &seismic_header_map::count,
         "Returns fields count"
     );
 
-    py_header_map.def_property_readonly(
+    py_header_map.def(
         "type", 
         &seismic_header_map::type,
         "Returns map type"
@@ -184,6 +184,12 @@ void py_seismic_header_map_init(
         "from_dict",
         &seismic_header_map::from_map,
         "Set all fields info in header map using dict"
+    );
+
+    py_header_map.def(
+        "description", 
+        &seismic_header_map::fields_descr,
+        "Get description for header map fields"
     );
 }
 

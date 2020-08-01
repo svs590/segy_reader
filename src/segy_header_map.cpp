@@ -12,9 +12,7 @@
 using namespace std;
 
 
-#define BOOL_TO_INT_I_true(x) 1
-#define BOOL_TO_INT_I_false(x) 0
-#define BOOL_TO_INT(x) BOOL_TO_INT_I_ ## x
+#define EMPTY ;
 
 #define SyHM_FIELD_NAME(tuple)                                                      \
     BOOST_PP_TUPLE_ELEM(6, 0, tuple)
@@ -34,17 +32,17 @@ using namespace std;
 #define SyHM_FIELD_DESCR(tuple)                                                 \
     BOOST_PP_TUPLE_ELEM(6, 5, tuple)
 
-#define SyHM_FILL_REQ_OP_I(z, data, i, el)                                           \
+#define SyHM_FILL_REQ_OP(z, data, el)                                           \
     BOOST_PP_IF(                                                                \
-        SyHM_IS_FIELD_REQ(el), ,data.push_back({                                \
+        SyHM_IS_FIELD_REQ(el), data.push_back({                                 \
             TO_USERFRIENDLY_STRING(BOOST_PP_STRINGIZE(SyHM_FIELD_NAME(el))), {  \
                 SyHM_FIELD_TYPE(el), SyHM_FIELD_OFFSET(el), SyHM_FIELD_SIZE(el) \
             }                                                                   \
-        });                                                                     \
-    )
+        }), EMPTY                                                               \
+    );
 
 #define SyHM_FILL_REQ(seq, container)                                           \
-    BOOST_PP_SEQ_FOR_EACH_I(SyHM_FILL_REQ_OP_I, container, seq)
+    BOOST_PP_SEQ_FOR_EACH(SyHM_FILL_REQ_OP, container, seq)
 
 #define SyHM_FILL_STD_OP(z, data, el)                                           \
     data.push_back({                                                            \
@@ -85,6 +83,10 @@ segy_header_map::segy_header_map(header_map_type type) {
     }
 }
 
+segy_header_map::segy_header_map(const map_storage_t &map) {
+    from_map(map);
+}
+
 segy_header_map::segy_header_map(const segy_header_map &map) {
     m_type          = map.m_type;
     m_fields        = map.m_fields;
@@ -92,34 +94,35 @@ segy_header_map::segy_header_map(const segy_header_map &map) {
     m_update_hash   = true;
 }
 
-segy_header_map::segy_header_map(std::shared_ptr<segy_header_map> map) {
+segy_header_map::segy_header_map(shared_ptr<segy_header_map> map) {
     m_type          = map->m_type;
     m_fields        = map->m_fields;
     m_descr         = map->m_descr;
     m_update_hash   = true;
 }
 
-segy_header_map::segy_header_map(std::shared_ptr<seismic_header_map> map) {
+segy_header_map::segy_header_map(shared_ptr<seismic_header_map> map) {
+    // TODO: cast to segy
     from_map(map->to_map());
 }
 
 void segy_header_map::set(
-    std::string     name,
+    string     name,
     header_field_t  val
 ) {
     set(name, std::get<1>(val), std::get<2>(val), std::get<0>(val), "");
 }
 
 void segy_header_map::set(
-    std::string     name,
+    string     name,
     header_field_t  val,
-    std::string     desc
+    string     desc
 ) {
     set(name, std::get<1>(val), std::get<2>(val), std::get<0>(val), desc);
 }
 
 void segy_header_map::set(
-    std::string name,
+    string name,
     int byte_loc,
     int byte_size,
     seismic_data_type type
@@ -136,19 +139,23 @@ void segy_header_map::set(
 ) {
     int idx = contains(name, m_fields);
     if (idx != NOT_INDEX) {
+        if (byte_loc != std::get<1>(m_fields[idx].second)
+            || byte_size != std::get<2>(m_fields[idx].second))
+            m_type = header_map_type::CUSTOM;
+
         m_fields[idx].second = { type, byte_loc, byte_size };
-        m_descr[idx] = { name,  desc };
+        //m_descr[idx] = { name,  desc };
     }
     else {
         m_fields.push_back({ name, { type, byte_loc, byte_size } });
-        m_descr.push_back({ name, desc });
+        //m_descr.push_back({ name, desc });
     }
 
     m_update_hash = true;
 }
 
 void segy_header_map::remove(const string &name) {
-    int idx = contains(name);
+    int idx = contains(name, m_fields);
     if (idx != NOT_INDEX)
         if (contains(name, m_fields_required) == NOT_INDEX)
             m_fields.erase(m_fields.begin() + idx);
@@ -171,7 +178,7 @@ bool segy_header_map::contains(const string &name) const {
 }
 
 seismic_header_map::header_field_t segy_header_map::get(
-    const std::string &name
+    const string &name
 ) const {
     int idx = contains(name, m_fields);
 
@@ -202,7 +209,7 @@ header_map_type segy_header_map::type() const {
 
 seismic_header_map::map_storage_t segy_header_map::to_map() const {
     seismic_header_map::map_storage_t res;
-    std::copy(m_fields.begin(), m_fields.end(), std::inserter(res, res.begin()));
+    copy(m_fields.begin(), m_fields.end(), inserter(res, res.begin()));
     return res;
 }
 
@@ -226,13 +233,17 @@ bool segy_header_map::operator==(shared_ptr<seismic_header_map> map) {
 }
 
 bool segy_header_map::operator==(shared_ptr<segy_header_map> map) {
+    return *this == *map;
+}
+
+bool segy_header_map::operator==(segy_header_map &map) {
     if (m_update_hash)
         calc_hash();
 
-    if (map->m_update_hash)
-        map->calc_hash();
+    if (map.m_update_hash)
+        map.calc_hash();
 
-    return m_hash == map->m_hash;
+    return m_hash == map.m_hash;
 }
 
 int segy_header_map::contains(
@@ -261,11 +272,28 @@ void segy_header_map::calc_hash() {
 #ifdef PYTHON
 void py_segy_header_map_init(
     py::module &m,
-    py::class_<segy_header_map, std::shared_ptr<segy_header_map>> &py_segy_header_map
+    py::class_<segy_header_map, shared_ptr<segy_header_map>> &py_segy_header_map
 ) {
     py_segy_header_map.def(py::init<>());
-    py_segy_header_map.def(py::init<header_map_type>(),
+
+    py_segy_header_map.def(
+        py::init<header_map_type>(),
         py::arg("map_type")
+    );
+
+    py_segy_header_map.def(
+        py::init<const seismic_header_map::map_storage_t &>(),
+        py::arg("dict")
+    );
+
+    py_segy_header_map.def(
+        py::init<shared_ptr<segy_header_map>>(),
+        py::arg("header_map")
+    );
+
+    py_segy_header_map.def(
+        py::init<shared_ptr<seismic_header_map>>(),
+        py::arg("header_map")
     );
 }
 #endif

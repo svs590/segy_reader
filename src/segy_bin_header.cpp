@@ -12,24 +12,6 @@
 using namespace std;
 
 
-string first_to_upper(const string &s) {
-    string res = s;
-    res[0] = static_cast<string::value_type>(toupper(res[0]));
-    return res;
-}
-
-string first_to_lower(const string &s) {
-    string res = s;
-    res[0] = static_cast<string::value_type>(tolower(res[0]));
-    return res;
-}
-
-#define TO_USERFRIENDLY_STRING(str)                                                 \
-    first_to_upper(regex_replace(str, regex("_"), " "))
-
-#define FROM_USERFRIENDLY_STRING(str)                                               \
-    first_to_lower(regex_replace(str, regex(" "), "_"))
-
 #define SyBH_READ_FROM_RAW_BUFFER_OP(z, data, el)                                   \
     BOOST_PP_CAT(m_, SyBH_FIELD_NAME(el)) = static_cast<SyBH_FIELD_OUT_TYPE(el)>(   \
         BOOST_PP_CAT(byte_to_, SyBH_FIELD_RAW_TYPE(el)) (                           \

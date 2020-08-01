@@ -189,8 +189,8 @@ int segy_trace_header::contains(const string &name) const {
 
 seismic_data_type segy_trace_header::type(const string &name) const {
     if (f_map->contains(name)) {
-        auto field_info = f_map->get_field(name);
-        return std::get<2>(field_info);
+        auto field_info = f_map->get(name);
+        return std::get<0>(field_info);
     }
     else
         SR_THROW(invalid_argument, "header map which tied to this header does not contains field " + name);
@@ -198,10 +198,10 @@ seismic_data_type segy_trace_header::type(const string &name) const {
 
 seismic_variant_value segy_trace_header::get(const string &name) const {
     if (f_map->contains(name) != NOT_INDEX) {
-        auto field_info = f_map->get_field(name);
-        int pos = std::get<0>(field_info);
-        int size = std::get<1>(field_info);
-        auto type = std::get<2>(field_info);
+        auto field_info = f_map->get(name);
+        auto type = std::get<0>(field_info);
+        int pos = std::get<1>(field_info);
+        int size = std::get<2>(field_info);
         seismic_variant_value res;
 
         switch (type) {
@@ -258,10 +258,10 @@ seismic_variant_value segy_trace_header::get(const string &name) const {
 
 void segy_trace_header::set(const string &name, seismic_variant_value val) {
     if (f_map->contains(name)) {
-        auto field_info = f_map->get_field(name);
-        int pos = std::get<0>(field_info);
-        int size = std::get<1>(field_info);
-        auto type = std::get<2>(field_info);
+        auto field_info = f_map->get(name);
+        auto type = std::get<0>(field_info);
+        int pos = std::get<1>(field_info);
+        int size = std::get<2>(field_info);
 
         if (type == seismic_data_type::INT) {
             if (size != 4)
@@ -329,7 +329,7 @@ void segy_trace_header::set(const string &name, seismic_variant_value val) {
 map<string, seismic_variant_value> segy_trace_header::to_map() {
     map<string, seismic_variant_value> res;
     for (int i = 0; i < f_map->count(); ++i) {
-        auto field_info = f_map->get_field(i);
+        auto field_info = f_map->get(i);
         string name = field_info.first;
         res[name] = get(name);
     }
@@ -371,13 +371,13 @@ void segy_trace_header::reset_header_map(std::shared_ptr<seismic_header_map> map
 
     for (auto &old_field : f_map->to_map()) {
         if (map->contains(old_field.first)) {
-            auto new_field = map->get_field(old_field.first);
+            auto new_field = map->get(old_field.first);
 
-            int old_byte_start  = std::get<0>(old_field.second);
-            int old_byte_size   = std::get<1>(old_field.second);
+            int old_byte_start  = std::get<1>(old_field.second);
+            int old_byte_size   = std::get<2>(old_field.second);
 
-            int new_byte_start  = std::get<0>(new_field);
-            int new_byte_size   = std::get<1>(new_field);
+            int new_byte_start  = std::get<1>(new_field);
+            int new_byte_size   = std::get<2>(new_field);
 
             if (old_byte_size != new_byte_size)
                 SR_THROW(invalid_argument, "can't convert old header map to new header map");
@@ -399,8 +399,8 @@ void segy_trace_header::reset_endian_order(endian_order order) {
         return;
 
     for (auto &field : f_map->to_map()) {
-        int pos = std::get<0>(field.second);
-        auto type = std::get<2>(field.second);
+        int pos = std::get<1>(field.second);
+        auto type = std::get<0>(field.second);
 
         if (type == seismic_data_type::INT) {
             int __val = byte_to_int(&f_raw_data[pos], f_endian_order);

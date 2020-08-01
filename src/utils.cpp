@@ -112,3 +112,15 @@ string date_time() {
     string res(str);
     return res.replace(res.end() - 1, res.end(), 1, ' ');
 }
+
+string first_to_upper(const string &s) {
+    string res = s;
+    res[0] = static_cast<string::value_type>(toupper(res[0]));
+    return res;
+}
+
+string first_to_lower(const string &s) {
+    string res = s;
+    res[0] = static_cast<string::value_type>(tolower(res[0]));
+    return res;
+}

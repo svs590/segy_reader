@@ -303,84 +303,84 @@ void segy_writer::prepare_text_header() {
     m_text_header->set_bin_header_samples_count_loc("bytes 21-22");
     m_text_header->set_bin_header_data_format_loc("bytes 25-26");
 
-    auto il_info = m_header_map->get_field("Inline");
+    auto il_info = m_header_map->get("Inline");
     m_text_header->set_trace_header_iline_loc(
-        "bytes " + to_string(std::get<0>(il_info) + 1)
+        "bytes " + to_string(std::get<1>(il_info) + 1)
         + "-" + to_string(
-            std::get<0>(il_info)
-            + std::get<1>(il_info)
+            std::get<1>(il_info)
+            + std::get<2>(il_info)
         )
     );
 
-    auto crl_info = m_header_map->get_field("Crossline");
+    auto crl_info = m_header_map->get("Crossline");
     m_text_header->set_trace_header_crossline_loc(
-        "bytes " + to_string(std::get<0>(crl_info) + 1)
+        "bytes " + to_string(std::get<1>(crl_info) + 1)
         + "-" + to_string(
-            std::get<0>(crl_info)
-            + std::get<1>(crl_info)
+            std::get<1>(crl_info)
+            + std::get<2>(crl_info)
         )
     );
 
-    auto cdpx_info = m_header_map->get_field("CDP X");
+    auto cdpx_info = m_header_map->get("CDP X");
     m_text_header->set_trace_header_cdpx_loc(
-        "bytes " + to_string(std::get<0>(cdpx_info) + 1)
+        "bytes " + to_string(std::get<1>(cdpx_info) + 1)
         + "-" + to_string(
-            std::get<0>(cdpx_info)
-            + std::get<1>(cdpx_info)
+            std::get<1>(cdpx_info)
+            + std::get<2>(cdpx_info)
         )
     );
 
-    auto cdpy_info = m_header_map->get_field("CDP Y");
+    auto cdpy_info = m_header_map->get("CDP Y");
     m_text_header->set_trace_header_cdpy_loc(
-        "bytes " + to_string(std::get<0>(cdpy_info) + 1)
+        "bytes " + to_string(std::get<1>(cdpy_info) + 1)
         + "-" + to_string(
-            std::get<0>(cdpy_info)
-            + std::get<1>(cdpy_info)
+            std::get<1>(cdpy_info)
+            + std::get<2>(cdpy_info)
         )
     );
 
-    auto sc_info = m_header_map->get_field("Samples count");
+    auto sc_info = m_header_map->get("Samples count");
     m_text_header->set_trace_header_samples_count_loc(
-        "bytes " + to_string(std::get<0>(sc_info) + 1)
+        "bytes " + to_string(std::get<1>(sc_info) + 1)
         + "-" + to_string(
-            std::get<0>(sc_info)
-            + std::get<1>(sc_info)
+            std::get<1>(sc_info)
+            + std::get<2>(sc_info)
         )
     );
 
-    auto si_info = m_header_map->get_field("Sample interval");
+    auto si_info = m_header_map->get("Sample interval");
     m_text_header->set_trace_header_sample_interval_loc(
-        "bytes " + to_string(std::get<0>(si_info) + 1)
+        "bytes " + to_string(std::get<1>(si_info) + 1)
         + "-" + to_string(
-            std::get<0>(si_info)
-            + std::get<1>(si_info)
+            std::get<1>(si_info)
+            + std::get<2>(si_info)
         )
     );
 
-    auto srcx_info = m_header_map->get_field("Src X");
+    auto srcx_info = m_header_map->get("Src X");
     m_text_header->set_trace_header_srcx_loc(
-        "bytes " + to_string(std::get<0>(srcx_info) + 1)
+        "bytes " + to_string(std::get<1>(srcx_info) + 1)
         + "-" + to_string(
-            std::get<0>(srcx_info)
-            + std::get<1>(srcx_info)
+            std::get<1>(srcx_info)
+            + std::get<2>(srcx_info)
         )
     );
 
-    auto srcy_info = m_header_map->get_field("Src Y");
+    auto srcy_info = m_header_map->get("Src Y");
     m_text_header->set_trace_header_srcy_loc(
-        "bytes " + to_string(std::get<0>(srcy_info) + 1)
+        "bytes " + to_string(std::get<1>(srcy_info) + 1)
         + "-" + to_string(
-            std::get<0>(srcy_info)
-            + std::get<1>(srcy_info)
+            std::get<1>(srcy_info)
+            + std::get<2>(srcy_info)
         )
     );
 
-    auto scf_info = m_header_map->get_field("Scalar coords");
+    auto scf_info = m_header_map->get("Scalar coords");
     m_text_header->set_trace_header_scale_factor_loc(
-        "bytes " + to_string(std::get<0>(scf_info) + 1)
+        "bytes " + to_string(std::get<1>(scf_info) + 1)
         + "-" + to_string(
-            std::get<0>(scf_info)
-            + std::get<1>(scf_info)
+            std::get<1>(scf_info)
+            + std::get<2>(scf_info)
         )
     );
 

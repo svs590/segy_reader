@@ -169,7 +169,9 @@ void segy_header_map::set(
         m_fields[idx].second = { 
             type, byte_loc, byte_size, std::get<3>(m_fields[idx].second) 
         };
-        m_descr[idx] = { name,  desc };
+
+        if (!desc.empty())
+            m_descr[idx] = { name,  desc };
     }
     else {
         m_fields.push_back(

@@ -6,10 +6,8 @@
 #include <tuple>
 #include <map>
 
+#include "base.h"
 #include "data_types.h"
-
-#include "seismic_header_field.h"
-#include "obj_base.h"
 
 #ifdef PYTHON
 #include <pybind11/pybind11.h>

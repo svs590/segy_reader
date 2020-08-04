@@ -1,5 +1,8 @@
 #include "data_types.h"
-#include <iostream>
+#include "data_conversion.h"
+
+using namespace std;
+
 
 template <class Int>
 struct next_integer { 
@@ -38,45 +41,45 @@ struct next_integer<uint32_t> {
 
 template <typename Type_first, typename Type_second>
 struct containing_type {
-    using type = std::conditional_t<
-        std::is_arithmetic<Type_first>::value && std::is_arithmetic<Type_second>::value,
+    using type = conditional_t<
+        is_arithmetic<Type_first>::value && is_arithmetic<Type_second>::value,
 
-        std::conditional_t<
-            std::is_integral<Type_first>::value && std::is_integral<Type_second>::value,
+        conditional_t<
+            is_integral<Type_first>::value && is_integral<Type_second>::value,
 
-            std::conditional_t<
-                std::is_unsigned<Type_first>::value && std::is_unsigned<Type_second>::value,
+            conditional_t<
+                is_unsigned<Type_first>::value && is_unsigned<Type_second>::value,
 
-                std::conditional_t<
+                conditional_t<
                     (sizeof(Type_first) > sizeof(Type_second)),
                     Type_first,
                     Type_second
                 >,
 
-                std::conditional_t<
+                conditional_t<
                     (sizeof(Type_first) > sizeof(Type_second)),
                     typename next_integer<Type_first>::next,
                     typename next_integer<Type_second>::next
                 >
             >,
 
-            std::conditional_t<
+            conditional_t<
                 (sizeof(Type_first) > sizeof(Type_second)),
                 Type_first,
                 Type_second
             >
         >,
         
-        std::string
+        string
     >;
 };
 
 bool is_integral_type(const seismic_variant_value &val) {
     bool res = false;
 
-    std::visit(
+    visit(
         [&res](auto &&arg) {
-            res = std::is_integral<decltype(arg)>::value;
+            res = is_integral<decltype(arg)>::value;
         },
         val
     );
@@ -87,9 +90,9 @@ bool is_integral_type(const seismic_variant_value &val) {
 segy_data_format segy_format_from_data(const seismic_variant_vector &val) {
     segy_data_format res;
     
-    std::visit(
+    visit(
         [&res](auto &&arg) {
-            using T = std::decay_t<decltype(arg)>::value_type;
+            using T = decay_t<decltype(arg)>::value_type;
             
             if (typeid(T).hash_code() == typeid(short).hash_code())
                 res = segy_data_format::int16_2complement;
@@ -117,35 +120,35 @@ segy_data_format segy_format_from_data(const seismic_variant_vector &val) {
 
 }
 
-template <typename T>
-inline int greater(const seismic_variant_value& left, T &right) {
-    return std::visit([right](auto& val_1) -> int {
-        using T1 = std::decay_t<decltype(val_1)>;
-        using T3 = containing_type<T1, T>::type;
-
-        T3 val_1_c;
-        T3 val_2_c;
-
-        caster_selector<T1, T3>::type::cast(val_1_c, val_1);
-        caster_selector<T, T3>::type::cast(val_2_c, right);
-
-        if (val_1_c > val_2_c)
-            return 1;
-        else if (val_1_c < val_2_c)
-            return -1;
-        return 0;
-    }, left);
-}
-
 namespace seismic_variant_operations {
+
+    template <typename T>
+    inline int greater(const seismic_variant_value& left, T &right) {
+        return visit([right](auto& val_1) -> int {
+            using T1 = decay_t<decltype(val_1)>;
+            using T3 = containing_type<T1, T>::type;
+    
+            T3 val_1_c;
+            T3 val_2_c;
+    
+            caster_selector<T1, T3>::type::cast(val_1_c, val_1);
+            caster_selector<T, T3>::type::cast(val_2_c, right);
+    
+            if (val_1_c > val_2_c)
+                return 1;
+            else if (val_1_c < val_2_c)
+                return -1;
+            return 0;
+        }, left);
+    }
 
     seismic_variant_value operator+(const seismic_variant_value& left, const seismic_variant_value& right) {
 
         containing_type<uint8_t, int32_t>::type;
 
-        return std::visit([](auto& val_1, auto& val_2) -> seismic_variant_value {
-            using T1 = std::decay_t<decltype(val_1)>;
-            using T2 = std::decay_t<decltype(val_2)>;
+        return visit([](auto& val_1, auto& val_2) -> seismic_variant_value {
+            using T1 = decay_t<decltype(val_1)>;
+            using T2 = decay_t<decltype(val_2)>;
             
             using T3 = containing_type<T1, T2>::type;
             T3 val_1_c;            
@@ -160,9 +163,9 @@ namespace seismic_variant_operations {
     }
 
     seismic_variant_value operator*(const seismic_variant_value& left, const seismic_variant_value& right) {
-        return std::visit([](auto& val_1, auto& val_2) -> seismic_variant_value {
-            using T1 = std::decay_t<decltype(val_1)>;
-            using T2 = std::decay_t<decltype(val_2)>;
+        return visit([](auto& val_1, auto& val_2) -> seismic_variant_value {
+            using T1 = decay_t<decltype(val_1)>;
+            using T2 = decay_t<decltype(val_2)>;
 
             using T3 = containing_type<T1, T2>::type;
             T3 val_1_c;
@@ -178,7 +181,7 @@ namespace seismic_variant_operations {
 
     int size(const seismic_variant_vector& vec) {
         int res = 0;
-        std::visit(
+        visit(
             [&res](auto& data) {
                 res = data.size();
             },

@@ -137,7 +137,7 @@ void segy_writer::write_line(
 
 void segy_writer::update_processed_info(shared_ptr<seismic_trace> trace) {
     if (trace->header()->coords() != m_config.coord)
-        trace->header()->reset_coords(m_config.coord);
+        trace->header()->set_coords(m_config.coord);
 
     double __float64;
     size_t __uint64;

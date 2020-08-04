@@ -3,6 +3,9 @@
 
 #include "data_types.h"
 
+
+enum class seismic_coords_type { CDP, SRC };
+
 class obj_base {
 public:
 	virtual object_type type_id() = 0;

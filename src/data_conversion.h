@@ -4,8 +4,8 @@
 
 #include "data_types.h"
 #include "segy_file.h"
+#include "common.h"
 
-enum class endian_order { big, little, mid_big, mid_little };
 
 endian_order native_order();
 
@@ -23,6 +23,8 @@ std::string char_to_ecdic(const std::string &str);
 /**
  * Integer conversion with or without swap endian
  */
+char			byte_to_char(byte_t const* ptr, endian_order order);
+
 int8_t			byte_to_int8_t(byte_t const* ptr, endian_order order);
 uint8_t			byte_to_uint8_t(byte_t const* ptr, endian_order order);
 
@@ -71,6 +73,8 @@ double          byte_to_double(byte_t const* ptr, endian_order order);
 /**
  * Inverse integer conversion with or without swap endian
  */
+void			char_to_byte(char value, byte_t *ptr, endian_order order);
+
 void			int8_t_to_byte(int8_t value, byte_t *ptr, endian_order order);
 void			uint8_t_to_byte(uint8_t value, byte_t *ptr, endian_order order);
 
@@ -118,3 +122,23 @@ seismic_variant_vector  segy_data_to_native(const byte_t *buffer, int buffer_siz
 
 template <segy_data_format To>
 std::vector<byte_t>     native_to_segy_data(seismic_variant_vector data, endian_order order);
+
+seismic_variant_value byte_to_seismic_variant_value(
+    seismic_data_type       type,
+    const byte_t            *ptr,
+    endian_order            endian
+);
+
+void seismic_variant_value_to_byte(
+    seismic_data_type       type,
+    seismic_variant_value   &val,
+    byte_t                  *ptr,
+    endian_order            endian
+);
+
+void swap_endian(
+    seismic_data_type       type,
+    byte_t                  *ptr,
+    endian_order            old_endian,
+    endian_order            new_endian
+);

@@ -7,14 +7,19 @@
 
 #include <Eigen/Dense>
 
+#include <boost/preprocessor.hpp>
+#include <boost/preprocessor/facilities/is_empty_variadic.hpp>
+#include <boost/preprocessor/seq/for_each.hpp>
+
+#include "seismic_exception.h"
+#include "segy_file.h"
+#include "common.h"
+
 #ifdef PYTHON
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
 #endif
-
-#include "seismic_exception.h"
-#include "segy_file.h"
 
 
 typedef unsigned char byte_t;
@@ -112,18 +117,27 @@ namespace seismic_variant_operations {
     bool operator==(const seismic_variant_value &left, T right);
 }
 
+#define SEISMIC_DATA_TYPE                                                       \
+    ((UNKNOWN,      ))                                                          \
+    ((EMPTY,        ))                                                          \
+    ((INT,          int))                                                       \
+    ((FLOAT,        float))                                                     \
+    ((DOUBLE,       double))                                                    \
+    ((CHAR,         char))                                                      \
+    ((STRING,       ))                                                          \
+    ((INT64,        int64_t))                                                   \
+    ((UINT64,       uint64_t))                                                  \
+    ((SHORT,        int16_t))                                                   \
+    ((USHORT,       uint16_t))
+
+#define DT_FILL_SEISMIC_DATA_TYPE_ENUM_OP(z, data, el)                          \
+    BOOST_PP_TUPLE_ELEM(2, 0, el),
+
+#define DT_FILL_SEISMIC_DATA_TYPE(seq)                                          \
+    BOOST_PP_SEQ_FOR_EACH(DT_FILL_SEISMIC_DATA_TYPE_ENUM_OP, ~, seq)
+
 enum class seismic_data_type {
-	UNKNOWN,
-	EMPTY,
-	INT,
-	FLOAT,
-	DOUBLE,
-	CHAR,
-	STRING,
-	INT64,
-    UINT64,
-	SHORT,
-	USHORT,
+    DT_FILL_SEISMIC_DATA_TYPE(SEISMIC_DATA_TYPE)
 
     VALUES_COUNT
 };

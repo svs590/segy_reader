@@ -79,6 +79,10 @@ endian_order native_order() {
         return endian_order::little;
 }
 
+char byte_to_char(byte_t const* ptr, endian_order order) {
+    return static_cast<char>(*ptr);
+}
+
 int8_t byte_to_int8_t(byte_t const* ptr, endian_order order) {
     return static_cast<int8_t>(*ptr);
 }
@@ -369,6 +373,10 @@ double byte_to_double<endian_order::mid_little>(byte_t const* ptr) {
     int64_t val = *reinterpret_cast<int64_t const*>(ptr);
     val = conditional_reverse<order::little, order::native>(val);
     return *reinterpret_cast<double const*>(&val);
+}
+
+void char_to_byte(char value, byte_t *ptr, endian_order order) {
+    *ptr = static_cast<char>(value);
 }
 
 void int8_t_to_byte(int8_t value, byte_t *ptr, endian_order order) {
@@ -1477,3 +1485,108 @@ vector<byte_t> native_to_segy_data<segy_data_format::uint8>(
     return res;
 }
 
+
+#define BYTE_TO_SEISMIC_VARIANT_VALUE_SWITCH_OP(z, data, el)                    \
+    case seismic_data_type:: ## BOOST_PP_TUPLE_ELEM(2, 0, el):                  \
+        BOOST_PP_IF(BOOST_PP_IS_EMPTY(BOOST_PP_TUPLE_ELEM(2, 1, el)),           \
+            SR_THROW(                                                           \
+                invalid_argument,                                               \
+                "UNKNOWN, EMPTY or STRING types can't be used"                  \
+            ),                                                                  \
+            res = BOOST_PP_CAT(byte_to_, BOOST_PP_TUPLE_ELEM(2, 1, el)) (       \
+                BOOST_PP_SEQ_ELEM(0, data), BOOST_PP_SEQ_ELEM(1, data)          \
+            );                                                                  \
+        );                                                                      \
+        break;
+
+#define BYTE_TO_SEISMIC_VARIANT_VALUE_SWITCH(type, bytes, endian, res)          \
+    switch (type) {                                                             \
+        BOOST_PP_SEQ_FOR_EACH(                                                  \
+            BYTE_TO_SEISMIC_VARIANT_VALUE_SWITCH_OP,                            \
+            (bytes) (endian),                                                   \
+            SEISMIC_DATA_TYPE                                                   \
+        )                                                                       \
+                                                                                \
+        default:                                                                \
+            SR_THROW(invalid_argument, "invalid seismic type for field");       \
+            break;                                                              \
+    }
+
+#define SEISMIC_VARIANT_VALUE_TO_BYTE_SWITCH_OP(z, data, i, el)                 \
+    BOOST_PP_IF(i, else if, if)                                                 \
+        (BOOST_PP_SEQ_ELEM(0, data) ==                                          \
+            seismic_data_type:: ## BOOST_PP_TUPLE_ELEM(2, 0, el)) {             \
+        BOOST_PP_IF(BOOST_PP_IS_EMPTY(BOOST_PP_TUPLE_ELEM(2, 1, el)),           \
+            SR_THROW(                                                           \
+                invalid_argument,                                               \
+                "UNKNOWN, EMPTY or STRING types can't be used"                  \
+            ),                                                                  \
+            BOOST_PP_TUPLE_ELEM(2, 1, el) __val;                                \
+            VARIANT_VALUE_CAST(__val, BOOST_PP_SEQ_ELEM(1, data));              \
+            BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(2, 1, el), _to_byte) (             \
+                __val, BOOST_PP_SEQ_ELEM(2, data), BOOST_PP_SEQ_ELEM(3, data)   \
+            );                                                                  \
+        );                                                                      \
+    }
+
+#define SEISMIC_VARIANT_VALUE_TO_BYTE_SWITCH(type, val, bytes, endian)          \
+    BOOST_PP_SEQ_FOR_EACH_I(                                                    \
+        SEISMIC_VARIANT_VALUE_TO_BYTE_SWITCH_OP,                                \
+        (type) (val) (bytes) (endian),                                          \
+        SEISMIC_DATA_TYPE                                                       \
+    )
+
+#define SWITCH_ENDIAN_OP(z, data, i, el)                                        \
+    BOOST_PP_IF(i, else if, if)                                                 \
+        (BOOST_PP_SEQ_ELEM(0, data) ==                                          \
+            seismic_data_type:: ## BOOST_PP_TUPLE_ELEM(2, 0, el)) {             \
+        BOOST_PP_IF(BOOST_PP_IS_EMPTY(BOOST_PP_TUPLE_ELEM(2, 1, el)),           \
+            SR_THROW(                                                           \
+                invalid_argument,                                               \
+                "UNKNOWN, EMPTY or STRING types can't be used"                  \
+            ),                                                                  \
+            BOOST_PP_TUPLE_ELEM(2, 1, el) __val;                                \
+            __val = BOOST_PP_CAT(byte_to_, BOOST_PP_TUPLE_ELEM(2, 1, el)) (     \
+                BOOST_PP_SEQ_ELEM(1, data), BOOST_PP_SEQ_ELEM(2, data)          \
+            );                                                                  \
+            BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(2, 1, el), _to_byte) (             \
+                __val, BOOST_PP_SEQ_ELEM(1, data), BOOST_PP_SEQ_ELEM(3, data)   \
+            );                                                                  \
+        );                                                                      \
+    }
+
+#define SWITCH_ENDIAN(type, bytes, old_endian, new_endian)                      \
+    BOOST_PP_SEQ_FOR_EACH_I(                                                    \
+        SWITCH_ENDIAN_OP,                                                       \
+        (type) (bytes) (old_endian) (new_endian),                               \
+        SEISMIC_DATA_TYPE                                                       \
+    )
+
+
+seismic_variant_value byte_to_seismic_variant_value(
+    seismic_data_type       type,
+    const byte_t            *ptr,
+    endian_order            endian
+) {
+    seismic_variant_value res;
+    BYTE_TO_SEISMIC_VARIANT_VALUE_SWITCH(type, ptr, endian, res);
+    return res;
+}
+
+void seismic_variant_value_to_byte(
+    seismic_data_type       type,
+    seismic_variant_value   &val,
+    byte_t                  *ptr,
+    endian_order            endian
+) {
+    SEISMIC_VARIANT_VALUE_TO_BYTE_SWITCH(type, val, ptr, endian)
+}
+
+void swap_endian(
+    seismic_data_type       type,
+    byte_t                  *ptr,
+    endian_order            old_endian,
+    endian_order            new_endian
+) {
+    SWITCH_ENDIAN(type, ptr, old_endian, new_endian);
+}

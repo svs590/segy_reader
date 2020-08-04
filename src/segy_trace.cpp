@@ -153,7 +153,7 @@ vector<byte_t> segy_trace::raw_data(segy_data_format format, endian_order order)
     vector<byte_t> header;
     vector<byte_t> data;
     
-    f_header->reset_endian_order(order);
+    f_header->set_endian(order);
 
     header = f_header->raw_data();
 

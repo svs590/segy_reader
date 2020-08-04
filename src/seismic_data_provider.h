@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 
-#include "obj_base.h"
+#include "base.h"
 #include "segy_trace.h"
 #include "seismic_header_map.h"
 #include "seismic_abstract_header.h"

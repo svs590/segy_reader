@@ -109,7 +109,7 @@ void py_seismic_header_map_init(
         (void(seismic_header_map::*)(string, seismic_header_map::header_field_t))
             &seismic_header_map::set,
         py::arg("field_name"),
-        py::arg("tuple kind of { data_type, byte_loc, byte_size}"),
+        py::arg("field_info"),
         "Add/set field in trace header map"
     );
 
@@ -119,7 +119,7 @@ void py_seismic_header_map_init(
             (string, seismic_header_map::header_field_t, string))
                 &seismic_header_map::set,
         py::arg("field_name"),
-        py::arg("tuple kind of { data_type, byte_loc, byte_size}"),
+        py::arg("field_info"),
         py::arg("description") = "",
         "Add/set field in trace header map"
     );

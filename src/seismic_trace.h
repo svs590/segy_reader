@@ -6,7 +6,7 @@
 
 #include <Eigen/Dense>
 
-#include "obj_base.h"
+#include "base.h"
 #include "seismic_trace_header.h"
 
 #ifdef PYTHON

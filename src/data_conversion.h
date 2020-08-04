@@ -69,6 +69,8 @@ template <endian_order From>
 double			byte_to_double( byte_t const* ptr );
 double          byte_to_double(byte_t const* ptr, endian_order order);
 
+nullptr_t       byte_to_nullptr_t(byte_t const* ptr, endian_order order);
+
 
 /**
  * Inverse integer conversion with or without swap endian
@@ -115,6 +117,8 @@ void			double_to_byte(double value, byte_t* outPtr, endian_order order);
 template <endian_order From>
 void			float_to_byte(float value, byte_t* outPtr);
 void			float_to_byte(float value, byte_t* outPtr, endian_order order);
+
+void			nullptr_t_to_byte(nullptr_t value, byte_t* outPtr, endian_order order);
 
 template <segy_data_format From>
 seismic_variant_vector  segy_data_to_native(const byte_t *buffer, int buffer_size, endian_order order);

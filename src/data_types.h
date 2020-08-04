@@ -118,8 +118,8 @@ namespace seismic_variant_operations {
 }
 
 #define SEISMIC_DATA_TYPE                                                       \
-    ((UNKNOWN,      ))                                                          \
-    ((EMPTY,        ))                                                          \
+    ((UNKNOWN,      nullptr_t))                                                 \
+    ((EMPTY,        nullptr_t))                                                 \
     ((INT,          int))                                                       \
     ((FLOAT,        float))                                                     \
     ((DOUBLE,       double))                                                    \

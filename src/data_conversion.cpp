@@ -818,6 +818,10 @@ double byte_to_double(byte_t const* ptr, endian_order order) {
     }
 }
 
+nullptr_t byte_to_nullptr_t(byte_t const* ptr, endian_order order) {
+    return nullptr;
+}
+
 void short_to_byte(short value, byte_t* outPtr, endian_order order) {
     switch (order)
     {
@@ -975,6 +979,10 @@ void double_to_byte(double value, byte_t* outPtr, endian_order order) {
     default:
         break;
     }
+}
+
+void nullptr_t_to_byte(nullptr_t value, byte_t* outPtr, endian_order order) {
+    return;
 }
 
 template <>
@@ -1491,7 +1499,7 @@ vector<byte_t> native_to_segy_data<segy_data_format::uint8>(
         BOOST_PP_IF(BOOST_PP_IS_EMPTY(BOOST_PP_TUPLE_ELEM(2, 1, el)),           \
             SR_THROW(                                                           \
                 invalid_argument,                                               \
-                "UNKNOWN, EMPTY or STRING types can't be used"                  \
+                "STRING types can't be used"                                    \
             ),                                                                  \
             res = BOOST_PP_CAT(byte_to_, BOOST_PP_TUPLE_ELEM(2, 1, el)) (       \
                 BOOST_PP_SEQ_ELEM(0, data), BOOST_PP_SEQ_ELEM(1, data)          \
@@ -1519,7 +1527,7 @@ vector<byte_t> native_to_segy_data<segy_data_format::uint8>(
         BOOST_PP_IF(BOOST_PP_IS_EMPTY(BOOST_PP_TUPLE_ELEM(2, 1, el)),           \
             SR_THROW(                                                           \
                 invalid_argument,                                               \
-                "UNKNOWN, EMPTY or STRING types can't be used"                  \
+                "STRING types can't be used"                                    \
             ),                                                                  \
             BOOST_PP_TUPLE_ELEM(2, 1, el) __val;                                \
             VARIANT_VALUE_CAST(__val, BOOST_PP_SEQ_ELEM(1, data));              \
@@ -1543,7 +1551,7 @@ vector<byte_t> native_to_segy_data<segy_data_format::uint8>(
         BOOST_PP_IF(BOOST_PP_IS_EMPTY(BOOST_PP_TUPLE_ELEM(2, 1, el)),           \
             SR_THROW(                                                           \
                 invalid_argument,                                               \
-                "UNKNOWN, EMPTY or STRING types can't be used"                  \
+                "STRING types can't be used"                                    \
             ),                                                                  \
             BOOST_PP_TUPLE_ELEM(2, 1, el) __val;                                \
             __val = BOOST_PP_CAT(byte_to_, BOOST_PP_TUPLE_ELEM(2, 1, el)) (     \

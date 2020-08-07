@@ -193,7 +193,10 @@ seismic_data_type segy_trace_header::type(const string &name) const {
         return std::get<0>(field_info);
     }
     else
-        SR_THROW(invalid_argument, "header map which tied to this header does not contains field " + name);
+        SR_THROW(
+            invalid_argument, 
+            "header map which tied to this header does not contains field " + name
+        );
 }
 
 seismic_variant_value segy_trace_header::get(const string &name) const {
@@ -243,9 +246,10 @@ map<string, seismic_variant_value> segy_trace_header::to_map() {
     return res;
 }
 
-void segy_trace_header::from_map(const std::map<std::string, seismic_variant_value> &map) {
+void segy_trace_header::from_map(const map<string, seismic_variant_value> &map) {
     for (auto &field : map)
         set(field.first, field.second);
+    parse_required();
 }
 
 bool segy_trace_header::is_valid() {
@@ -272,8 +276,8 @@ seismic_coords_type segy_trace_header::coords() {
     return m_coord;
 }
 
-void segy_trace_header::reset_header_map(std::shared_ptr<seismic_header_map> map) {
-    std::vector<byte_t> new_raw_data;
+void segy_trace_header::reset_header_map(shared_ptr<seismic_header_map> map) {
+    vector<byte_t> new_raw_data;
     new_raw_data.resize(segy_file::trace_header_size, 0);
 
     for (auto &old_field : m_map->to_map()) {
@@ -287,7 +291,10 @@ void segy_trace_header::reset_header_map(std::shared_ptr<seismic_header_map> map
             int new_byte_size   = std::get<2>(new_field);
 
             if (old_byte_size != new_byte_size)
-                SR_THROW(invalid_argument, "can't convert old header map to new header map");
+                SR_THROW(
+                    invalid_argument, 
+                    "can't convert old header map to new header map"
+                );
 
             memcpy(
                 new_raw_data.data() + new_byte_start, 
@@ -306,8 +313,8 @@ void segy_trace_header::set_endian(endian_order order) {
         return;
 
     for (auto &field : m_map->to_map()) {
-        int pos = std::get<1>(field.second);
-        auto type = std::get<0>(field.second);
+        int pos     = std::get<1>(field.second);
+        auto type   = std::get<0>(field.second);
 
         swap_endian(type, &m_raw_data[pos], m_endian_order, order);
     }
@@ -322,8 +329,8 @@ void segy_trace_header::set_coords(seismic_coords_type coord) {
 #ifdef PYTHON
 void py_segy_trace_header_init(py::module &m,
 	py::class_<segy_trace_header,
-	shared_ptr<segy_trace_header>> &py_segy_trace_header) {
-
+	shared_ptr<segy_trace_header>> &py_segy_trace_header
+) {
     py::enum_<segy_coord>(m, "segy_coordinates")
         .value("CDP", segy_coord::CDP)
         .value("SRC", segy_coord::SRC)

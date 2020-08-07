@@ -100,7 +100,8 @@ class segy_writer {
 public:
     ~segy_writer();
     segy_writer(const segy_writer_config &config);
-    segy_writer                                 config() { return m_config; }
+
+    segy_writer_config                          config() { return m_config; }
     void                                        set_config(const segy_writer_config &config);
 
     endian_order                                endian();

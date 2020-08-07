@@ -409,22 +409,24 @@ void py_segy_writer_init(
     py::module &m,
     py::class_<segy_writer, std::shared_ptr<segy_writer>> &py_segy_writer
 ) {
-    py::class_<segy_writer_config> reader_config(m, "segy_writer_config");
-    reader_config.def(py::init<>());
-    reader_config.def_property("filename",
+    py::class_<segy_writer_config> writer_config(m, "segy_writer_config");
+    writer_config.def(py::init<>());
+    writer_config.def_property("filename",
         [](segy_writer_config &c) { return c.filename; },
         [](segy_writer_config &c, std::wstring &filename) { c.filename = filename; }
     );
-    reader_config.def_property("data_format",
+    writer_config.def_property("data_format",
         [](segy_writer_config &c) { return c.data_format; },
         [](segy_writer_config &c, segy_data_format df) { c.data_format = df; }
     );
-    reader_config.def_property("sorting",
+    writer_config.def_property("sorting",
         [](segy_writer_config &c) { return c.sorting; },
         [](segy_writer_config &c, segy_sorting s) { c.sorting = s; }
     );
 
     py_segy_writer.def(py::init<const segy_writer_config &>());
+
+    py_segy_writer.def("config", &segy_writer::config);
 
     py_segy_writer.def("endian", &segy_writer::endian);
     py_segy_writer.def("set_endian", &segy_writer::set_endian);

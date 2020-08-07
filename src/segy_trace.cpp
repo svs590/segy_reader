@@ -1,6 +1,16 @@
+#include <exception>
+
+#ifdef PYTHON
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/numpy.h>
+
+namespace py = pybind11;
+#endif
+
 #include "segy_trace.h"
 #include "data_conversion.h"
-#include <exception>
+
 
 using namespace std;
 
@@ -211,3 +221,18 @@ vector<byte_t> segy_trace::raw_data(segy_data_format format, endian_order order)
 
     return all;
 }
+
+#ifdef PYTHON
+void py_segy_trace_init(
+    py::module &m,
+    py::class_<segy_trace, shared_ptr<segy_trace>> &py_segy_trace
+) {
+    py_segy_trace.def(py::init<const segy_trace &>());
+    py_segy_trace.def(
+        py::init<
+            const segy_trace_header &,
+            const seismic_variant_vector &
+        >()
+    );
+}
+#endif

@@ -5,6 +5,7 @@
 #include <pybind11/numpy.h>
 
 #include "seismic_data_provider.h"
+#include "segy_trace.h"
 #include "segy_reader.h"
 #include "segy_writer.h"
 #include "segy_text_header.h"
@@ -41,6 +42,8 @@ PYBIND11_MODULE(seismo_reader, m)
 		py_segy_trace_header(m, "segy_trace_header", py_seismic_trace_header);
 	py::class_<seismic_trace, std::shared_ptr<seismic_trace>>
 		py_seismic_trace(m, "trace");
+    py::class_<segy_trace, std::shared_ptr<segy_trace>>
+        py_segy_trace(m, "segy_trace", py_seismic_trace);
 	py::class_<seismic_header_map, shared_ptr<seismic_header_map>>
 		py_header_map(m, "header_map");
 	py::class_<segy_header_map, shared_ptr<segy_header_map>>
@@ -55,6 +58,7 @@ PYBIND11_MODULE(seismo_reader, m)
     py_segy_bin_header_init(m, py_segy_bin_header);
 	py_seismic_trace_header_init(m, py_seismic_trace_header);
 	py_seismic_trace_init(m, py_seismic_trace);
+    py_segy_trace_init(m, py_segy_trace);
 	py_seismic_header_map_init(m, py_header_map);
 	py_segy_header_map_init(m, py_segy_header_map);
 	py_segy_trace_header_init(m, py_segy_trace_header);
@@ -67,6 +71,8 @@ PYBIND11_MODULE(seismo_reader, m)
 
     // Enums
     py_segy_file_init(m);
+
+    m.def("native_endian_order", &native_order);
 }
 
 #endif

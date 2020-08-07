@@ -69,7 +69,7 @@ class segy_bin_header : public seismic_abstract_header {
     ))                                                                  \
     ((                                                                  \
         line_num,                  int32_t,    int32_t,            4,   \
-        "Line number. For 3D data, this will contain the in-linenumber" \
+        "Line number. For 3D data, this will contain the in-line number"\
     ))                                                                  \
     ((                                                                  \
         reel_num,                  int32_t,    int32_t,            8,   \
@@ -238,7 +238,7 @@ class segy_bin_header : public seismic_abstract_header {
     ((                                                                  \
         is_same_for_file,          int16_t,    int32_t,            302, \
         "A value of one indicates that all traces in this SEG-Yfile "   \
-        "are guaranteed to have the same sample interval, number of "   \
+        "are guaranteed to have the same sample interval, number of\n"  \
         "trace headerblocks and trace samples"                          \
     ))                                                                  \
     ((                                                                  \

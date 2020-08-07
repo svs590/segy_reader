@@ -214,6 +214,11 @@ void py_segy_text_header_init(
 ) { 
     py_segy_text_header.def(py::init<>());
     py_segy_text_header.def(py::init<const vector<byte_t> &, bool>());
+    py_segy_text_header.def(
+        py::init<const map<string, seismic_variant_value> &, bool>(),
+        py::arg("fields_dict"),
+        py::arg("is_ebdic") = true
+    );
     py_segy_text_header.def("raw_data", &segy_text_header::raw_data);
 
     py_segy_text_header.def("set_product_name", &segy_text_header::set_product_name);

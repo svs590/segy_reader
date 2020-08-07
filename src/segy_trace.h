@@ -7,6 +7,12 @@
 
 #include <Eigen/Dense>
 
+#ifdef PYTHON
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+#endif
+
 #include "segy_trace_header.h"
 #include "seismic_trace.h"
 #include "seismic_trace_header.h"
@@ -61,3 +67,11 @@ public:
 private:
     void parse(const byte_t *data, int num_samples, segy_data_format format, endian_order order);
 };
+
+
+#ifdef PYTHON
+void py_segy_trace_init(
+    py::module &m,
+    py::class_<segy_trace, std::shared_ptr<segy_trace>> &py_segy_trace
+);
+#endif

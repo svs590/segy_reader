@@ -303,8 +303,8 @@ void py_seismic_data_types_init(py::module &m) {
     py::enum_<endian_order>(m, "endian_order")
         .value("big",        endian_order::big)
         .value("little",     endian_order::little)
-        .value("mid_big",    endian_order::mid_big)
-        .value("mid_little", endian_order::mid_little)
+        .value("mid big",    endian_order::mid_big)
+        .value("mid little", endian_order::mid_little)
         .export_values();
 }
 

@@ -83,23 +83,23 @@ void py_seismic_header_map_init(
 
     py_header_map.def(
         "set", 
-        (void(seismic_header_map::*)(string, int, int, seismic_data_type))
+        (void(seismic_header_map::*)(string, seismic_data_type, int, int))
             &seismic_header_map::set,
         py::arg("field_name"),
+        py::arg("data_type"),
         py::arg("byte_location"),
         py::arg("byte_size"),
-        py::arg("data_type"),
         "Add/set field in trace header map"
     );
 
     py_header_map.def(
         "set",
-        (void(seismic_header_map::*)(string, int, int, seismic_data_type, string))
+        (void(seismic_header_map::*)(string, seismic_data_type, int, int, string))
             &seismic_header_map::set,
         py::arg("field_name"),
+        py::arg("data_type"),
         py::arg("byte_location"),
         py::arg("byte_size"),
-        py::arg("data_type"),
         py::arg("description") = "",
         "Add/set field in trace header map"
     );

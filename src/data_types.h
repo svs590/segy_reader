@@ -110,11 +110,18 @@ segy_data_format segy_format_from_data(const seismic_variant_vector &val);
 namespace seismic_variant_operations {
     seismic_variant_value operator+(const seismic_variant_value& left, const seismic_variant_value& right);
     seismic_variant_value operator*(const seismic_variant_value& left, const seismic_variant_value& right);
+    seismic_variant_value operator/(const seismic_variant_value& left, const seismic_variant_value& right);
+    
+    seismic_variant_value abs(const seismic_variant_value& val);
+
 
     int                   size(const seismic_variant_vector& vec);
 
     template <typename T>
     bool operator==(const seismic_variant_value &left, T right);
+
+    template <typename T>
+    bool operator>(const seismic_variant_value& val, T right);
 }
 
 #define SEISMIC_DATA_TYPE                                                       \
@@ -141,6 +148,8 @@ enum class seismic_data_type {
 
     VALUES_COUNT
 };
+
+int seismic_data_type_size(seismic_data_type dt);
 
 enum class object_type {
 	UNKNOWN,

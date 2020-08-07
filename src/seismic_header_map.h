@@ -49,16 +49,16 @@ public:
 
     virtual void set(
         std::string         name,
+        seismic_data_type   type,
         int                 byte_loc,
-        int                 byte_size,
-        seismic_data_type   type
+        int                 byte_size
     ) = 0;
 
     virtual void set(
         std::string         name,
+        seismic_data_type   type,
         int                 byte_loc,
         int                 byte_size,
-        seismic_data_type   type,
         std::string         desc
     ) = 0;
 

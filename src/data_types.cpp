@@ -120,6 +120,34 @@ segy_data_format segy_format_from_data(const seismic_variant_vector &val) {
 
 }
 
+#define SEISMIC_VARIANT_VALUE_SIZE_OP(z, data, el)                              \
+    case seismic_data_type:: ## BOOST_PP_TUPLE_ELEM(2, 0, el):                  \
+        BOOST_PP_IF(BOOST_PP_IS_EMPTY(BOOST_PP_TUPLE_ELEM(2, 1, el)),           \
+            return 0,                                                           \
+            if (typeid(BOOST_PP_TUPLE_ELEM(2, 1, el)) == typeid(nullopt_t))     \
+                return 0;                                                       \
+            else                                                                \
+                return sizeof(BOOST_PP_TUPLE_ELEM(2, 1, el));                   \
+        );                                                                      \
+        break;
+
+#define SEISMIC_VARIANT_VALUE_SIZE_SWITCH(type)                                 \
+    switch (type) {                                                             \
+        BOOST_PP_SEQ_FOR_EACH(                                                  \
+            SEISMIC_VARIANT_VALUE_SIZE_OP,                                      \
+            ~,                                                                  \
+            SEISMIC_DATA_TYPE                                                   \
+        )                                                                       \
+                                                                                \
+        default:                                                                \
+            return 0;                                                           \
+            break;                                                              \
+    }
+
+int seismic_data_type_size(seismic_data_type dt) {
+    SEISMIC_VARIANT_VALUE_SIZE_SWITCH(dt);
+}
+
 namespace seismic_variant_operations {
 
     template <typename T>
@@ -179,6 +207,31 @@ namespace seismic_variant_operations {
         }, left, right);
     }
 
+    seismic_variant_value operator/(const seismic_variant_value& left, const seismic_variant_value& right) {
+        return visit([](auto& val_1, auto& val_2) -> seismic_variant_value {
+            using T1 = decay_t<decltype(val_1)>;
+            using T2 = decay_t<decltype(val_2)>;
+
+            using T3 = containing_type<T1, T2>::type;
+            T3 val_1_c;
+            T3 val_2_c;
+
+            caster_selector<T1, T3>::type::cast(val_1_c, val_1);
+            caster_selector<T2, T3>::type::cast(val_2_c, val_2);
+
+            return val_1_c / val_2_c;
+
+        }, left, right);
+    }
+
+    seismic_variant_value abs(const seismic_variant_value& val) {
+        return visit([](auto& val) -> seismic_variant_value {
+            using T1 = decay_t<decltype(val)>;
+            return abs(val);
+
+        }, val);
+    }
+
     int size(const seismic_variant_vector& vec) {
         int res = 0;
         visit(
@@ -203,5 +256,10 @@ namespace seismic_variant_operations {
     template <>
     bool operator==(const seismic_variant_value &left, double right) {
         return greater<double>(left, right) == 0;
+    }
+
+    template <>
+    bool operator>(const seismic_variant_value& val, int right) {
+        return greater<int>(val, right) == 1;
     }
 }

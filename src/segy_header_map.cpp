@@ -133,7 +133,7 @@ void segy_header_map::set(
     string     name,
     header_field_t  val
 ) {
-    set(name, std::get<1>(val), std::get<2>(val), std::get<0>(val), "");
+    set(name, std::get<0>(val), std::get<1>(val), std::get<2>(val), "");
 }
 
 void segy_header_map::set(
@@ -141,29 +141,30 @@ void segy_header_map::set(
     header_field_t  val,
     string     desc
 ) {
-    set(name, std::get<1>(val), std::get<2>(val), std::get<0>(val), desc);
+    set(name, std::get<0>(val), std::get<1>(val), std::get<2>(val), desc);
 }
 
 void segy_header_map::set(
     string name,
-    int byte_loc,
-    int byte_size,
-    seismic_data_type type
-) {
-    set(name, byte_loc, byte_size, type, "");
-}
-
-void segy_header_map::set(
-    string name,
-    int byte_loc,
-    int byte_size,
     seismic_data_type type,
+    int byte_loc,
+    int byte_size
+) {
+    set(name, type, byte_loc, byte_size, "");
+}
+
+void segy_header_map::set(
+    string name,
+    seismic_data_type type,
+    int byte_loc,
+    int byte_size,
     string desc
 ) {
+    byte_size = seismic_data_type_size(type);
+
     int idx = contains(name, m_fields);
     if (idx != NOT_INDEX) {
-        if (byte_loc != std::get<1>(m_fields[idx].second)
-            || byte_size != std::get<2>(m_fields[idx].second))
+        if (byte_loc != std::get<1>(m_fields[idx].second))
             m_type = header_map_type::CUSTOM;
 
         m_fields[idx].second = { 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.insert(0, '../bin')
+sys.path.insert(0, 'C:\\Users\\ShkuratovAM\\Projects\\segy_reader-new_segy_reader\\bin\\Release')
 
 import seismo_reader as sgr
 import matplotlib.pyplot as plt
@@ -10,7 +10,7 @@ import numpy as np
 from timeit import default_timer as timer
 
 config = sgr.reader_config()
-config.filename = '~/Documents/FullStack_PSTM.segy'
+config.filename = 'D:/FullStack_PSTM.segy'
 reader = sgr.segy_reader(config)
 
 print(reader.text_header())

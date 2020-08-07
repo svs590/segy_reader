@@ -158,7 +158,10 @@ seismic_variant_value segy_trace_header::X() {
     if (m_req_field_init) {
         using namespace seismic_variant_operations;
         if (m_coord == seismic_coords_type::CDP)
-            return m_CDP_X * m_coord_scalar;
+            if (m_coord_scalar > 0)
+                return m_CDP_X * m_coord_scalar;
+            else
+                return m_CDP_X / abs(m_coord_scalar);
         else
             return m_Src_X * m_coord_scalar;
     }

@@ -224,11 +224,33 @@ namespace seismic_variant_operations {
         }, left, right);
     }
 
-    seismic_variant_value abs(const seismic_variant_value& val) {
-        return visit([](auto& val) -> seismic_variant_value {
-            using T1 = decay_t<decltype(val)>;
-            return abs(val);
+    template <typename From>
+    struct numeric_abs {
+        static SR_STRONG_INLINE From abs(const From &val) {
+            return static_cast<From>(std::abs(val));
+        }
+    };
 
+    template <typename From>
+    struct no_numeric_abs {
+        static SR_STRONG_INLINE From abs(const From &val) {
+            return val;
+        }
+    };
+
+    template <typename From>
+    struct abs_selector {
+        using type = std::conditional_t<
+            (std::is_arithmetic<From>::value && std::is_signed<From>::value),
+            numeric_abs<From>,
+            no_numeric_abs<From>
+        >;
+    };
+
+    seismic_variant_value abs(const seismic_variant_value& val) {
+        return visit([](auto& val_1) -> seismic_variant_value {
+            using T1 = decay_t<decltype(val_1)>;
+            return abs_selector<T1>::type::abs(val_1);
         }, val);
     }
 

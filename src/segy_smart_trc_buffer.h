@@ -23,11 +23,11 @@ class smart_trc_buffer {
     std::vector<byte_t>                             f_raw_buffer;
     std::vector<size_t>                             f_trc_offsets;
     size_t                                          f_capacity          = 1;
-    size_t                                          f_absolute_trc_beg;
+    size_t                                          f_absolute_trc_beg  = 0;
     size_t                                          f_size              = 0;
 
-    bool                                            f_fail;
-    size_t                                          f_underload;
+    bool                                            f_fail              = false;
+    size_t                                          f_underload         = 0;
     seismic_coords_type                             f_coord             = seismic_coords_type::CDP;
 public:
     smart_trc_buffer() {}
